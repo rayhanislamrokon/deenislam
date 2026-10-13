@@ -1,0 +1,17 @@
+$path = 'J:\REACT NATIVE APPS\DeenIslam\admin-panel\app\islamic-lifestyle\page.tsx'
+$s = [IO.File]::ReadAllText($path)
+$s = $s.Replace('import Link from "next/link";', 'import Link from "next/link";'+[Environment]::NewLine+'import ReactMarkdown from "react-markdown";')
+$s = $s.Replace(' const editorRef=useRef<HTMLTextAreaElement>(null);', ' const editorRef=useRef<HTMLTextAreaElement>(null);'+[Environment]::NewLine+' const[preview,setPreview]=useState(false),[markdownHelp,setMarkdownHelp]=useState(false);')
+$link = '<button type="button" title="Link" onClick={()=>format("[","](https://)","link title")}>Link</button>'
+$extra = $link + '<button type="button" title="Image" onClick={()=>format("![","](https://image-url)","image description")}>Image</button><button type="button" title="Inline code" onClick={()=>format("`","`","code")}>Code</button><button type="button" title="Strikethrough" onClick={()=>format("~~","~~","text")}>Strike</button><button type="button" className={preview?"selected":""} title="Toggle preview" onClick={()=>setPreview(value=>!value)}>Preview</button><button type="button" className={markdownHelp?"selected":""} title="Markdown help" onClick={()=>setMarkdownHelp(value=>!value)}>Help</button>'
+if (-not $s.Contains($link)) { throw 'Link toolbar button not found.' }
+$s = $s.Replace($link, $extra)
+$counter = '<em>{form.content.length.toLocaleString()} characters ready</em>'
+$after = $counter + '{markdownHelp&&<div className="markdownHelp"><b>Markdown quick guide</b><span># H1 &nbsp; ## H2 &nbsp; ### H3 &nbsp; #### H4</span><span>**bold** &nbsp; *italic* &nbsp; ~~strike~~ &nbsp; `code`</span><span>- bullet &nbsp; 1. numbered &nbsp; &gt; quote</span><span>[title](https://link) &nbsp; ![description](https://image-url)</span></div>}{preview&&<div className="markdownPreview"><div><b>FORMATTED PREVIEW</b><button type="button" onClick={()=>setPreview(false)}>Close</button></div><article><ReactMarkdown>{form.content||"Nothing to preview yet."}</ReactMarkdown></article></div>}'
+if (-not $s.Contains($counter)) { throw 'Character counter not found.' }
+$s = $s.Replace($counter, $after)
+$cssMarker = '.markdownToolbar+textarea{border-radius:0 0 11px 11px}'
+$css = '.markdownToolbar button.selected{background:#087a4d;color:#fff;border-color:#087a4d}.markdownToolbar+textarea{border-radius:0 0 11px 11px}.markdownHelp{margin-top:10px;padding:13px;border-radius:12px;background:#fff8df;border:1px solid #ead99b;display:grid;gap:7px;font-size:11px;color:#594e2d}.markdownPreview{margin-top:13px;border:1px solid #d6e4da;border-radius:14px;overflow:hidden;background:#fff}.markdownPreview>div{padding:10px 13px;background:#075b3b;color:#fff;display:flex;justify-content:space-between;align-items:center}.markdownPreview>div>b{font-size:9px;letter-spacing:1px}.markdownPreview>div button{padding:5px 9px;background:#ffffff22}.markdownPreview article{padding:20px;line-height:1.75;color:#263f34}.markdownPreview article h1,.markdownPreview article h2,.markdownPreview article h3,.markdownPreview article h4{color:#075b3b}.markdownPreview article img{max-width:100%;border-radius:10px}.markdownPreview article blockquote{margin-left:0;padding:10px 15px;border-left:4px solid #b89536;background:#fff9e7}'
+if (-not $s.Contains($cssMarker)) { throw 'Toolbar CSS marker not found.' }
+$s = $s.Replace($cssMarker, $css)
+[IO.File]::WriteAllText($path, $s, (New-Object Text.UTF8Encoding($false)))

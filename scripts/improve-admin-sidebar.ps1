@@ -1,0 +1,26 @@
+$pagePath = Join-Path $PSScriptRoot '..\admin-panel\app\page.tsx'
+$cssPath = Join-Path $PSScriptRoot '..\admin-panel\app\globals.css'
+$text = [IO.File]::ReadAllText($pagePath)
+
+$marker = 'function AnalyticsBars('
+$icon = @'
+function NavIcon({name}:{name:string}){const paths:Record<string,any>={overview:<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,users:<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,team:<><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"/><path d="M9 12l2 2 4-4"/></>,device:<><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 18h6"/></>,ads:<><path d="m3 11 18-5v12L3 14v-3Z"/><path d="M11.6 16.1 13 21H7l-1.4-6"/></>,books:<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></>,library:<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v15H6.5A2.5 2.5 0 0 0 4 19.5Z"/><path d="M8 6h8M8 10h6"/></>,lifestyle:<><path d="M12 22c4-3 7-7 7-12a7 7 0 0 0-14 0c0 5 3 9 7 12Z"/><path d="M8.5 10.5 11 13l4.5-5"/></>,prophets:<><path d="M12 3a6 6 0 0 0-6 6c0 5-2 7-2 7h16s-2-2-2-7a6 6 0 0 0-6-6Z"/><path d="M10 20h4"/></>,quran:<><path d="M3 5.5A3.5 3.5 0 0 1 6.5 2H11v18H6.5A3.5 3.5 0 0 0 3 23V5.5ZM21 5.5A3.5 3.5 0 0 0 17.5 2H13v18h4.5a3.5 3.5 0 0 1 3.5 3V5.5Z"/></>,hadith:<><path d="M6 2h12v20H6z"/><path d="M9 6h6M9 10h6M9 14h4"/></>,duas:<><path d="M7 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v7-5a2 2 0 0 1 4 0v8c0 5-3 9-8 9s-8-4-8-9v-2a2 2 0 0 1 4 0Z"/></>,security:<><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4M12 15v2"/></>};return <svg className="navIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>}
+'@
+if (-not $text.Contains($marker)) { throw 'Component marker not found' }
+$text = $text.Replace($marker, $icon + $marker)
+
+$nav = @'
+<p className="menuLabel">WORKSPACE</p><nav><button className={view==="overview"?"active":""} onClick={()=>setView("overview")}><NavIcon name="overview"/><span>Overview</span></button><button className={view==="users"?"active":""} onClick={()=>setView("users")}><NavIcon name="users"/><span>Users</span></button><button className={view==="team"?"active":""} onClick={()=>setView("team")}><NavIcon name="team"/><span>Team &amp; Permissions</span></button><button className={view==="devices"?"active":""} onClick={()=>setView("devices")}><NavIcon name="device"/><span>Device IDs</span></button><button className={view==="ads"?"active":""} onClick={()=>{setView("ads");void loadAdHistory()}}><NavIcon name="ads"/><span>Ad History</span></button><button className={view==="books"?"active":""} onClick={()=>setView("books")}><NavIcon name="books"/><span>Books Manager</span></button><button className={view==="book-library"?"active":""} onClick={()=>setView("book-library")}><NavIcon name="library"/><span>Book Library</span></button><button className={view==="lifestyle"?"active":""} onClick={()=>setView("lifestyle")}><NavIcon name="lifestyle"/><span>Lifestyle Categories</span></button><button className={view==="prophets"?"active":""} onClick={()=>setView("prophets")}><NavIcon name="prophets"/><span>Prophets Content</span></button><button className={view==="quran"?"active":""} onClick={()=>setView("quran")}><NavIcon name="quran"/><span>Quran Content</span></button><button className={view==="hadith"?"active":""} onClick={()=>setView("hadith")}><NavIcon name="hadith"/><span>Hadith Content</span></button><button className={view==="duas"?"active":""} onClick={()=>setView("duas")}><NavIcon name="duas"/><span>Duas Content</span></button><button className={view==="security"?"active":""} onClick={()=>{setView("security");setChangeMessage("")}}><NavIcon name="security"/><span>Change Password</span></button></nav><button className="logout"
+'@
+$pattern = '<p className="menuLabel">WORKSPACE</p><nav>.*?</nav><button className="logout"'
+if (-not [regex]::IsMatch($text, $pattern)) { throw 'Sidebar navigation not found' }
+$text = [regex]::Replace($text, $pattern, $nav, 1)
+[IO.File]::WriteAllText($pagePath, $text, [Text.UTF8Encoding]::new($false))
+
+$css = [IO.File]::ReadAllText($cssPath)
+$css += @'
+
+/* Spacious admin navigation with one consistent icon system. */
+@media(min-width:781px){.shell{grid-template-columns:270px minmax(0,1fr)}aside{padding:24px 18px}.brand{padding:0 9px}.brand i{width:46px;height:46px;border-radius:13px;font-size:15px}.brand b{font-size:15px}.menuLabel{margin:32px 13px 11px}aside nav{display:grid;gap:3px}aside nav button{min-height:46px;margin:0;padding:12px 14px;border-radius:11px;font-size:14px;font-weight:700;gap:12px;transition:background .18s,color .18s,transform .18s}aside nav button:hover{transform:translateX(2px)}aside nav button.active{background:#e5f5eb;color:#056b43;box-shadow:inset 3px 0 #087a4b}.navIcon{width:19px;height:19px;flex:0 0 19px}.logout{height:44px;border-radius:11px;font-size:13px}}
+'@
+[IO.File]::WriteAllText($cssPath, $css, [Text.UTF8Encoding]::new($false))

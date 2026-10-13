@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en,en-GB",
+  "useGitignore": true,
+  "words": [
+    "Amol",
+    "Aqidah",
+    "DeenIslam",
+    "Duas",
+    "oauthredirect",
+    "Sahaba",
+    "Sahih",
+    "Seerah",
+    "Tafsir",
+    "Tasbih",
+    "Zakat"
+  ]
+}

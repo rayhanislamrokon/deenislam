@@ -1,0 +1,11 @@
+$builderPath=Join-Path $PSScriptRoot '..\admin-panel\app\books\BookPageBuilder.tsx';$builder=[IO.File]::ReadAllText($builderPath)
+$builder=$builder.Replace('.builder{grid-column:1/-1;padding:', '.builder{grid-column:1/-1;width:100%;max-width:100%;min-width:0;overflow:hidden;padding:')
+$builder=$builder.Replace('.pages{display:grid;gap:14px}', '.pages{display:grid;min-width:0;max-width:100%;gap:14px}')
+$builder=$builder.Replace('.pages>article{scroll-margin-top:', '.pages>article{width:100%;max-width:100%;min-width:0;overflow:hidden;scroll-margin-top:')
+$builder=$builder.Replace('.pages :global(.richEditorBody){min-height:', '.pages :global(.tiptapShell){width:100%;max-width:100%;min-width:0}.pages :global(.richToolbar){max-width:100%;flex-wrap:wrap}.pages :global(.richEditorBody){max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal;min-height:')
+[IO.File]::WriteAllText($builderPath,$builder,[Text.UTF8Encoding]::new($false))
+
+$editorPath=Join-Path $PSScriptRoot '..\admin-panel\app\islamic-lifestyle\RichTextEditor.tsx';$editor=[IO.File]::ReadAllText($editorPath)
+$editor=$editor.Replace('.tiptapShell.largeText .richEditorBody{font-size:24px!important;line-height:1.9!important}', '.tiptapShell.largeText{width:100%;max-width:100%;min-width:0;overflow:hidden}.tiptapShell.largeText .richToolbar{max-width:100%;flex-wrap:wrap}.tiptapShell.largeText .richEditorBody{max-width:100%;font-size:22px!important;line-height:1.85!important;overflow-wrap:anywhere!important;word-break:break-word!important;white-space:normal!important}')
+$editor=$editor.Replace('.tiptapShell.largeText .richEditorBody p{font-size:24px!important;line-height:1.9!important;', '.tiptapShell.largeText .richEditorBody p{max-width:100%;font-size:22px!important;line-height:1.85!important;overflow-wrap:anywhere!important;word-break:break-word!important;')
+[IO.File]::WriteAllText($editorPath,$editor,[Text.UTF8Encoding]::new($false))

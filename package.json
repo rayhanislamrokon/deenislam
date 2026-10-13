@@ -1,0 +1,16 @@
+{
+  "name": "deen-islam-platform",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix app start",
+    "app": "npm --prefix app start",
+    "app:android": "npm --prefix app run android",
+    "app:ios": "npm --prefix app run ios",
+    "web": "npm --prefix web run dev",
+    "admin": "npm --prefix admin-panel run dev",
+    "server": "npm --prefix server start",
+    "check:app": "npm --prefix app exec -- tsc --noEmit -p app/tsconfig.json",
+    "check:web": "npm --prefix web exec -- tsc --noEmit -p web/tsconfig.json",
+    "check:admin": "npm --prefix admin-panel exec -- tsc --noEmit -p admin-panel/tsconfig.json"
+  }
+}

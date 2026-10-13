@@ -1,0 +1,5 @@
+$path=Join-Path $PSScriptRoot '..\src\screens\DuasCollectionScreen.tsx';$content=[IO.File]::ReadAllText($path)
+$content=$content.Replace("import { API_URL } from '../config/api';","")
+$content=$content.Replace("const GREEN='#075B3B';", "const API_URL=(process.env.EXPO_PUBLIC_API_URL??'http://10.0.2.2:4000').replace(/\/$/,'');`r`nconst GREEN='#075B3B';")
+$content=$content.Replace('({`r`n key:',"({`r`n key:")
+[IO.File]::WriteAllText($path,$content,[Text.UTF8Encoding]::new($false))

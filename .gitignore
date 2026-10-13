@@ -1,0 +1,77 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# Mobile app source is kept locally and is not published to this repository
+/app/
+
+# dependencies
+node_modules/
+**/node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+/app/android/
+/app/ios/
+expo-env.d.ts
+
+# Web/Admin generated output and local platform state
+**/dist/
+**/.output/
+**/.next/
+**/.vinext/
+**/.wrangler/
+**/out/
+**/coverage/
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+*.log
+.cleanup-backup/
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# secrets
+*.keystore
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+credentials*.json
+
+# local editor and deployment state
+.vscode/
+.vercel/
+**/.vercel/

@@ -1,0 +1,48 @@
+$path = 'admin-panel/app/islamic-lifestyle/RichTextEditor.tsx'
+$text = Get-Content -Raw $path
+$text = $text.Replace('const fileRef = useRef<HTMLInputElement>(null);', 'const fileRef = useRef<HTMLInputElement>(null);' + "`r`n" + '  const imagePositionRef = useRef<number | null>(null);')
+
+$linkPattern = '(?s)  const addLink = \(\) => \{.*?\r?\n  \};\r?\n\r?\n  const uploadImage'
+$linkReplacement = @'
+  const addLink = () => {
+    const { from, to } = editor.state.selection;
+    const previous = editor.getAttributes("link").href || "https://";
+    const url = window.prompt("Enter the complete link", previous);
+    if (url === null) return;
+    const chain = editor.chain().focus().setTextSelection({ from, to });
+    if (!url.trim()) {
+      chain.extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    if (from !== to) {
+      chain.extendMarkRange("link").setLink({ href: url.trim() }).run();
+      return;
+    }
+    const label = window.prompt("Link text", "Open link")?.trim();
+    if (!label) return;
+    chain.insertContent({ type: "text", text: label, marks: [{ type: "link", attrs: { href: url.trim() } }] }).run();
+  };
+
+  const clearFormatting = () => {
+    const { empty } = editor.state.selection;
+    const chain = editor.chain().focus().unsetAllMarks().clearNodes();
+    chain.run();
+    if (empty) editor.view.dispatch(editor.state.tr.setStoredMarks([]));
+  };
+
+  const chooseImage = () => {
+    imagePositionRef.current = editor.state.selection.from;
+    fileRef.current?.click();
+  };
+
+  const uploadImage
+'@
+$text = [regex]::Replace($text, $linkPattern, $linkReplacement, 1)
+$text = $text.Replace('editor.chain().focus().setImage({ src: payload.data.publicUrl, alt: file.name.replace(/\.[^.]+$/, "") }).run();', 'const position = imagePositionRef.current;' + "`r`n" + '      const chain = editor.chain().focus();' + "`r`n" + '      if (position !== null) chain.setTextSelection(position);' + "`r`n" + '      chain.setImage({ src: payload.data.publicUrl, alt: file.name.replace(/\.[^.]+$/, "") }).run();')
+$text = $text.Replace('<Tool title="Block quote" icon="Quote"', '<Tool title="Block quote" icon=">"')
+$text = $text.Replace('action={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}', 'action={clearFormatting}')
+$text = $text.Replace('action={() => !uploading && fileRef.current?.click()}', 'action={() => !uploading && chooseImage()}')
+$text = $text.Replace('Rich text â€¢ Formatting saves automatically', 'Rich text - formatting saves automatically')
+$text = $text.Replace('Rich text • Formatting saves automatically', 'Rich text - formatting saves automatically')
+$text = $text.Replace('Loading editorâ€¦', 'Loading editor...')
+Set-Content -Path $path -Value $text -Encoding utf8

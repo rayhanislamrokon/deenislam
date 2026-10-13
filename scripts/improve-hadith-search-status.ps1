@@ -1,0 +1,6 @@
+$target=Join-Path $PSScriptRoot '..\admin-panel\app\hadith\page.tsx';$source=Get-Content $target -Raw -Encoding utf8
+$source=$source.Replace('placeholder="Search collection, number or text"','placeholder="Search Hadith number or text (e.g. 1, 7563)"')
+$source=$source.Replace('</div>{visible.map(x=><article','</div><div className="resultStatus"><b>{query?`${visible.length} matching result(s) shown`:`Showing first ${Math.min(250,visible.length)} records`}</b><span>Total source records: {existing.length}. Bukhari Hadith numbers run from 1 to 7563.</span></div>{visible.length?visible.map(x=><article')
+$source=$source.Replace('</nav></article>)}</section>','</nav></article>):<div className="noResults"><b>No matching Hadith number or text</b><span>7589 is the total record count, not a Hadith number. Try a number from 1 to 7563.</span></div>}</section>')
+$source=$source.Replace('.libraryHead input{width:270px}', '.libraryHead input{width:310px}.resultStatus{display:flex;justify-content:space-between;gap:12px;margin:14px 0;padding:10px 12px;border-radius:10px;background:#eef7f1;color:#496458;font-size:10px}.noResults{padding:70px 20px;text-align:center;color:#687a71}.noResults b,.noResults span{display:block}.noResults span{margin-top:7px}')
+Set-Content $target $source -NoNewline -Encoding utf8

@@ -1,0 +1,990 @@
+export type HomeLanguageOption = { code: string; short: string; label: string };
+
+// Static Google Translation language catalog. No runtime API request is required.
+export const HOME_LANGUAGES: HomeLanguageOption[] = [
+  {
+    code: "ab",
+    label: "Abkhaz",
+    short: "AB",
+  },
+  {
+    code: "ace",
+    label: "Acehnese",
+    short: "ACE",
+  },
+  {
+    code: "ach",
+    label: "Acholi",
+    short: "ACH",
+  },
+  {
+    code: "af",
+    label: "Afrikaans",
+    short: "AF",
+  },
+  {
+    code: "sq",
+    label: "Albanian",
+    short: "SQ",
+  },
+  {
+    code: "alz",
+    label: "Alur",
+    short: "ALZ",
+  },
+  {
+    code: "am",
+    label: "Amharic",
+    short: "AM",
+  },
+  {
+    code: "ar",
+    label: "Arabic",
+    short: "AR",
+  },
+  {
+    code: "hy",
+    label: "Armenian",
+    short: "HY",
+  },
+  {
+    code: "as",
+    label: "Assamese",
+    short: "AS",
+  },
+  {
+    code: "awa",
+    label: "Awadhi",
+    short: "AWA",
+  },
+  {
+    code: "ay",
+    label: "Aymara",
+    short: "AY",
+  },
+  {
+    code: "az",
+    label: "Azerbaijani",
+    short: "AZ",
+  },
+  {
+    code: "ban",
+    label: "Balinese",
+    short: "BAN",
+  },
+  {
+    code: "bm",
+    label: "Bambara",
+    short: "BM",
+  },
+  {
+    code: "ba",
+    label: "Bashkir",
+    short: "BA",
+  },
+  {
+    code: "eu",
+    label: "Basque",
+    short: "EU",
+  },
+  {
+    code: "btx",
+    label: "Batak Karo",
+    short: "BTX",
+  },
+  {
+    code: "bts",
+    label: "Batak Simalungun",
+    short: "BTS",
+  },
+  {
+    code: "bbc",
+    label: "Batak Toba",
+    short: "BBC",
+  },
+  {
+    code: "be",
+    label: "Belarusian",
+    short: "BE",
+  },
+  {
+    code: "bem",
+    label: "Bemba",
+    short: "BEM",
+  },
+  {
+    code: "bn",
+    label: "Bengali",
+    short: "BN",
+  },
+  {
+    code: "bew",
+    label: "Betawi",
+    short: "BEW",
+  },
+  {
+    code: "bho",
+    label: "Bhojpuri",
+    short: "BHO",
+  },
+  {
+    code: "bik",
+    label: "Bikol",
+    short: "BIK",
+  },
+  {
+    code: "bs",
+    label: "Bosnian",
+    short: "BS",
+  },
+  {
+    code: "br",
+    label: "Breton",
+    short: "BR",
+  },
+  {
+    code: "ber",
+    label: "Berber",
+    short: "BER",
+  },
+  {
+    code: "bg",
+    label: "Bulgarian",
+    short: "BG",
+  },
+  {
+    code: "bua",
+    label: "Buryat",
+    short: "BUA",
+  },
+  {
+    code: "yue",
+    label: "Cantonese",
+    short: "YUE",
+  },
+  {
+    code: "ca",
+    label: "Catalan",
+    short: "CA",
+  },
+  {
+    code: "ceb",
+    label: "Cebuano",
+    short: "CEB",
+  },
+  {
+    code: "ny",
+    label: "Chichewa",
+    short: "NY",
+  },
+  {
+    code: "zh",
+    label: "Chinese (Simplified)",
+    short: "ZH",
+  },
+  {
+    code: "zh-CN",
+    label: "Chinese (Simplified)",
+    short: "ZH-",
+  },
+  {
+    code: "zh-TW",
+    label: "Chinese (Traditional)",
+    short: "ZH-",
+  },
+  {
+    code: "cv",
+    label: "Chuvash",
+    short: "CV",
+  },
+  {
+    code: "co",
+    label: "Corsican",
+    short: "CO",
+  },
+  {
+    code: "crh",
+    label: "Crimean Tatar",
+    short: "CRH",
+  },
+  {
+    code: "hr",
+    label: "Croatian",
+    short: "HR",
+  },
+  {
+    code: "ce",
+    label: "Chechen",
+    short: "CE",
+  },
+  {
+    code: "cs",
+    label: "Czech",
+    short: "CS",
+  },
+  {
+    code: "da",
+    label: "Danish",
+    short: "DA",
+  },
+  {
+    code: "dv",
+    label: "Dhivehi",
+    short: "DV",
+  },
+  {
+    code: "din",
+    label: "Dinka",
+    short: "DIN",
+  },
+  {
+    code: "doi",
+    label: "Dogri",
+    short: "DOI",
+  },
+  {
+    code: "dov",
+    label: "Dombe",
+    short: "DOV",
+  },
+  {
+    code: "nl",
+    label: "Dutch",
+    short: "NL",
+  },
+  {
+    code: "dz",
+    label: "Dzongkha",
+    short: "DZ",
+  },
+  {
+    code: "en",
+    label: "English",
+    short: "EN",
+  },
+  {
+    code: "eo",
+    label: "Esperanto",
+    short: "EO",
+  },
+  {
+    code: "et",
+    label: "Estonian",
+    short: "ET",
+  },
+  {
+    code: "ee",
+    label: "Ewe",
+    short: "EE",
+  },
+  {
+    code: "fj",
+    label: "Fijian",
+    short: "FJ",
+  },
+  {
+    code: "tl",
+    label: "Filipino",
+    short: "TL",
+  },
+  {
+    code: "fi",
+    label: "Finnish",
+    short: "FI",
+  },
+  {
+    code: "fr",
+    label: "French",
+    short: "FR",
+  },
+  {
+    code: "fr-CA",
+    label: "French (Canada)",
+    short: "FR-",
+  },
+  {
+    code: "fy",
+    label: "Frisian",
+    short: "FY",
+  },
+  {
+    code: "ff",
+    label: "Fulani",
+    short: "FF",
+  },
+  {
+    code: "gaa",
+    label: "Ga",
+    short: "GAA",
+  },
+  {
+    code: "gl",
+    label: "Galician",
+    short: "GL",
+  },
+  {
+    code: "ka",
+    label: "Georgian",
+    short: "KA",
+  },
+  {
+    code: "de",
+    label: "German",
+    short: "DE",
+  },
+  {
+    code: "el",
+    label: "Greek",
+    short: "EL",
+  },
+  {
+    code: "gn",
+    label: "Guarani",
+    short: "GN",
+  },
+  {
+    code: "gu",
+    label: "Gujarati",
+    short: "GU",
+  },
+  {
+    code: "ht",
+    label: "Haitian Creole",
+    short: "HT",
+  },
+  {
+    code: "cnh",
+    label: "Hakha Chin",
+    short: "CNH",
+  },
+  {
+    code: "ha",
+    label: "Hausa",
+    short: "HA",
+  },
+  {
+    code: "haw",
+    label: "Hawaiian",
+    short: "HAW",
+  },
+  {
+    code: "iw",
+    label: "Hebrew",
+    short: "IW",
+  },
+  {
+    code: "he",
+    label: "Hebrew",
+    short: "HE",
+  },
+  {
+    code: "hil",
+    label: "Hiligaynon",
+    short: "HIL",
+  },
+  {
+    code: "hi",
+    label: "Hindi",
+    short: "HI",
+  },
+  {
+    code: "hmn",
+    label: "Hmong",
+    short: "HMN",
+  },
+  {
+    code: "hu",
+    label: "Hungarian",
+    short: "HU",
+  },
+  {
+    code: "hrx",
+    label: "Hunsrik",
+    short: "HRX",
+  },
+  {
+    code: "is",
+    label: "Icelandic",
+    short: "IS",
+  },
+  {
+    code: "ig",
+    label: "Igbo",
+    short: "IG",
+  },
+  {
+    code: "ilo",
+    label: "Ilocano",
+    short: "ILO",
+  },
+  {
+    code: "id",
+    label: "Indonesian",
+    short: "ID",
+  },
+  {
+    code: "ga",
+    label: "Irish",
+    short: "GA",
+  },
+  {
+    code: "it",
+    label: "Italian",
+    short: "IT",
+  },
+  {
+    code: "ja",
+    label: "Japanese",
+    short: "JA",
+  },
+  {
+    code: "jw",
+    label: "Javanese",
+    short: "JW",
+  },
+  {
+    code: "jv",
+    label: "Javanese",
+    short: "JV",
+  },
+  {
+    code: "kn",
+    label: "Kannada",
+    short: "KN",
+  },
+  {
+    code: "pam",
+    label: "Kapampangan",
+    short: "PAM",
+  },
+  {
+    code: "kk",
+    label: "Kazakh",
+    short: "KK",
+  },
+  {
+    code: "km",
+    label: "Khmer",
+    short: "KM",
+  },
+  {
+    code: "cgg",
+    label: "Kiga",
+    short: "CGG",
+  },
+  {
+    code: "rw",
+    label: "Kinyarwanda",
+    short: "RW",
+  },
+  {
+    code: "ktu",
+    label: "Kituba",
+    short: "KTU",
+  },
+  {
+    code: "gom",
+    label: "Konkani",
+    short: "GOM",
+  },
+  {
+    code: "ko",
+    label: "Korean",
+    short: "KO",
+  },
+  {
+    code: "kri",
+    label: "Krio",
+    short: "KRI",
+  },
+  {
+    code: "ku",
+    label: "Kurdish (Kurmanji)",
+    short: "KU",
+  },
+  {
+    code: "ckb",
+    label: "Kurdish (Sorani)",
+    short: "CKB",
+  },
+  {
+    code: "ky",
+    label: "Kyrgyz",
+    short: "KY",
+  },
+  {
+    code: "lo",
+    label: "Lao",
+    short: "LO",
+  },
+  {
+    code: "ltg",
+    label: "Latgalian",
+    short: "LTG",
+  },
+  {
+    code: "la",
+    label: "Latin",
+    short: "LA",
+  },
+  {
+    code: "lv",
+    label: "Latvian",
+    short: "LV",
+  },
+  {
+    code: "lij",
+    label: "Ligurian",
+    short: "LIJ",
+  },
+  {
+    code: "li",
+    label: "Limburgish",
+    short: "LI",
+  },
+  {
+    code: "ln",
+    label: "Lingala",
+    short: "LN",
+  },
+  {
+    code: "lt",
+    label: "Lithuanian",
+    short: "LT",
+  },
+  {
+    code: "lmo",
+    label: "Lombard",
+    short: "LMO",
+  },
+  {
+    code: "lg",
+    label: "Luganda",
+    short: "LG",
+  },
+  {
+    code: "luo",
+    label: "Luo",
+    short: "LUO",
+  },
+  {
+    code: "lb",
+    label: "Luxembourgish",
+    short: "LB",
+  },
+  {
+    code: "mk",
+    label: "Macedonian",
+    short: "MK",
+  },
+  {
+    code: "mai",
+    label: "Maithili",
+    short: "MAI",
+  },
+  {
+    code: "mak",
+    label: "Makassar",
+    short: "MAK",
+  },
+  {
+    code: "mg",
+    label: "Malagasy",
+    short: "MG",
+  },
+  {
+    code: "ms",
+    label: "Malay",
+    short: "MS",
+  },
+  {
+    code: "ms-Arab",
+    label: "Malay (Jawi)",
+    short: "MS-",
+  },
+  {
+    code: "ml",
+    label: "Malayalam",
+    short: "ML",
+  },
+  {
+    code: "mt",
+    label: "Maltese",
+    short: "MT",
+  },
+  {
+    code: "mi",
+    label: "Maori",
+    short: "MI",
+  },
+  {
+    code: "mr",
+    label: "Marathi",
+    short: "MR",
+  },
+  {
+    code: "chm",
+    label: "Meadow Mari",
+    short: "CHM",
+  },
+  {
+    code: "mni-Mtei",
+    label: "Meiteilon (Manipuri)",
+    short: "MNI",
+  },
+  {
+    code: "min",
+    label: "Minang",
+    short: "MIN",
+  },
+  {
+    code: "lus",
+    label: "Mizo",
+    short: "LUS",
+  },
+  {
+    code: "mn",
+    label: "Mongolian",
+    short: "MN",
+  },
+  {
+    code: "my",
+    label: "Myanmar (Burmese)",
+    short: "MY",
+  },
+  {
+    code: "nr",
+    label: "Ndebele (South)",
+    short: "NR",
+  },
+  {
+    code: "new",
+    label: "Nepalbhasa (Newari)",
+    short: "NEW",
+  },
+  {
+    code: "ne",
+    label: "Nepali",
+    short: "NE",
+  },
+  {
+    code: "no",
+    label: "Norwegian",
+    short: "NO",
+  },
+  {
+    code: "nus",
+    label: "Nuer",
+    short: "NUS",
+  },
+  {
+    code: "oc",
+    label: "Occitan",
+    short: "OC",
+  },
+  {
+    code: "or",
+    label: "Odia (Oriya)",
+    short: "OR",
+  },
+  {
+    code: "om",
+    label: "Oromo",
+    short: "OM",
+  },
+  {
+    code: "pag",
+    label: "Pangasinan",
+    short: "PAG",
+  },
+  {
+    code: "pap",
+    label: "Papiamento",
+    short: "PAP",
+  },
+  {
+    code: "ps",
+    label: "Pashto",
+    short: "PS",
+  },
+  {
+    code: "fa",
+    label: "Persian",
+    short: "FA",
+  },
+  {
+    code: "pl",
+    label: "Polish",
+    short: "PL",
+  },
+  {
+    code: "pt",
+    label: "Portuguese (Brazil)",
+    short: "PT",
+  },
+  {
+    code: "pt-PT",
+    label: "Portuguese (Portugal)",
+    short: "PT-",
+  },
+  {
+    code: "pa",
+    label: "Punjabi (Gurmukhi)",
+    short: "PA",
+  },
+  {
+    code: "pa-Arab",
+    label: "Punjabi (Shahmukhi)",
+    short: "PA-",
+  },
+  {
+    code: "qu",
+    label: "Quechua",
+    short: "QU",
+  },
+  {
+    code: "rom",
+    label: "Romani",
+    short: "ROM",
+  },
+  {
+    code: "ro",
+    label: "Romanian",
+    short: "RO",
+  },
+  {
+    code: "rn",
+    label: "Rundi",
+    short: "RN",
+  },
+  {
+    code: "ru",
+    label: "Russian",
+    short: "RU",
+  },
+  {
+    code: "sm",
+    label: "Samoan",
+    short: "SM",
+  },
+  {
+    code: "sg",
+    label: "Sango",
+    short: "SG",
+  },
+  {
+    code: "sa",
+    label: "Sanskrit",
+    short: "SA",
+  },
+  {
+    code: "gd",
+    label: "Scots Gaelic",
+    short: "GD",
+  },
+  {
+    code: "nso",
+    label: "Sepedi",
+    short: "NSO",
+  },
+  {
+    code: "sr",
+    label: "Serbian",
+    short: "SR",
+  },
+  {
+    code: "st",
+    label: "Sesotho",
+    short: "ST",
+  },
+  {
+    code: "crs",
+    label: "Seychellois Creole",
+    short: "CRS",
+  },
+  {
+    code: "shn",
+    label: "Shan",
+    short: "SHN",
+  },
+  {
+    code: "sn",
+    label: "Shona",
+    short: "SN",
+  },
+  {
+    code: "scn",
+    label: "Sicilian",
+    short: "SCN",
+  },
+  {
+    code: "szl",
+    label: "Silesian",
+    short: "SZL",
+  },
+  {
+    code: "sd",
+    label: "Sindhi",
+    short: "SD",
+  },
+  {
+    code: "si",
+    label: "Sinhala",
+    short: "SI",
+  },
+  {
+    code: "sk",
+    label: "Slovak",
+    short: "SK",
+  },
+  {
+    code: "sl",
+    label: "Slovenian",
+    short: "SL",
+  },
+  {
+    code: "so",
+    label: "Somali",
+    short: "SO",
+  },
+  {
+    code: "es",
+    label: "Spanish",
+    short: "ES",
+  },
+  {
+    code: "su",
+    label: "Sundanese",
+    short: "SU",
+  },
+  {
+    code: "sw",
+    label: "Swahili",
+    short: "SW",
+  },
+  {
+    code: "ss",
+    label: "Swati",
+    short: "SS",
+  },
+  {
+    code: "sv",
+    label: "Swedish",
+    short: "SV",
+  },
+  {
+    code: "tg",
+    label: "Tajik",
+    short: "TG",
+  },
+  {
+    code: "ta",
+    label: "Tamil",
+    short: "TA",
+  },
+  {
+    code: "tt",
+    label: "Tatar",
+    short: "TT",
+  },
+  {
+    code: "te",
+    label: "Telugu",
+    short: "TE",
+  },
+  {
+    code: "tet",
+    label: "Tetum",
+    short: "TET",
+  },
+  {
+    code: "th",
+    label: "Thai",
+    short: "TH",
+  },
+  {
+    code: "ti",
+    label: "Tigrinya",
+    short: "TI",
+  },
+  {
+    code: "ts",
+    label: "Tsonga",
+    short: "TS",
+  },
+  {
+    code: "tn",
+    label: "Tswana",
+    short: "TN",
+  },
+  {
+    code: "tr",
+    label: "Turkish",
+    short: "TR",
+  },
+  {
+    code: "tk",
+    label: "Turkmen",
+    short: "TK",
+  },
+  {
+    code: "ak",
+    label: "Twi",
+    short: "AK",
+  },
+  {
+    code: "uk",
+    label: "Ukrainian",
+    short: "UK",
+  },
+  {
+    code: "ur",
+    label: "Urdu",
+    short: "UR",
+  },
+  {
+    code: "ug",
+    label: "Uyghur",
+    short: "UG",
+  },
+  {
+    code: "uz",
+    label: "Uzbek",
+    short: "UZ",
+  },
+  {
+    code: "vi",
+    label: "Vietnamese",
+    short: "VI",
+  },
+  {
+    code: "cy",
+    label: "Welsh",
+    short: "CY",
+  },
+  {
+    code: "xh",
+    label: "Xhosa",
+    short: "XH",
+  },
+  {
+    code: "yi",
+    label: "Yiddish",
+    short: "YI",
+  },
+  {
+    code: "yo",
+    label: "Yoruba",
+    short: "YO",
+  },
+  {
+    code: "yua",
+    label: "Yucatec Maya",
+    short: "YUA",
+  },
+  {
+    code: "zu",
+    label: "Zulu",
+    short: "ZU",
+  },
+];

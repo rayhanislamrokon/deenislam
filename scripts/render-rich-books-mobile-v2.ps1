@@ -1,0 +1,10 @@
+$path=Join-Path $PSScriptRoot '..\src\screens\BookReaderScreen.tsx';$content=[IO.File]::ReadAllText($path)
+$content=$content.Replace("import { ActivityIndicator, Alert, ImageBackground, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';","import { ActivityIndicator, Alert, ImageBackground, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';`r`nimport RenderHTML from 'react-native-render-html';")
+$content=$content.Replace("export function BookReaderScreen({ slug, onBack }: { slug: string; onBack: () => void }) {", "export function BookReaderScreen({ slug, onBack }: { slug: string; onBack: () => void }) {`r`n  const {width}=useWindowDimensions();")
+$line="    const chunks = content.match(/[\s\S]{1,3200}(?:\n\n|$)/g) || [content];"
+$replacement="    if (/<[a-z][\s\S]*>/i.test(content)) return [content];`r`n"+$line
+if(-not $content.Contains($line)){throw 'Book chunks line not found'};$content=$content.Replace($line,$replacement)
+$old='<View style={styles.bodyText}>{paragraphs.map((paragraph,index)=><Text key={index} selectable style={[styles.body,{fontSize,lineHeight:Math.round(fontSize*1.75)},isRtl&&styles.bodyRtl,index===0&&styles.openingParagraph]}>{paragraph}</Text>)}</View>'
+$new='<View style={styles.bodyText}>{/<[a-z][\s\S]*>/i.test(current)?<RenderHTML contentWidth={width-76} source={{html:current}} baseStyle={{...styles.body,fontSize,lineHeight:Math.round(fontSize*1.75),...(isRtl?styles.bodyRtl:{})}} tagsStyles={{h1:{color:GREEN},h2:{color:GREEN},h3:{color:GREEN},h4:{color:GREEN},blockquote:{backgroundColor:"#FFF8DF",borderLeftColor:"#D0AD45",borderLeftWidth:4,borderRadius:8,padding:12},a:{color:GREEN,fontWeight:"700"},img:{borderRadius:12}}}/>:paragraphs.map((paragraph,index)=><Text key={index} selectable style={[styles.body,{fontSize,lineHeight:Math.round(fontSize*1.75)},isRtl&&styles.bodyRtl,index===0&&styles.openingParagraph]}>{paragraph}</Text>)}</View>'
+if(-not $content.Contains($old)){throw 'Book body target not found'};$content=$content.Replace($old,$new)
+[IO.File]::WriteAllText($path,$content,[Text.UTF8Encoding]::new($false))

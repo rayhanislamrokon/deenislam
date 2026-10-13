@@ -1,0 +1,17 @@
+$target = Join-Path $PSScriptRoot '..\admin-panel\app\islamic-lifestyle\RichTextEditor.tsx'
+$source = Get-Content -LiteralPath $target -Raw
+$old = '.richEditorBody blockquote{display:table;max-width:100%;margin:15px 0;padding:10px 15px;border-left:4px solid #d0ad45;border-radius:0 10px 10px 0;background:#fff8df;color:#5c5132}'
+$new = '.richEditorBody blockquote{position:relative;display:block;max-width:100%;margin:18px 0;padding:18px 20px 18px 50px;border:1px solid #ead99b;border-left:5px solid #d0ad45;border-radius:14px;background:#fff8df;color:#5c5132;box-shadow:0 5px 18px rgba(74,62,26,.08);transition:background-color .28s ease,border-color .28s ease,color .28s ease,box-shadow .28s ease,transform .2s ease}.richEditorBody blockquote:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(23,61,46,.11)}.richEditorBody blockquote:before{content:"“";position:absolute;left:16px;top:8px;font:700 38px/1 Georgia,serif;color:currentColor;opacity:.28;pointer-events:none}'
+if (-not $source.Contains($old)) { throw 'Base quote style marker not found' }
+$source = $source.Replace($old,$new)
+$source = $source.Replace('.richEditorBody blockquote[data-tone="green"]{border-left-color:#27a36a;background:#eaf8ef;color:#28533d}', '.richEditorBody blockquote[data-tone="green"]{border-color:#bfe5ce;border-left-color:#27a36a;background:#eaf8ef;color:#28533d}')
+$source = $source.Replace('.richEditorBody blockquote[data-tone="blue"]{border-left-color:#4285c5;background:#edf6ff;color:#294b68}', '.richEditorBody blockquote[data-tone="blue"]{border-color:#c5dcf1;border-left-color:#4285c5;background:#edf6ff;color:#294b68}')
+$source = $source.Replace('.richEditorBody blockquote[data-tone="rose"]{border-left-color:#ce6b78;background:#fff0f2;color:#684047}', '.richEditorBody blockquote[data-tone="rose"]{border-color:#f0cbd1;border-left-color:#ce6b78;background:#fff0f2;color:#684047}')
+$source = $source.Replace('.richEditorBody blockquote[data-tone="gold"]{border-left-color:#d0ad45;background:#fff8df;color:#5c5132}', '.richEditorBody blockquote[data-tone="gold"]{border-color:#ead99b;border-left-color:#d0ad45;background:#fff8df;color:#5c5132}')
+$source = $source.Replace('.richEditorBody blockquote[data-tone="red"]{border-left-color:#d84343;background:#fff0f0;color:#742d2d}', '.richEditorBody blockquote[data-tone="red"]{border-color:#f1c4c4;border-left-color:#d84343;background:#fff0f0;color:#742d2d}')
+$paletteMarker = '.quotePalette{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 11px;border-bottom:1px solid #c8d9cd;background:#f5faf6}'
+$paletteNew = '.quotePalette{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid #c8d9cd;background:linear-gradient(180deg,#f8fcf9,#f0f7f2);animation:quotePaletteIn .2s ease-out;transform-origin:top}@keyframes quotePaletteIn{from{opacity:0;transform:translateY(-5px) scaleY(.96)}to{opacity:1;transform:translateY(0) scaleY(1)}}'
+if (-not $source.Contains($paletteMarker)) { throw 'Quote palette marker not found' }
+$source = $source.Replace($paletteMarker,$paletteNew)
+$source = $source.Replace('font-weight:800;cursor:pointer}.quotePalette button.selected', 'font-weight:800;cursor:pointer;transition:transform .16s ease,box-shadow .2s ease,border-color .2s ease,background .2s ease}.quotePalette button:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(23,61,46,.1)}.quotePalette button.selected')
+Set-Content -LiteralPath $target -Value $source -NoNewline

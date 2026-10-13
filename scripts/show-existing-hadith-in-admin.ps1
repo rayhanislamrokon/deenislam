@@ -1,0 +1,20 @@
+$apiPath = Join-Path $PSScriptRoot '..\server\src\hadith-admin.js'
+$api = Get-Content -LiteralPath $apiPath -Raw -Encoding utf8
+$route = @'
+ router.get('/api/admin/hadith/existing/:collectionId',admin,async(req,res)=>{try{const books={b:'bukhari',m:'muslim',a:'abudawud',t:'tirmidhi',s:'nasai',i:'ibnmajah',malik:'malik',n:'nawawi',q:'qudsi'},collectionId=clean(req.params.collectionId,30),book=books[collectionId];if(!book)return res.status(400).json({message:'Unknown Hadith collection.'});const base='https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/',[englishResponse,arabicResponse]=await Promise.all([fetch(base+'eng-'+book+'.min.json'),fetch(base+'ara-'+book+'.min.json').catch(()=>null)]);if(!englishResponse.ok)throw Error('Existing Hadith source is unavailable.');const english=await englishResponse.json(),arabic=arabicResponse&&arabicResponse.ok?await arabicResponse.json():null,arabicByNumber=new Map((arabic?.hadiths||[]).map(x=>[String(x.hadithnumber),x.text])),sections=english?.metadata?.section||{},rows=(english?.hadiths||[]).map(x=>({id:'existing-'+collectionId+'-'+x.hadithnumber,external:true,collectionId,collectionName:english?.metadata?.name||book,book:String(x.reference?.book||'1'),sectionName:sections[String(x.reference?.book||'1')]||('Book '+String(x.reference?.book||'1')),hadithNumber:String(x.hadithnumber),title:'Hadith '+x.hadithnumber,arabic:String(arabicByNumber.get(String(x.hadithnumber))||''),text:clean(x.text,30000),narrator:'',grade:(x.grades||[]).map(g=>g.grade).filter(Boolean).join(', '),explanation:'',reference:`${book} ${x.hadithnumber}`,source:'fawazahmed0 Hadith API',published:true}));res.json({data:rows,total:rows.length})}catch(e){console.error(e);res.status(502).json({message:e.message||'Unable to load existing Hadith.'})}});
+'@
+$api = $api.Replace(' return router;', $route.TrimEnd()+[Environment]::NewLine+' return router;')
+Set-Content -LiteralPath $apiPath -Value $api -NoNewline -Encoding utf8
+
+$pagePath = Join-Path $PSScriptRoot '..\admin-panel\app\hadith\page.tsx'
+$page = Get-Content -LiteralPath $pagePath -Raw -Encoding utf8
+$page = $page.Replace("[items,setItems]=useState<any[]>([]),[form,setForm]", "[items,setItems]=useState<any[]>([]),[existing,setExisting]=useState<any[]>([]),[existingLoading,setExistingLoading]=useState(false),[form,setForm]")
+$page = $page.Replace("useEffect(()=>{if(token)load()},[token]);async function load()", "useEffect(()=>{if(token)load()},[token]);useEffect(()=>{if(!token)return;setExistingLoading(true);fetch(API+'/api/admin/hadith/existing/'+form.collectionId,{headers:headers()}).then(r=>r.json()).then(j=>setExisting(j.data||[])).catch(()=>setExisting([])).finally(()=>setExistingLoading(false))},[token,form.collectionId]);async function load()")
+$page = $page.Replace("setForm({...empty,...row,...t,id:row.id,collectionId", "setForm({...empty,...row,...t,id:row.external?'':row.id,collectionId")
+$page = $page.Replace("const visible=useMemo(()=>items.filter(x=>", "const visible=useMemo(()=>[...items,...existing.filter(x=>!items.some(saved=>saved.collectionId===x.collectionId&&String(saved.hadithNumber)===String(x.hadithNumber)))].filter(x=>")
+$page = $page.Replace(",[items,query]);const set=", ",[items,existing,query]);const set=")
+$page = $page.Replace('<h2>Saved Hadith</h2>', '<h2>Saved & existing app Hadith</h2><p>{existingLoading?"Loading existing app content...":`${existing.length} existing in selected collection`}</p>')
+$page = $page.Replace('<span>{1+Object.keys(x.translations||{}).length} language(s) · {x.published?', '<span>{x.external?"APP SOURCE · Edit to save in Admin":`${1+Object.keys(x.translations||{}).length} language(s)`} · {x.published?')
+$page = $page.Replace('<button onClick={()=>edit(x,\'en\')}>Edit</button><button className="delete"', '<button onClick={()=>edit(x,\'en\')}>{x.external?"Import & Edit":"Edit"}</button>{!x.external&&<button className="delete"')
+$page = $page.Replace('</button></nav></article>)}</section>', '</button>}</nav></article>)}</section>')
+Set-Content -LiteralPath $pagePath -Value $page -NoNewline -Encoding utf8
