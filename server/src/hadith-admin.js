@@ -4,7 +4,7 @@ const { ObjectId } = require("mongodb");
 const path = require("path");
 const { gunzipSync } = require("zlib");
 const COMMENTARIES = require(
-  path.join(__dirname, "../../app/src/data/hadeethenc-en.json"),
+  path.join(__dirname, "../../web/app/data/hadeethenc-en.json"),
 );
 const STOP = new Set([
   "the",
