@@ -2,10 +2,11 @@
 import AdminLanguagePicker,{ADMIN_LANGUAGES}from"../components/AdminLanguagePicker";
 import{FormEvent,useEffect,useMemo,useState}from"react";
 import Link from"next/link";
-import{DUA_PRESETS}from"../../../app/src/data/zikrPresets";
+import DUA_PRESET_ROWS from"../../../server/src/dua-presets.json";
 import RichTextEditor from"../islamic-lifestyle/RichTextEditor";
 const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:4000").replace(/\/$/,"");
 const blank={id:"",key:"",name:"",description:"",arabic:"",pronunciation:"",meaning:"",source:"",category:"General",order:1,published:true};
+const DUA_PRESETS=DUA_PRESET_ROWS.map(x=>({label:x.name,names:[x.name,x.pronunciation].filter(Boolean),arabic:x.arabic,meaning:x.meaning,source:x.source}));
 const existing=DUA_PRESETS.map((x:any,i:number)=>({external:true,id:`existing-${i+1}`,key:`dua-${i+1}`,name:x.label,description:x.meaning||"",arabic:x.arabic,pronunciation:[...(x.names||[])].filter((n:string)=>n!==x.label).sort((a:string,b:string)=>b.length-a.length)[0]||"",meaning:x.meaning,source:x.source||"",category:"App collection",order:i+1,published:true,translations:{}}));
 export default function DuasAdmin(){const[token,setToken]=useState(""),[items,setItems]=useState<any[]>([]),[form,setForm]=useState<any>(blank),[language,setLanguage]=useState("en"),[languages,setLanguages]=useState<any[]>(ADMIN_LANGUAGES),[query,setQuery]=useState(""),[message,setMessage]=useState(""),[saving,setSaving]=useState(false);const headers=()=>({"Content-Type":"application/json",Authorization:"Bearer "+token});
  useEffect(()=>{setToken(sessionStorage.getItem("deenislam_admin_token")||"");fetch(API+"/api/translate/languages").then(r=>r.json()).then(j=>Array.isArray(j.data)&&setLanguages(j.data)).catch(()=>{})},[]);useEffect(()=>{if(token)load()},[token]);async function load(){const r=await fetch(API+"/api/admin/duas",{headers:headers()}),j=await r.json();if(r.ok)setItems(j.data||[]);else setMessage(j.message)}

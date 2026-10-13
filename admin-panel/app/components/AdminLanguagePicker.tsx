@@ -1,6 +1,6 @@
 "use client";
 import {useMemo,useState} from "react";
-import {HOME_LANGUAGES} from "../../../app/src/data/homeLanguages";
+import {HOME_LANGUAGES} from "../../../web/app/data/homeLanguages";
 
 export const ADMIN_LANGUAGES=HOME_LANGUAGES.filter(item=>!["iw","jw"].includes(item.code));
 

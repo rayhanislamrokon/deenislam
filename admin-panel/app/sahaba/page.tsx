@@ -1,7 +1,7 @@
 "use client";
 import{FormEvent,useEffect,useMemo,useState}from"react";
 import BookPageBuilder from"../books/BookPageBuilder";
-import{HOME_LANGUAGES}from"../../../app/src/data/homeLanguages";
+import{HOME_LANGUAGES}from"../../../web/app/data/homeLanguages";
 import{prepareWebPUpload}from"../lib/imageUpload";
 const SAHABA_LANGUAGES=HOME_LANGUAGES.filter(item=>!["iw","jw"].includes(item.code));
 const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:4000").replace(/\/$/,"");
