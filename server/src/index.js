@@ -47,7 +47,26 @@ if (!mongoUri || !jwtSecret) {
   console.error("MONGODB_URI and JWT_SECRET are required in server/.env");
   process.exit(1);
 }
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+const allowedCorsOrigins = String(process.env.CORS_ORIGIN || "*")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Native apps and server-to-server requests do not send an Origin header.
+      if (
+        !origin ||
+        allowedCorsOrigins.includes("*") ||
+        allowedCorsOrigins.includes(origin.replace(/\/$/, ""))
+      ) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Origin is not allowed by CORS"));
+    },
+  }),
+);
 app.use(express.json({ limit: "5mb" }));
 let users,
   surahs,
