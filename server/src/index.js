@@ -37,7 +37,7 @@ const translationLanguages = require("./languages.json");
 const duaPresets = require("./dua-presets.json");
 require("dotenv").config();
 const app = express(),
-  port = Number(process.env.PORT || 4000),
+  port = Number(process.env.PORT || 6002),
   mongoUri = process.env.MONGODB_URI,
   jwtSecret = process.env.JWT_SECRET,
   googleClientId = process.env.GOOGLE_CLIENT_ID,
