@@ -35,9 +35,16 @@ export default function AdminHeaderTools(){
 
   if(pathname==="/"||!host)return null;
   const search=(event:FormEvent)=>{event.preventDefault();const value=query.trim();if(!value){inputRef.current?.focus();return}const find=(window as Window&{find?:(text:string,caseSensitive?:boolean,backwards?:boolean,wrapAround?:boolean)=>boolean}).find;setMessage(find?.call(window,value,false,false,true)?"Match selected":"No match")};
+  const backToDashboard=()=>{
+    if(window.parent!==window){
+      window.parent.postMessage({type:"deenislam-admin-back"},window.location.origin);
+      return;
+    }
+    router.push("/");
+  };
   return createPortal(<div className="adminHeaderTools">
-    <button type="button" className="adminHeaderBack" onClick={()=>router.push("/")}><span>‹</span> Back to Dashboard</button>
-    <form onSubmit={search}><span>⌕</span><input ref={inputRef} value={query} onChange={event=>{setQuery(event.target.value);setMessage("")}} placeholder="Search this page..." aria-label="Search this page"/>{query&&<button type="button" className="adminHeaderClear" onClick={()=>{setQuery("");setMessage("");inputRef.current?.focus()}}>×</button>}<button type="submit" className="adminHeaderSearch">Search</button></form>
+    <button type="button" className="adminHeaderBack" onClick={backToDashboard}><span>{"\u2039"}</span> Back to Dashboard</button>
+    <form onSubmit={search}><span>{"\u2315"}</span><input ref={inputRef} value={query} onChange={event=>{setQuery(event.target.value);setMessage("")}} placeholder="Search this page..." aria-label="Search this page"/>{query&&<button type="button" className="adminHeaderClear" onClick={()=>{setQuery("");setMessage("");inputRef.current?.focus()}}>{"\u00d7"}</button>}<button type="submit" className="adminHeaderSearch">Search</button></form>
     <small className={message==="No match"?"notFound":""}>{message||"Ctrl K"}</small>
   </div>,host);
 }

@@ -91,7 +91,7 @@ import {
   type WebTranslationTable,
 } from "./services/webTranslation";
 const WEB_API = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:6002"
 ).replace(/\/$/, "");
 const nav = [
   ["⌂", "Home"],
@@ -281,6 +281,58 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
+    let cancelled = false;
+    const recordVisit = async () => {
+      try {
+      const key = "deenislam_web_visitor_id";
+      let visitorId = localStorage.getItem(key);
+      if (!visitorId) {
+        const randomPart =
+          typeof crypto?.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        visitorId = `web:${randomPart}`;
+        localStorage.setItem(key, visitorId);
+      }
+      const countryKey = "deenislam_web_country_code";
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const locale = navigator.language || "";
+      let countryCode = sessionStorage.getItem(countryKey) || "";
+      if (!/^[A-Z]{2}$/.test(countryCode)) {
+        try {
+          const response = await fetch("https://api.country.is/", {
+            signal: AbortSignal.timeout(3500),
+          });
+          const payload = await response.json();
+          countryCode = String(payload?.country || "").toUpperCase();
+          if (/^[A-Z]{2}$/.test(countryCode))
+            sessionStorage.setItem(countryKey, countryCode);
+        } catch {
+          countryCode = timeZone === "Asia/Dhaka" ? "BD" : "";
+        }
+      }
+      if (cancelled) return;
+      await fetch(`${WEB_API}/api/analytics/visit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: visitorId,
+          page: window.location.pathname,
+          referrer: document.referrer,
+          countryCode,
+          timeZone,
+          locale,
+        }),
+        keepalive: true,
+      }).catch(() => undefined);
+      } catch {}
+    };
+    void recordVisit();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useEffect(() => {
     let live = true;
     const apply = (data: any) => {
       const timings = data?.data?.timings;
@@ -417,6 +469,21 @@ export default function Home() {
   const selectedLanguage =
     HOME_LANGUAGES.find((item) => item.code === language) ??
     HOME_LANGUAGES.find((item) => item.code === "en")!;
+  const currentGregorianDate = now.getTime()
+    ? new Intl.DateTimeFormat(language || "en", {
+        weekday: "long",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(now)
+    : "Loading date...";
+  const currentHijriDate = now.getTime()
+    ? `${new Intl.DateTimeFormat(`${language || "en"}-u-ca-islamic`, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(now)} AH`
+    : "";
   useEffect(() => {
     const sync = () => {
       const feature = featureFromPath(window.location.pathname);
@@ -552,34 +619,76 @@ export default function Home() {
               <b>⌕</b>
               <input
                 aria-label='Search'
+                role='combobox'
+                aria-expanded={query.trim().length > 0}
+                aria-controls='global-search-results'
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
                   language === "bn"
-                    ? "কুরআন, হাদিস, দোয়া ও ইসলামিক বই খুঁজুন…"
-                    : "Search Quran, Hadith, Dua, Islamic Books, Topics…"
+                    ? "কুরআন, হাদিস, দোয়া ও আরও কিছু খুঁজুন…"
+                    : "Search Quran, Hadith, Dua & more…"
                 }
               />
               <kbd>Ctrl K</kbd>
-              {results.length > 0 && (
-                <div className='results'>
+              {query.trim().length > 0 && (
+                <div
+                  className={`results${results.length === 0 ? " empty" : ""}`}
+                  id='global-search-results'
+                  role='listbox'
+                >
+                  <div className='results-head'>
+                    <span>
+                      <strong>Quick results</strong>
+                      <small>
+                        {results.length > 0
+                          ? `${results.length} matches found`
+                          : "Try another keyword"}
+                      </small>
+                    </span>
+                    <button
+                      type='button'
+                      aria-label='Close search results'
+                      onClick={() => setQuery("")}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {results.length === 0 && (
+                    <div className='results-empty'>
+                      <DeenIcon name='Search' size={20} />
+                      <span>
+                        <strong>No result found</strong>
+                        <small>Search Quran, Hadith, Dua or another service.</small>
+                      </span>
+                    </div>
+                  )}
                   {results.map((x) => (
                     <button
+                      className='result-item'
                       key={x}
+                      role='option'
+                      aria-selected='false'
                       onClick={() => {
                         setQuery("");
                         navigate(x);
                         act(`Opening ${x}`);
                       }}
                     >
-                      {x}
-                      <b>→</b>
+                      <i>
+                        <DeenIcon name={x} size={18} strokeWidth={1.9} />
+                      </i>
+                      <span>
+                        <strong>{x}</strong>
+                        <small>Open page</small>
+                      </span>
+                      <b aria-hidden='true'>→</b>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <div className='top-control'>
+            <div className='top-control notification-control'>
               <button
                 className='round badge'
                 onClick={() => {
@@ -1010,13 +1119,18 @@ export default function Home() {
               </section>
             </div>
             <aside className='rail'>
-              <section className='date'>
+              <button
+                type='button'
+                className='date'
+                onClick={() => navigate("Islamic Calendar")}
+                aria-label={`Open Islamic Calendar. Today is ${currentGregorianDate}, ${currentHijriDate}`}
+              >
                 <i>▦</i>
                 <div>
-                  <strong>Thursday, 26 Sep 2026</strong>
-                  <span>4 Rabi Al-Awwal 1448 AH</span>
+                  <strong>{currentGregorianDate}</strong>
+                  <span>{currentHijriDate}</span>
                 </div>
-              </section>
+              </button>
               <section className='event'>
                 <div>
                   <small>Upcoming Islamic Event</small>

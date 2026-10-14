@@ -3,6 +3,7 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { MongoClient, ObjectId } = require("mongodb");
+const { isIP } = require("node:net");
 const { OAuth2Client } = require("google-auth-library");
 const { createBooksRouter } = require("./books-admin");
 const { createAppAdminRouter } = require("./admin-panel");
@@ -97,6 +98,64 @@ const requestDeviceId = (req) =>
   )
     .trim()
     .slice(0, 128);
+const countryLookupCache = new Map();
+const validCountryCode = (value) => {
+  const code = String(value || "").trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(code) && !["XX", "T1"].includes(code) ? code : "";
+};
+const requestPublicIp = (req) => {
+  const raw = String(
+    req.get("cf-connecting-ip") ||
+      req.get("x-real-ip") ||
+      String(req.get("x-forwarded-for") || "").split(",")[0] ||
+      req.socket?.remoteAddress ||
+      "",
+  )
+    .trim()
+    .replace(/^::ffff:/, "");
+  if (!isIP(raw)) return "";
+  if (
+    raw === "::1" ||
+    raw === "127.0.0.1" ||
+    raw.startsWith("10.") ||
+    raw.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(raw) ||
+    /^f[cd][0-9a-f]{2}:/i.test(raw) ||
+    /^fe[89ab][0-9a-f]:/i.test(raw)
+  )
+    return "";
+  return raw;
+};
+async function requestCountryCode(req) {
+  const supplied = validCountryCode(
+    req.get("cf-ipcountry") ||
+      req.get("x-vercel-ip-country") ||
+      req.get("x-country-code") ||
+      req.body?.countryCode,
+  );
+  if (supplied) return supplied;
+  const ip = requestPublicIp(req);
+  if (!ip) return "";
+  const cached = countryLookupCache.get(ip);
+  if (cached && cached.expiresAt > Date.now()) return cached.countryCode;
+  try {
+    const response = await fetch(
+      `https://api.country.is/${encodeURIComponent(ip)}`,
+      { signal: AbortSignal.timeout(3000) },
+    );
+    if (!response.ok) return "";
+    const payload = await response.json();
+    const countryCode = validCountryCode(payload?.country);
+    if (countryCode)
+      countryLookupCache.set(ip, {
+        countryCode,
+        expiresAt: Date.now() + 6 * 60 * 60 * 1000,
+      });
+    return countryCode;
+  } catch {
+    return "";
+  }
+}
 function optionalUserId(req) {
   const token = String(req.get("authorization") || "").replace(
     /^Bearer\s+/i,
@@ -653,6 +712,8 @@ app.post("/api/devices/register", async (req, res) => {
       { deviceId },
       {
         $set: {
+          visitorType: "app",
+          source: "app",
           platform: String(req.body.platform || "unknown").slice(0, 20),
           appVersion: String(req.body.appVersion || "").slice(0, 30),
           lastSeenAt: now,
@@ -698,6 +759,53 @@ app.post("/api/devices/register", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: "Unable to register this installation." });
+  }
+});
+app.post("/api/analytics/visit", async (req, res) => {
+  try {
+    const deviceId = requestDeviceId(req);
+    if (!deviceId || !deviceId.startsWith("web:"))
+      return res.status(400).json({ message: "Web visitor ID is required." });
+    const now = new Date(),
+      countryCode = await requestCountryCode(req),
+      page = String(req.body.page || "/").trim().slice(0, 240) || "/",
+      referrer = String(req.body.referrer || "").trim().slice(0, 500),
+      timeZone = String(req.body.timeZone || "").trim().slice(0, 80),
+      locale = String(req.body.locale || "").trim().slice(0, 40),
+      userAgent = String(req.get("user-agent") || "").slice(0, 500);
+    await deviceInstallations.updateOne(
+      { deviceId },
+      {
+        $set: {
+          visitorType: "web",
+          source: "web",
+          platform: "web",
+          appVersion: "",
+          lastSeenAt: now,
+          lastPage: page,
+          userAgent,
+          timeZone,
+          locale,
+          ...(countryCode ? { countryCode } : {}),
+        },
+        $setOnInsert: { deviceId, firstSeenAt: now },
+        $inc: { openCount: 1 },
+      },
+      { upsert: true },
+    );
+    await analyticsEvents.insertOne({
+      type: "web_visit",
+      deviceId,
+      userId: null,
+      page,
+      referrer,
+      countryCode: countryCode || null,
+      createdAt: now,
+    });
+    res.status(201).json({ data: { recorded: true } });
+  } catch (error) {
+    console.error("Web visit analytics failed:", error);
+    res.status(500).json({ message: "Unable to record this web visit." });
   }
 });
 app.post("/api/analytics/events", async (req, res) => {
@@ -1640,6 +1748,10 @@ async function start() {
   );
   await deviceInstallations.createIndex({ deviceId: 1 }, { unique: true });
   await deviceInstallations.createIndex({ firstSeenAt: -1 });
+  await deviceInstallations.updateMany(
+    { deviceId: /^web:/ },
+    { $set: { visitorType: "web", source: "web", platform: "web" } },
+  );
   await analyticsEvents.createIndex({ createdAt: -1, type: 1 });
   await analyticsEvents.createIndex({ deviceId: 1, createdAt: -1 });
   await analyticsEvents.createIndex(

@@ -6,7 +6,7 @@
         "node": ">=22.13.0"
     },
     "scripts": {
-        "dev": "vinext dev --port 6000",
+        "dev": "vinext dev --port 6080",
         "build": "vinext build",
         "start": "vinext start --port 6000",
         "test": "npm run build && node --test tests/rendered-html.test.mjs",

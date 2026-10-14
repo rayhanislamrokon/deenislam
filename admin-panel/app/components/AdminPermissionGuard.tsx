@@ -12,5 +12,14 @@ export default function AdminPermissionGuard(){
   const apply=()=>{const token=sessionStorage.getItem("deenislam_admin_token")||"",permissions=tokenPermissions(token),buttons=[...document.querySelectorAll("aside nav button")] as HTMLButtonElement[];buttons.forEach(button=>{const label=button.textContent?.trim()||"",permission=NAV_PERMISSION[label];button.hidden=Boolean(permission&&!hasPermission(permissions,permission))});const active=buttons.find(button=>button.classList.contains("active"));if(active?.hidden)buttons.find(button=>!button.hidden)?.click();const required=Object.entries(ROUTE_PERMISSION).find(([route])=>pathname===route||pathname.startsWith(route+"/"))?.[1];if(token&&required&&!hasPermission(permissions,required))router.replace("/")};
   apply();const observer=new MutationObserver(apply);observer.observe(document.body,{childList:true,subtree:true});const timer=window.setInterval(apply,1000);return()=>{observer.disconnect();window.clearInterval(timer)};
  },[pathname,router]);
+ useEffect(()=>{
+  const receive=(event:MessageEvent)=>{
+   if(event.origin!==window.location.origin||event.data?.type!=="deenislam-admin-back")return;
+   const overview=[...document.querySelectorAll("aside nav button")].find(button=>button.textContent?.trim()==="Overview") as HTMLButtonElement|undefined;
+   overview?.click();
+  };
+  window.addEventListener("message",receive);
+  return()=>window.removeEventListener("message",receive);
+ },[]);
  return null;
 }
