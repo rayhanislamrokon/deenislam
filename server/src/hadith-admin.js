@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
+const { deleteReplacedImages, deleteStoredImages } = require("./s3-books");
 const path = require("path");
 const { gunzipSync } = require("zlib");
 const COMMENTARIES = require(
@@ -78,6 +79,18 @@ const language = (v) => {
   const x = clean(v, 20).toLowerCase();
   return /^[a-z]{2,3}(?:-[a-z]{2,8})?$/.test(x) ? x : "en";
 };
+async function safeResponseJson(response) {
+  if (!response || !response.ok) return null;
+  const raw = await response.text();
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start < 0 || end < start) return null;
+  try {
+    return JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
 const DEFAULT_COLLECTIONS = [
   {
     collectionId: "b",
@@ -214,6 +227,7 @@ function createHadithRouter(getCollection, adminKey, jwtSecret) {
     arabicTitle: clean(b.arabicTitle, 160),
     author: clean(b.author, 160),
     coverImageUrl: clean(b.coverImageUrl, 2000),
+    coverImageKey: clean(b.coverImageKey, 1000),
     hadithCount: Math.max(0, Number(b.hadithCount) || 0),
     category: b.category === "Classical" ? "Classical" : "Major",
     languages: Array.isArray(b.languages)
@@ -299,10 +313,13 @@ function createHadithRouter(getCollection, adminKey, jwtSecret) {
         return res
           .status(400)
           .json({ message: "Collection ID and title are required." });
+      const current = await getCollection().findOne({ _id: new ObjectId(req.params.id), recordType: "collection" });
+      if (!current) return res.status(404).json({ message: "Collection card not found." });
       await getCollection().updateOne(
         { _id: new ObjectId(req.params.id), recordType: "collection" },
         { $set: row },
       );
+      await deleteReplacedImages(current, row);
       res.json({ message: "Hadith book card updated." });
     } catch (e) {
       res.status(500).json({ message: "Unable to update collection card." });
@@ -331,6 +348,7 @@ function createHadithRouter(getCollection, adminKey, jwtSecret) {
           return res.status(409).json({
             message: `Delete or move the ${used} Hadith records in this collection first.`,
           });
+        await deleteStoredImages(meta);
         await getCollection().deleteOne({ _id: meta._id });
         res.json({ message: "Collection card deleted." });
       } catch (e) {
@@ -446,7 +464,11 @@ function createHadithRouter(getCollection, adminKey, jwtSecret) {
     try {
       if (!ObjectId.isValid(req.params.id))
         return res.status(400).json({ message: "Invalid Hadith id." });
-      await getCollection().deleteOne({ _id: new ObjectId(req.params.id) });
+      const id = new ObjectId(req.params.id);
+      const item = await getCollection().findOne({ _id: id });
+      if (!item) return res.status(404).json({ message: "Hadith not found." });
+      await deleteStoredImages(item);
+      await getCollection().deleteOne({ _id: id });
       res.json({ message: "Hadith deleted." });
     } catch (e) {
       res.status(500).json({ message: "Unable to delete Hadith." });
@@ -739,8 +761,8 @@ function createHadithRouter(getCollection, adminKey, jwtSecret) {
           er = responses[0],
           ar = responses[1];
         if (!er.ok) throw Error("Existing Hadith source unavailable.");
-        const english = await er.json(),
-          arabic = ar && ar.ok ? await ar.json() : null,
+        const english = await safeResponseJson(er),
+          arabic = await safeResponseJson(ar),
           arabicMap = new Map(
             (arabic?.hadiths || []).map((x) => [
               String(x.hadithnumber),
@@ -771,7 +793,8 @@ function createHadithRouter(getCollection, adminKey, jwtSecret) {
             source: "fawazahmed0 Hadith API",
             published: true,
           }));
-        res.json({ data: rows, total: rows.length });
+        if (!english?.hadiths?.length) throw Error("Existing Hadith source returned an invalid or rate-limited response. Please try again shortly.");
+        res.json({ data: rows, total: rows.length, arabicAvailable: Boolean(arabic?.hadiths?.length) });
       } catch (e) {
         console.error(e);
         res

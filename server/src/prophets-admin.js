@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
+const { deleteStoredImages } = require("./s3-books");
 
 const clean = (value, max = 1000) =>
   String(value ?? "")
@@ -157,11 +158,12 @@ function createProphetsRouter(getCollection, adminKey, jwtSecret) {
   router.delete("/api/admin/prophets/:id", admin, async (req, res) => {
     if (!ObjectId.isValid(req.params.id))
       return res.status(400).json({ message: "Invalid Prophet ID." });
-    const result = await getCollection().deleteOne({
-      _id: new ObjectId(req.params.id),
-    });
-    if (!result.deletedCount)
+    const id = new ObjectId(req.params.id);
+    const item = await getCollection().findOne({ _id: id });
+    if (!item)
       return res.status(404).json({ message: "Prophet not found." });
+    await deleteStoredImages(item);
+    await getCollection().deleteOne({ _id: id });
     res.json({ message: "Prophet content deleted." });
   });
   return router;

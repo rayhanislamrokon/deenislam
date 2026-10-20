@@ -151,6 +151,7 @@ type TafsirCommentary = {
   ayahNumber: number;
   surahName?: string;
   title?: string;
+  pronunciation?: string;
   text: string;
   published: boolean;
   createdAt?: string;
@@ -167,6 +168,7 @@ const blankForm: TafsirCommentary = {
   ayahNumber: 1,
   surahName: "Al-Faatiha",
   title: "",
+  pronunciation: "",
   text: "",
   published: true,
 };
@@ -181,6 +183,81 @@ const cleanSnippet = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character] || character);
+
+const previewHtml = (value: string) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "<p class=\"emptyPreview\">Start writing to see the live preview.</p>";
+  const looksLikeHtml = /<(?:p|h[1-4]|ul|ol|li|blockquote|strong|em|br)\b/i.test(raw);
+  const html = looksLikeHtml
+    ? raw
+    : raw
+        .split(/\n{2,}/)
+        .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+        .join("");
+  return html
+    .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/\s(?:href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\1/gi, "");
+};
+
+const arrangeTafsirHtml = (value: string) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/<(?:h[1-4]|ul|ol|li|blockquote)\b/i.test(raw)) return raw;
+  const plain = cleanSnippet(raw);
+  const parts = plain.split(/(?=\b\d+\.\s+)/).map((part) => part.trim()).filter(Boolean);
+  const numbered = parts.filter((part) => /^\d+\.\s+/.test(part));
+  if (!numbered.length) {
+    return plain
+      .split(/\n{2,}/)
+      .filter(Boolean)
+      .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+      .join("");
+  }
+  const introduction = parts.filter((part) => !/^\d+\.\s+/.test(part)).join(" ");
+  const list = numbered
+    .map((part) => `<li><p>${escapeHtml(part.replace(/^\d+\.\s+/, ""))}</p></li>`)
+    .join("");
+  return `${introduction ? `<p>${escapeHtml(introduction)}</p>` : ""}<ol>${list}</ol>`;
+};
+
+const readableTafsirText = (value: string) =>
+  String(value || "")
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_list, body: string) => {
+      let number = 0;
+      return body.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_item: string, text: string) => `\n${++number}. ${text}\n`);
+    })
+    .replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_list, body: string) =>
+      body.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_item: string, text: string) => `\n• ${text}\n`),
+    )
+    .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/(?:p|h[1-4]|blockquote|div)>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+const tafsirPreviewParts = (value: string) =>
+  readableTafsirText(value)
+    .split(/(?=\b\d+\.\s+)/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const numbered = part.match(/^(\d+)\.\s*([\s\S]*)$/);
+      return numbered ? { number: numbered[1], text: numbered[2].trim() } : { number: "", text: part };
+    });
+
 export default function TafsirManager() {
   const [token, setToken] = useState("");
   const [sources, setSources] = useState<TafsirSource[]>([]);
@@ -189,6 +266,7 @@ export default function TafsirManager() {
   const [language, setLanguage] = useState("bn");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [contentView, setContentView] = useState<"editor" | "app" | "web">("editor");
   const [loadingItems, setLoadingItems] = useState(false);
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -233,8 +311,16 @@ export default function TafsirManager() {
     if (!token) return;
     try {
       const [managedResult, libraryResult] = await Promise.allSettled([
-        fetch(API + "/api/admin/tafsir/sources", { headers: headers() }).then((res) => res.json()),
-        fetch(API + "/api/tafsir/sources?language=en").then((res) => res.json()),
+        fetch(API + "/api/admin/tafsir/sources", { headers: headers() }).then(async (res) => {
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.message || "Unable to load managed Tafsir books.");
+          return body;
+        }),
+        fetch(API + "/api/tafsir/sources?language=en").then(async (res) => {
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.message || "Unable to load the public Tafsir library.");
+          return body;
+        }),
       ]);
       const managed = managedResult.status === "fulfilled" && Array.isArray(managedResult.value.data)
         ? managedResult.value.data.map((item: TafsirSource) => ({ ...item, managed: true }))
@@ -247,7 +333,20 @@ export default function TafsirManager() {
         const key = String(item.sourceId || item.id || "");
         if (key) merged.set(key, { ...item, sourceId: key, published: item.published !== false });
       });
-      setSources(Array.from(merged.values()));
+      const nextSources = Array.from(merged.values());
+      if (!nextSources.length) throw new Error("No Tafsir books were returned by the server.");
+      setSources(nextSources);
+      setForm((current) => {
+        if (nextSources.some((item) => item.sourceId === current.sourceId)) return current;
+        const first = nextSources.find((item) => item.language === language) || nextSources[0];
+        return {
+          ...current,
+          sourceId: first.sourceId,
+          sourceName: first.name,
+          authorName: first.author_name,
+          language: first.language || language,
+        };
+      });
     } catch {
       setMessage("Unable to load the shared mobile Tafsir library.");
     }
@@ -365,8 +464,9 @@ export default function TafsirManager() {
         id: body.data.managed ? body.data.id : "",
         sourceName: body.data.sourceName || current.sourceName,
         authorName: body.data.authorName || current.authorName,
-        title: body.data.title || current.title,
-        text: body.data.text,
+        title: body.data.title || "",
+        pronunciation: body.data.pronunciation || "",
+        text: arrangeTafsirHtml(body.data.text),
         published: true,
       }));
       setMessage(body.data.managed
@@ -391,7 +491,8 @@ export default function TafsirManager() {
       ayahNumber: item.ayahNumber || 1,
       surahName: item.surahName || `Surah ${item.surahNumber}`,
       title: item.title || "",
-      text: item.text || "",
+      pronunciation: item.pronunciation || "",
+      text: arrangeTafsirHtml(item.text || ""),
       published: item.published !== false,
     });
     if (item.language && item.language !== language) {
@@ -654,6 +755,17 @@ export default function TafsirManager() {
               />
             </label>
 
+            <label className="wide">
+              Arabic pronunciation / transliteration (optional)
+              <textarea
+                value={form.pronunciation || ""}
+                onChange={(e) => setForm({ ...form, pronunciation: e.target.value })}
+                placeholder="e.g. Bismillaahir Rahmaanir Raheem"
+                rows={2}
+              />
+              <small>Shown below the Arabic Ayah in both the mobile app and website. Leave empty to use the Quran library pronunciation.</small>
+            </label>
+
             <label>
               Author / Scholar citation
               <input
@@ -677,17 +789,87 @@ export default function TafsirManager() {
             Load existing Mobile Tafsir for {form.surahNumber}:{form.ayahNumber}
           </button>
 
-          <label style={{ marginTop: 14 }}>
-            Detailed commentary text
-            <RichTextEditor
-              value={form.text}
-              onChange={(value) => setForm({ ...form, text: value })}
-              api={API}
-              token={token}
-              onMessage={setMessage}
-              recordId={`tafsir:${form.sourceId}:${form.surahNumber}:${form.ayahNumber}`}
-            />
-          </label>
+          <section className="contentComposer">
+            <div className="composerHead">
+              <div>
+                <b>Detailed commentary text</b>
+                <small>Format once, then check how it will look before publishing.</small>
+              </div>
+              <nav aria-label="Commentary editor and previews">
+                <button type="button" className={contentView === "editor" ? "active" : ""} onClick={() => setContentView("editor")}>Edit text</button>
+                <button type="button" className={contentView === "app" ? "active" : ""} onClick={() => setContentView("app")}>App preview</button>
+                <button type="button" className={contentView === "web" ? "active" : ""} onClick={() => setContentView("web")}>Web preview</button>
+              </nav>
+            </div>
+
+            {contentView === "editor" ? <>
+              <div className="formatGuide">
+                <span><b>Title/Heading</b> section name</span>
+                <span><b>Numbers</b> ordered explanation</span>
+                <span><b>Bullets</b> key points</span>
+                <span><b>Quote</b> highlighted evidence</span>
+              </div>
+              <RichTextEditor
+                value={form.text}
+                onChange={(value) => setForm({ ...form, text: value })}
+                api={API}
+                token={token}
+                onMessage={setMessage}
+                recordId={`tafsir:${form.sourceId}:${form.surahNumber}:${form.ayahNumber}`}
+                autoArrange={arrangeTafsirHtml}
+                showPreviewTabs={false}
+              />
+            </> : contentView === "app" ? (
+              <div className="previewStage appStage">
+                <div className="previewStatus">
+                  <b>FULL APP CONTENT PREVIEW</b>
+                  <span>{cleanSnippet(form.text).length.toLocaleString()} characters · click the text below to edit</span>
+                </div>
+                <div className="phonePreview">
+                  <small>TAFSIR PREVIEW · {selectedSurah.name} {form.surahNumber}:{form.ayahNumber}</small>
+                  <h2
+                    className="editableTitle"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(event) => setForm((current) => ({ ...current, title: event.currentTarget.textContent?.trim() === "Explanation" ? "" : event.currentTarget.textContent?.trim() || "" }))}
+                  >{form.title || "Explanation"}</h2>
+                  <div
+                    className="previewContent editablePreview appCommentaryPreview"
+                    contentEditable
+                    suppressContentEditableWarning
+                    role="textbox"
+                    aria-label="Edit app preview commentary"
+                    onBlur={(event) => setForm((current) => ({ ...current, text: event.currentTarget.innerHTML }))}
+                    dangerouslySetInnerHTML={{ __html: previewHtml(form.text) }}
+                  />
+                  <footer>Source: {form.sourceName || "Selected Tafsir book"}</footer>
+                </div>
+              </div>
+            ) : (
+              <div className="previewStage webStage">
+                <article className="webPreview">
+                  <div className="inlineEditNotice">EDITABLE PREVIEW · click the commentary text to edit</div>
+                  <small>VERIFIED COMMENTARY · {selectedSurah.name} {form.surahNumber}:{form.ayahNumber}</small>
+                  <h2
+                    className="editableTitle"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(event) => setForm((current) => ({ ...current, title: event.currentTarget.textContent?.trim() === "Explanation" ? "" : event.currentTarget.textContent?.trim() || "" }))}
+                  >{form.title || "Explanation"}</h2>
+                  <div
+                    className="previewContent editablePreview webCommentaryPreview"
+                    contentEditable
+                    suppressContentEditableWarning
+                    role="textbox"
+                    aria-label="Edit web preview commentary"
+                    onBlur={(event) => setForm((current) => ({ ...current, text: event.currentTarget.innerHTML }))}
+                    dangerouslySetInnerHTML={{ __html: previewHtml(form.text) }}
+                  />
+                  <footer>Source: {form.sourceName || "Selected Tafsir book"}</footer>
+                </article>
+              </div>
+            )}
+          </section>
 
           <label className="publish">
             <input
@@ -902,6 +1084,7 @@ export default function TafsirManager() {
                           surahName: selected.name,
                           ayahNumber: 1,
                           title: "",
+                          pronunciation: "",
                           text: "",
                         }));
                       }
@@ -933,7 +1116,7 @@ export default function TafsirManager() {
                     type="button"
                     key={ayahNumber}
                     className={form.surahNumber === librarySurah && form.ayahNumber === ayahNumber ? "surahRow selected" : "surahRow"}
-                    onClick={() => { setForm((current) => ({ ...current, surahNumber: librarySurah, surahName: SURAHS.find((item) => item.number === librarySurah)?.name || current.surahName, ayahNumber, id: "", text: "", title: "" })); void loadMobileCommentary(librarySurah, ayahNumber); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onClick={() => { setForm((current) => ({ ...current, surahNumber: librarySurah, surahName: SURAHS.find((item) => item.number === librarySurah)?.name || current.surahName, ayahNumber, id: "", text: "", title: "", pronunciation: "" })); void loadMobileCommentary(librarySurah, ayahNumber); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   >
                     <span>{ayahNumber}</span>
                     <div><b>Ayah {ayahNumber}</b><small>Open existing mobile Tafsir commentary</small></div>
@@ -1186,6 +1369,65 @@ export default function TafsirManager() {
           cursor: pointer;
         }
         .loadMobile { width: 100%; margin-top: 13px; background: #e4f3e9; color: #075b3b; border: 1px solid #bad8c5; }
+        .contentComposer { margin-top: 14px; }
+        .composerHead { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+        .composerHead b, .composerHead small { display: block; }
+        .composerHead>b { font-size: 12px; }
+        .composerHead small { margin-top: 4px; color: #718078; font-size: 10px; }
+        .composerHead nav { display: flex; gap: 5px; padding: 4px; border-radius: 11px; background: #edf4ef; }
+        .composerHead nav button { padding: 8px 11px; background: transparent; color: #527064; }
+        .composerHead nav button.active { background: #087a4d; color: #fff; box-shadow: 0 4px 10px rgba(8,122,77,.18); }
+        .formatGuide { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 9px; }
+        .formatGuide span { padding: 8px 9px; border: 1px solid #d9e7dd; border-radius: 9px; background: #f7fbf8; color: #63746b; font-size: 9px; line-height: 1.4; }
+        .formatGuide b { display: block; color: #087a4d; font-size: 10px; }
+        .previewStage { width: 100%; min-height: 520px; height: auto; padding: 24px; display: grid; place-items: start center; align-content: start; border: 1px solid #cdded2; border-radius: 14px; background: #edf4ef; overflow: visible; }
+        .appStage { gap: 12px; }
+        .previewStatus { width: min(560px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; border: 1px solid #c9ddcf; border-radius: 10px; background: #fff; }
+        .previewStatus b { color: #087a4d; font-size: 9px; letter-spacing: .7px; }
+        .previewStatus span { color: #718078; font-size: 9px; text-align: right; }
+        .inlineEditNotice { margin-bottom: 13px; padding: 8px 11px; border-radius: 9px; background: #e8f4ec; color: #087a4d; font-size: 9px; font-weight: 900; letter-spacing: .5px; }
+        .phonePreview { width: min(560px, 100%); height: auto; min-height: 470px; max-height: none; padding: 24px 22px 32px; border: 8px solid #17221d; border-radius: 32px; background: #fff; box-shadow: 0 18px 40px rgba(12,45,32,.18); overflow: visible; }
+        .phonePreview>small, .webPreview>small { color: #087a4d; font-size: 9px; font-weight: 900; letter-spacing: .8px; }
+        .phonePreview h2, .webPreview h2 { margin: 8px 0 13px; padding-bottom: 10px; border-bottom: 1px solid #dce8df; color: #173d2e; font-family: Georgia,serif; }
+        .phonePreview h2 { font-size: 23px; }
+        .webStage { place-items: start stretch; }
+        .webPreview { width: 100%; min-height: 440px; padding: 27px; border: 1px solid #d3e2d7; border-radius: 16px; background: #fff; }
+        .webPreview h2 { font-size: 27px; }
+        .previewContent { width: 100%; height: auto; max-height: none; color: #263f34; font: 16px/1.75 Arial,sans-serif; overflow: visible; overflow-wrap: anywhere; white-space: normal; }
+        .editablePreview { min-height: 180px; padding: 12px; border: 1px dashed transparent; border-radius: 11px; outline: none; cursor: text; transition: border-color .18s, background .18s, box-shadow .18s; }
+        .editablePreview:hover { border-color: #a8ceb5; background: #f8fcf9; }
+        .editablePreview:focus { border-color: #087a4d; background: #fff; box-shadow: 0 0 0 3px rgba(8,122,77,.12); }
+        .editableTitle { border-radius: 7px; outline: none; cursor: text; }
+        .editableTitle:hover { background: #f2f8f4; }
+        .editableTitle:focus { background: #fff8df; box-shadow: 0 0 0 3px rgba(195,155,45,.15); }
+        .appCommentaryPreview { font-size: 16px; line-height: 1.58; }
+        .appPreviewIntro { margin: 0 0 20px !important; color: #34473f; }
+        .appPreviewPoint { display: grid; grid-template-columns: 25px minmax(0,1fr); gap: 4px; align-items: start; margin-bottom: 14px; }
+        .appPreviewPoint>b { color: #34473f !important; font-size: 16px; line-height: 1.58; }
+        .appPreviewPoint>p { margin: 0 !important; color: #34473f; font-size: 16px; line-height: 1.58; }
+        .webCommentaryPreview { display: grid; gap: 9px; margin-top: 14px; }
+        .webPreviewIntro { margin: 0 0 4px !important; color: #33453d; font-size: 18px; line-height: 1.75; }
+        .webPreviewPoint { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 5px; align-items: start; }
+        .webPreviewPoint>b { color: #087846 !important; font-size: 17px; line-height: 1.7; }
+        .webPreviewPoint>p { margin: 0 !important; color: #33453d; font-size: 17px; line-height: 1.7; }
+        .previewContent :global(p) { margin: 8px 0 13px; }
+        .previewContent :global(h1), .previewContent :global(h2), .previewContent :global(h3), .previewContent :global(h4) { margin: 22px 0 10px; color: #075b3b; line-height: 1.3; }
+        .previewContent :global(h1) { font-size: 32px; }.previewContent :global(h2) { font-size: 27px; }.previewContent :global(h3) { font-size: 21px; }.previewContent :global(h4) { font-size: 17px; }
+        .previewContent :global(strong) { color: #173d2e; font-weight: 800; }
+        .previewContent :global(em) { display: inline; margin: 0; color: inherit; font-size: inherit; line-height: inherit; font-style: italic; }
+        .previewContent :global(ul), .previewContent :global(ol) { display: block; margin: 12px 0; padding-left: 30px; }
+        .previewContent :global(ul) { list-style-type: disc; }.previewContent :global(ol) { list-style-type: decimal; }
+        .previewContent :global(li) { display: list-item; margin: 6px 0; padding-left: 4px; }.previewContent :global(li::marker) { color: #087a4d; font-weight: 800; }.previewContent :global(li p) { display: inline; margin: 0; }
+        .previewContent :global(span[data-selection-style]) { display: inline; color: #075b3b; font-weight: 800; line-height: 1.3; }
+        .previewContent :global(span[data-selection-style="heading1"]) { font-size: 2em; }.previewContent :global(span[data-selection-style="heading2"]) { font-size: 1.65em; }.previewContent :global(span[data-selection-style="heading3"]) { font-size: 1.35em; }.previewContent :global(span[data-selection-style="heading4"]) { font-size: 1.12em; }
+        .previewContent :global(span[data-inline-quote]) { display: inline; padding: 2px 5px; border-radius: 5px; background: #fff8df; color: #5c5132; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+        .previewContent :global(span[data-inline-quote][data-tone="green"]) { background: #eaf8ef; color: #28533d; }.previewContent :global(span[data-inline-quote][data-tone="blue"]) { background: #edf6ff; color: #294b68; }.previewContent :global(span[data-inline-quote][data-tone="rose"]) { background: #fff0f2; color: #684047; }.previewContent :global(span[data-inline-quote][data-tone="red"]) { background: #fff0f0; color: #a12626; }
+        .previewContent :global(blockquote) { display: block; margin: 18px 0; padding: 18px 20px; border: 1px solid #ead99b; border-left: 5px solid #d0ad45; border-radius: 14px; background: #fff8df; color: #5c5132; box-shadow: 0 5px 18px rgba(74,62,26,.08); }.previewContent :global(blockquote p) { margin: 0; }
+        .previewContent :global(blockquote[data-tone="green"]) { border-color: #bfe5ce; border-left-color: #27a36a; background: #eaf8ef; color: #28533d; }.previewContent :global(blockquote[data-tone="blue"]) { border-color: #c5dcf1; border-left-color: #4285c5; background: #edf6ff; color: #294b68; }.previewContent :global(blockquote[data-tone="rose"]) { border-color: #f0cbd1; border-left-color: #ce6b78; background: #fff0f2; color: #684047; }.previewContent :global(blockquote[data-tone="red"]) { border-color: #f1c4c4; border-left-color: #d84343; background: #fff0f0; color: #742d2d; }
+        .previewContent :global(img) { display: block; max-width: 100%; height: auto; margin: 18px auto; border-radius: 14px; box-shadow: 0 5px 18px rgba(23,61,46,.18); }
+        .previewContent :global(a) { color: #087a4d; font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+        .previewContent :global(.emptyPreview) { color: #87948d; text-align: center; }
+        .phonePreview footer, .webPreview footer { margin-top: 22px; padding-top: 13px; border-top: 1px solid #dce8df; color: #668077; font-size: 10px; }
         .publish input {
           width: auto;
           margin: 0;
@@ -1273,6 +1515,12 @@ export default function TafsirManager() {
           .wide {
             grid-column: auto;
           }
+          .composerHead { align-items: stretch; flex-direction: column; }
+          .composerHead nav { display: grid; grid-template-columns: repeat(3, 1fr); }
+          .formatGuide { grid-template-columns: 1fr 1fr; }
+          .previewStage { padding: 13px; }
+          .previewStatus { align-items: flex-start; flex-direction: column; }
+          .previewStatus span { text-align: left; }
         }
       `}</style>
     </main>

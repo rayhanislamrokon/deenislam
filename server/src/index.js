@@ -2,10 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const { MongoClient, ObjectId } = require("mongodb");
 const { isIP } = require("node:net");
 const { OAuth2Client } = require("google-auth-library");
 const { createBooksRouter } = require("./books-admin");
+const { storeWebPImage, getStoredImage } = require("./s3-books");
 const { createAppAdminRouter } = require("./admin-panel");
 const { createRewardsRouter } = require("./rewards");
 const { createLifestyleRouter } = require("./lifestyle-admin");
@@ -22,8 +24,14 @@ const {
   startAdminAuditCleanup,
 } = require("./admin-audit");
 const { createDailyPrayerRouter } = require("./daily-prayer-admin");
+const { createHomeEventsRouter } = require("./home-events-admin");
+const { createContentEngagementAdminRouter } = require("./content-engagement-admin");
+const { createDailyFeaturedContentRouter } = require("./daily-featured-content-admin");
 const { createAboutContentRouter } = require("./about-content-admin");
 const { createPrivacyContentRouter } = require("./privacy-content-admin");
+const { createTermsContentRouter } = require("./terms-content-admin");
+const { createHelpContentRouter } = require("./help-content-admin");
+const { createContactSupportRouter } = require("./contact-support");
 const { createNotificationRouter } = require("./notification-admin");
 const { createPasswordResetRouter } = require("./password-reset");
 const { createAccountPasswordRouter } = require("./account-password");
@@ -69,6 +77,38 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "5mb" }));
+app.put(
+  "/api/media-upload/:token",
+  express.raw({ type: ["image/*", "application/octet-stream"], limit: "10mb" }),
+  async (req, res) => {
+    try {
+      const data = await storeWebPImage(req.params.token, req.body);
+      res.status(201).json({ data, message: "Image converted to WebP and stored in S3." });
+    } catch (error) {
+      const rawMessage = String(error?.message || "");
+      const message = error?.name === "TokenExpiredError"
+        ? "This image upload link expired. Choose the image again."
+        : /credentials|credential provider/i.test(rawMessage)
+          ? "AWS S3 credentials are missing. Add AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to server/.env, save the file, and restart the backend."
+          : rawMessage || "Image upload failed.";
+      res.status(error?.name === "TokenExpiredError" ? 410 : 400).json({ message });
+    }
+  },
+);
+app.get(/^\/api\/media\/(.+)$/, async (req, res) => {
+  try {
+    const key = decodeURIComponent(String(req.params[0] || ""));
+    const object = await getStoredImage(key);
+    res.set("Content-Type", object.ContentType || "image/webp");
+    res.set("Cache-Control", object.CacheControl || "public, max-age=31536000, immutable");
+    if (object.ETag) res.set("ETag", object.ETag);
+    const bytes = await object.Body.transformToByteArray();
+    res.send(Buffer.from(bytes));
+  } catch (error) {
+    if (error?.name !== "NoSuchKey") console.error("S3 media read failed:", error);
+    res.status(404).json({ message: "Image not found." });
+  }
+});
 let users,
   surahs,
   books,
@@ -91,7 +131,9 @@ let users,
   dailyPrayerPlans,
   pushTokens,
   appNotifications,
+  notificationDeliveries,
   billingTransactions;
+let homeEvents;
 const requestDeviceId = (req) =>
   String(
     req.body?.deviceId || req.query?.deviceId || req.get("x-device-id") || "",
@@ -164,6 +206,7 @@ function optionalUserId(req) {
   if (!token) return null;
   try {
     const p = jwt.verify(token, jwtSecret);
+    if (p.accountStatus === "deleted") return null;
     return p.sub && ObjectId.isValid(p.sub) ? new ObjectId(p.sub) : null;
   } catch {
     return null;
@@ -180,9 +223,11 @@ const publicUser = (u) => ({
     id: u._id.toString(),
     name: u.name,
     email: u.email,
+    accountStatus: u.accountStatus || "active",
+    deletionRequestedAt: u.deletionRequestedAt || null,
   }),
   createToken = (u) =>
-    jwt.sign({ sub: u._id.toString(), email: u.email }, jwtSecret, {
+    jwt.sign({ sub: u._id.toString(), email: u.email, accountStatus: u.accountStatus || "active" }, jwtSecret, {
       expiresIn: "30d",
     });
 app.get("/health", (_q, s) => s.json({ ok: true }));
@@ -812,7 +857,7 @@ app.post("/api/analytics/events", async (req, res) => {
   try {
     const type = String(req.body.type || ""),
       deviceId = requestDeviceId(req);
-    if (!["ad_impression", "ad_click", "ad_revenue"].includes(type))
+    if (!["ad_impression", "ad_click", "ad_revenue", "content_view", "content_heartbeat", "content_complete"].includes(type))
       return res.status(400).json({ message: "Unsupported analytics event." });
     if (!deviceId)
       return res.status(400).json({ message: "Device ID is required." });
@@ -844,6 +889,14 @@ app.post("/api/analytics/events", async (req, res) => {
         adFormat: String(req.body.adFormat || "").slice(0, 40),
         createdAt: new Date(),
       };
+    if (type.startsWith("content_")) {
+      const section = String(req.body.section || "other").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 50) || "other";
+      event.section = section;
+      event.contentId = String(req.body.contentId || section).trim().slice(0, 180);
+      event.contentTitle = String(req.body.contentTitle || req.body.title || section).trim().slice(0, 180);
+      event.platform = String(req.body.platform || (deviceId.startsWith("web:") ? "web" : "app")).trim().slice(0, 20);
+      event.durationSeconds = type === "content_heartbeat" ? Math.max(1, Math.min(60, Math.floor(Number(req.body.durationSeconds) || 10))) : 0;
+    }
     if (type === "ad_revenue") {
       const value = Number(req.body.value),
         currency = String(req.body.currency || "")
@@ -1046,12 +1099,19 @@ app.use(
     () => ({ duas: duaContent, surahs, lifestyle: lifestyleContent }),
   ),
 );
+app.use(createHomeEventsRouter(() => homeEvents, jwtSecret));
+app.use(createContentEngagementAdminRouter(() => analyticsEvents, jwtSecret));
+app.use(createDailyFeaturedContentRouter(() => appSettings, jwtSecret, { surahs: () => surahs, hadith: () => hadithContent }));
 app.use(createAboutContentRouter(() => appSettings, jwtSecret));
 app.use(createPrivacyContentRouter(() => appSettings, jwtSecret));
+app.use(createTermsContentRouter(() => appSettings, jwtSecret));
+app.use(createHelpContentRouter(() => appSettings, jwtSecret));
+app.use(createContactSupportRouter());
 app.use(
   createNotificationRouter(
     () => pushTokens,
     () => appNotifications,
+    () => notificationDeliveries,
     jwtSecret,
   ),
 );
@@ -1067,7 +1127,7 @@ app.use(
   }),
 );
 app.use(createAccountPasswordRouter(() => users, jwtSecret));
-app.use(createDeletionApprovalRouter(() => deletionRequests, jwtSecret, port));
+app.use(createDeletionApprovalRouter(() => deletionRequests, () => users, jwtSecret, port));
 app.use(
   createAppAdminRouter(
     () => appSettings,
@@ -1396,6 +1456,8 @@ app.post("/api/auth/login", async (req, res) => {
       !(await bcrypt.compare(password, user.passwordHash))
     )
       return res.status(401).json({ message: "Incorrect email or password." });
+    if (user.accountStatus === "deleted")
+      return res.json({ token: createToken(user), user: publicUser(user) });
     if (user.banned)
       return res
         .status(403)
@@ -1444,6 +1506,8 @@ app.post("/api/auth/google", async (req, res) => {
     const email = p.email.toLowerCase();
     let user = await users.findOne({ $or: [{ googleSub: p.sub }, { email }] });
     if (user) {
+      if (user.accountStatus === "deleted")
+        return res.json({ token: createToken(user), user: publicUser(user) });
       if (user.banned)
         return res
           .status(403)
@@ -1539,6 +1603,8 @@ app.get("/api/account/profile", async (req, res) => {
           name: 1,
           email: 1,
           authProvider: 1,
+          accountStatus: 1,
+          deletionRequestedAt: 1,
           createdAt: 1,
           lastLoginAt: 1,
           deviceIds: 1,
@@ -1598,6 +1664,8 @@ app.get("/api/account/profile", async (req, res) => {
         name: user.name || "",
         email: user.email || "",
         authProvider: user.authProvider || "email",
+        accountStatus: user.accountStatus || "active",
+        deletionRequestedAt: user.deletionRequestedAt || null,
         createdAt: user.createdAt || null,
         lastLoginAt: user.lastLoginAt || null,
         lastOpenedAt,
@@ -1633,33 +1701,84 @@ app.delete("/api/account", async (req, res) => {
         .json({ message: "Please sign in to delete your account." });
     const user = await users.findOne(
       { _id: userId },
-      { projection: { _id: 1, email: 1 } },
+      { projection: { _id: 1, name: 1, email: 1, accountStatus: 1 } },
     );
     if (!user) return res.status(404).json({ message: "Account not found." });
-    await Promise.all([
-      users.deleteOne({ _id: userId }),
-      tasbihProgress.deleteMany({ userId }),
-      rewardAccounts.deleteMany({ ownerKey: "user:" + userId.toString() }),
-      rewardedAdEvents.deleteMany({ ownerKey: "user:" + userId.toString() }),
-      billingTransactions.updateMany(
-        { userId },
-        { $set: { userId: null, userDeletedAt: new Date() } },
-      ),
-      deviceInstallations.updateMany(
-        { userId },
-        { $unset: { userId: "" }, $set: { lastSeenAt: new Date() } },
-      ),
-      analyticsEvents.updateMany({ userId }, { $set: { userId: null } }),
-      pushTokens.deleteMany({ userId: userId.toString() }),
-    ]);
+    const now = new Date();
+    let request = await deletionRequests.findOne(
+      { resourceType: "user-account", userId: userId.toString() },
+      { sort: { createdAt: -1 } },
+    );
+    if (request && ["rejected", "restored"].includes(request.status)) {
+      await deletionRequests.updateOne(
+        { _id: request._id },
+        {
+          $set: { status: "pending", createdAt: now, userName: user.name || "", userEmail: user.email || "" },
+          $unset: { reviewedAt: "", reviewedBy: "", completedAt: "", restoredAt: "", result: "" },
+          $push: { activityHistory: { action: "requested", at: now, by: user.email || userId.toString() } },
+        },
+      );
+      request = { ...request, status: "pending", createdAt: now };
+    }
+    if (!request) {
+      const record = {
+        path: "/api/account",
+        resourceType: "user-account",
+        resourceId: userId.toString(),
+        userId: userId.toString(),
+        userName: user.name || "",
+        userEmail: user.email || "",
+        requestedBy: user.email || userId.toString(),
+        requestedByRole: "user",
+        reason: "Account deletion requested from the DeenIslam mobile app.",
+        status: "pending",
+        manualReviewOnly: true,
+        createdAt: now,
+        activityHistory: [{ action: "requested", at: now, by: user.email || userId.toString() }],
+      };
+      const result = await deletionRequests.insertOne(record);
+      request = { ...record, _id: result.insertedId };
+    }
+    await users.updateOne(
+      { _id: userId },
+      { $set: { accountStatus: "deleted", deletionRequestedAt: now, deletionRequestId: request._id, updatedAt: now } },
+    );
+    try {
+      const smtpUser = process.env.SMTP_USER, smtpPass = process.env.SMTP_PASS, smtpHost = process.env.SMTP_HOST;
+      if (smtpUser && smtpPass && smtpHost) {
+        const transporter = nodemailer.createTransport({ host: smtpHost, port: Number(process.env.SMTP_PORT || 587), secure: String(process.env.SMTP_SECURE).toLowerCase() === "true", auth: { user: smtpUser, pass: smtpPass } });
+        const from = process.env.MAIL_FROM || `DeenIslam <${smtpUser}>`, adminEmail = process.env.SUPPORT_EMAIL || process.env.ADMIN_EMAIL || smtpUser;
+        const safeName = String(user.name || "DeenIslam User").replace(/[<>&]/g, "");
+        await Promise.all([
+          transporter.sendMail({ from, to: user.email, subject: "Your DeenIslam account deletion request", text: "Your account deletion request was received. Your account is now disabled and your data has not been immediately removed. The request is available for administrator review.", html: `<div style="font-family:Arial;background:#eef5f0;padding:28px"><div style="max-width:600px;margin:auto;background:#fff;border-radius:18px;overflow:hidden"><div style="padding:28px;background:#075b3b;color:#fff"><b style="color:#f0c95e">DEEN ISLAM</b><h1>Deletion request received</h1></div><div style="padding:28px;color:#334f43"><p>Assalamu Alaikum ${safeName},</p><p>Your account deletion request has been received. Your account is now disabled, but your database information has <strong>not been immediately erased</strong>.</p><p>An administrator can review this request from the Deletion Requests panel.</p><p style="padding:14px;border-radius:10px;background:#f5f8f5">Account: <strong>${user.email}</strong><br>Request ID: ${request._id}</p></div></div></div>` }),
+          transporter.sendMail({ from, to: adminEmail, replyTo: user.email, subject: `[DeenIslam] Account deletion request - ${user.email}`, text: `User ${user.name || ""} (${user.email}) requested account deletion. Request ID: ${request._id}. Review it in the Admin Panel.`, html: `<div style="font-family:Arial;background:#eef5f0;padding:28px"><div style="max-width:600px;margin:auto;background:#fff;border-radius:18px;overflow:hidden"><div style="padding:28px;background:#7e241d;color:#fff"><b>DEEN ISLAM ADMIN</b><h1>Account deletion request</h1></div><div style="padding:28px;color:#334f43"><p>A user requested account deletion.</p><p><strong>Name:</strong> ${safeName}<br><strong>Email:</strong> ${user.email}<br><strong>User ID:</strong> ${userId}<br><strong>Request ID:</strong> ${request._id}</p><p>The account has been disabled. Review the request in the Admin Panel → Deletion Requests.</p></div></div></div>` }),
+        ]);
+      }
+    } catch (mailError) { console.error("Account deletion email failed:", mailError?.message || mailError); }
     res.json({
-      message: "Your account and linked personal data have been deleted.",
+      message: "Your account deletion request was received. The account is now disabled and no data was immediately erased.",
+      data: { requestId: request._id.toString(), status: "pending", accountStatus: "deleted" },
     });
   } catch (error) {
     console.error("Account deletion failed:", error);
     res
       .status(500)
       .json({ message: "Unable to delete your account right now." });
+  }
+});
+app.get("/api/account/deletion-status", async (req, res) => {
+  try {
+    const raw = String(req.get("authorization") || "").replace(/^Bearer\s+/i, "");
+    if (!raw) return res.status(401).json({ message: "Please sign in to view this request." });
+    const payload = jwt.verify(raw, jwtSecret);
+    if (!payload.sub || !ObjectId.isValid(payload.sub)) return res.status(401).json({ message: "Invalid account session." });
+    const userId = new ObjectId(payload.sub);
+    const user = await users.findOne({ _id: userId }, { projection: { name: 1, email: 1, accountStatus: 1, deletionRequestedAt: 1 } });
+    if (!user) return res.status(404).json({ message: "Account not found." });
+    const request = await deletionRequests.findOne({ resourceType: "user-account", userId: userId.toString() }, { sort: { createdAt: -1 } });
+    res.json({ data: { accountStatus: user.accountStatus || "active", requestStatus: request?.status || null, requestedAt: request?.createdAt || user.deletionRequestedAt || null, reviewedAt: request?.reviewedAt || request?.completedAt || null, name: user.name || "", email: user.email || "", sessionToken: user.accountStatus === "active" ? createToken(user) : null } });
+  } catch {
+    res.status(401).json({ message: "Your account session has expired. Please sign in again." });
   }
 });
 async function start() {
@@ -1687,7 +1806,9 @@ async function start() {
   dailyPrayerPlans = db.collection("daily_prayer_plans");
   pushTokens = db.collection("push_tokens");
   appNotifications = db.collection("app_notifications");
+  notificationDeliveries = db.collection("notification_deliveries");
   billingTransactions = db.collection("billing_transactions");
+  homeEvents = db.collection("home_events");
   await users.createIndex({ email: 1 }, { unique: true });
   await users.createIndex({ googleSub: 1 }, { unique: true, sparse: true });
   await surahs.createIndex({ number: 1 }, { unique: true });
@@ -1754,6 +1875,7 @@ async function start() {
   );
   await analyticsEvents.createIndex({ createdAt: -1, type: 1 });
   await analyticsEvents.createIndex({ deviceId: 1, createdAt: -1 });
+  await analyticsEvents.createIndex({ type: 1, section: 1, createdAt: -1 });
   await analyticsEvents.createIndex(
     { eventId: 1 },
     { unique: true, sparse: true },
@@ -1776,9 +1898,18 @@ async function start() {
   await adminAuditLogs.createIndex({ email: 1, createdAt: -1 });
   await dailyPrayerPlans.createIndex({ date: 1 }, { unique: true });
   await dailyPrayerPlans.createIndex({ published: 1, date: -1 });
+  await homeEvents.createIndex({ published: 1, order: 1, eventDate: 1 });
   await pushTokens.createIndex({ deviceId: 1 }, { unique: true });
   await pushTokens.createIndex({ active: 1, updatedAt: -1 });
   await appNotifications.createIndex({ createdAt: -1 });
+  await appNotifications.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  await appNotifications.updateMany(
+    { expiresAt: { $exists: false }, createdAt: { $type: "date" } },
+    [{ $set: { expiresAt: { $dateAdd: { startDate: "$createdAt", unit: "day", amount: 30 } } } }],
+  );
+  await notificationDeliveries.createIndex({ noticeId: 1, deviceId: 1 }, { unique: true });
+  await notificationDeliveries.createIndex({ deviceId: 1, updatedAt: -1 });
+  await notificationDeliveries.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   startAdminAuditCleanup(() => adminAuditLogs, {
     retentionDays: 30,
     cleanupEveryDays: 15,

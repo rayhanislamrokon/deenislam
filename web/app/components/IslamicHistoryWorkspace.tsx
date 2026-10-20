@@ -8,6 +8,7 @@ type Era = {
   summary: string;
   topics: string[];
   chapterContent?: string[];
+  chapterAbout?: string[];
   chapterReferences?: string[];
 };
 const API = (
@@ -320,6 +321,9 @@ export function IslamicHistoryWorkspace({
             chapterContent: (item.chapters || []).map(
               (chapter: any) => chapter.content || "",
             ),
+            chapterAbout: (item.chapters || []).map(
+              (chapter: any) => chapter.about || "",
+            ),
             chapterReferences: (item.chapters || []).map(
               (chapter: any) => chapter.reference || "",
             ),
@@ -415,8 +419,8 @@ export function IslamicHistoryWorkspace({
           <aside>
             <b>About this chapter</b>
             <p>
-              This topic belongs to the {selected.title} period and is part of
-              the same Islamic History curriculum available in the mobile app.
+              {selected.chapterAbout?.[chapter] ||
+                `This topic belongs to the ${selected.title} period and is part of the same Islamic History curriculum available in the mobile app.`}
             </p>
           </aside>
         </article>
@@ -494,6 +498,9 @@ export function IslamicHistoryWorkspace({
     );
   return (
     <div className='history-library'>
+      <a className='sahaba-back' href='/'>
+        <b>‹</b> Back to Home
+      </a>
       <div className='feature-hero history-hero'>
         <span>FROM CREATION TO TODAY</span>
         <h2>Explore Islamic History</h2>
@@ -534,6 +541,13 @@ export function IslamicHistoryWorkspace({
           </button>
         ))}
       </div>
+      {!shown.length ? (
+        <div className='history-empty'>
+          <span>⌕</span>
+          <h2>No historical period found</h2>
+          <p>Try searching by an era, event, chapter or timeline.</p>
+        </div>
+      ) : null}
       <small className='history-note'>
         Historical articles should be reviewed against reliable primary and
         scholarly sources before publication.

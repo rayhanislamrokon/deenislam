@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
+const { deleteStoredImages } = require("./s3-books");
 const clean = (v, n = 30000) =>
   String(v ?? "")
     .trim()
@@ -119,7 +120,11 @@ function createDuaRouter(getCollection, adminKey, jwtSecret) {
     try {
       if (!ObjectId.isValid(req.params.id))
         return res.status(400).json({ message: "Invalid Dua id." });
-      await getCollection().deleteOne({ _id: new ObjectId(req.params.id) });
+      const id = new ObjectId(req.params.id);
+      const item = await getCollection().findOne({ _id: id });
+      if (!item) return res.status(404).json({ message: "Dua not found." });
+      await deleteStoredImages(item);
+      await getCollection().deleteOne({ _id: id });
       res.json({ message: "Dua deleted." });
     } catch (e) {
       res.status(500).json({ message: "Unable to delete Dua." });

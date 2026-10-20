@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
+const { deleteReplacedImages, deleteStoredImages } = require("./s3-books");
 
 const clean = (v, n = 50000) =>
   String(v ?? "")
@@ -739,6 +740,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
               ayahNumber,
               surahName: commentary.surahName,
               title: commentary.title || "",
+              pronunciation: commentary.pronunciation || "",
               text: commentary.text,
               sourceName: commentary.sourceName,
               authorName: commentary.authorName,
@@ -889,6 +891,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
         ayahNumber,
         surahName: clean(b.surahName, 100) || `Surah ${surahNumber}`,
         title: clean(b.title, 300),
+        pronunciation: clean(b.pronunciation, 2000),
         text,
         source: clean(b.source, 500),
         published: b.published !== false,
@@ -964,6 +967,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
           ayahNumber,
           surahName: clean(b.surahName, 100) || `Surah ${surahNumber}`,
           title: clean(b.title, 300),
+          pronunciation: clean(b.pronunciation, 2000),
           text,
           source: clean(b.source, 500),
           published: b.published !== false,
@@ -999,6 +1003,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
       const b = req.body || {};
       const updateData = {
         title: clean(b.title, 300),
+        pronunciation: clean(b.pronunciation, 2000),
         text: clean(b.text, 50000),
         sourceName: clean(b.sourceName, 200),
         authorName: clean(b.authorName, 200),
@@ -1096,6 +1101,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
         language: lang(b.language || "bn"),
         description: clean(b.description, 1000),
         coverImageUrl: clean(b.coverImageUrl, 2000),
+        coverImageKey: clean(b.coverImageKey, 1000),
         order: Math.max(1, Number(b.order) || 1),
         published: b.published !== false,
         createdAt: new Date(),
@@ -1118,6 +1124,8 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
         return res.status(400).json({ message: "Invalid Source ID." });
       const id = new ObjectId(req.params.id);
       const b = req.body || {};
+      const current = await getCollection().findOne({ _id: id, recordType: "source" });
+      if (!current) return res.status(404).json({ message: "Tafsir source not found." });
       const updateData = {
         name: clean(b.name, 200),
         author_name: clean(b.author_name, 200),
@@ -1125,6 +1133,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
         language: lang(b.language || "bn"),
         description: clean(b.description, 1000),
         coverImageUrl: clean(b.coverImageUrl, 2000),
+        coverImageKey: clean(b.coverImageKey, 1000),
         order: Math.max(1, Number(b.order) || 1),
         published: b.published !== false,
         updatedAt: new Date(),
@@ -1135,6 +1144,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
         { _id: id, recordType: "source" },
         { $set: updateData },
       );
+      await deleteReplacedImages(current, updateData);
       res.json({ message: "Tafsir source updated." });
     } catch (e) {
       res.status(500).json({ message: "Unable to update Tafsir source." });
@@ -1164,6 +1174,7 @@ function createTafsirRouter(getCollection, adminKey, jwtSecret) {
         });
       }
 
+      await deleteStoredImages(current);
       await getCollection().deleteOne({ _id: id });
       res.json({ message: "Tafsir source deleted." });
     } catch (e) {

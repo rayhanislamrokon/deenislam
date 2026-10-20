@@ -1,5 +1,6 @@
 ﻿const express = require("express");
 const jwt = require("jsonwebtoken");
+const { deleteReplacedImages, deleteStoredImages } = require("./s3-books");
 
 const TYPES = [
   "dua",
@@ -255,6 +256,7 @@ function createDailyPrayerRouter(
           .status(400)
           .json({ message: "Add at least one daily task." });
       const actor = req.dailyPrayerAdmin?.email || "";
+      const existing = await getCollection().findOne({ date });
       await getCollection().updateOne(
         { date },
         {
@@ -264,6 +266,7 @@ function createDailyPrayerRouter(
         { upsert: true },
       );
       const item = await getCollection().findOne({ date });
+      await deleteReplacedImages(existing, item);
       res.json({ data: publicPlan(item), message: "Daily Prayer plan saved." });
     } catch (error) {
       console.error(error);
@@ -273,11 +276,13 @@ function createDailyPrayerRouter(
   router.delete("/api/admin/daily-prayer/:date", async (req, res) => {
     try {
       const date = String(req.params.date || "");
-      const result = await getCollection().deleteOne({ date });
-      if (!result.deletedCount)
+      const item = await getCollection().findOne({ date });
+      if (!item)
         return res
           .status(404)
           .json({ message: "Daily Prayer plan not found." });
+      await deleteStoredImages(item);
+      await getCollection().deleteOne({ date });
       res.json({ message: "Daily Prayer plan deleted.", data: { date } });
     } catch (error) {
       res.status(500).json({ message: "Unable to delete Daily Prayer plan." });

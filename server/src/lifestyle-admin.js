@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
+const { deleteReplacedImages, deleteStoredImages } = require("./s3-books");
 
 const clean = (value, max = 1000) =>
   String(value ?? "")
@@ -266,6 +267,11 @@ function createLifestyleRouter(getCollection, adminKey, jwtSecret) {
     try {
       if (!ObjectId.isValid(req.params.id))
         return res.status(400).json({ message: "Invalid chapter ID." });
+      const collection = getCollection(),
+        id = new ObjectId(req.params.id),
+        existing = await collection.findOne({ _id: id });
+      if (!existing)
+        return res.status(404).json({ message: "Chapter not found." });
       const language = languageCode(req.body.language),
         item = payload(req.body),
         updates =
@@ -275,13 +281,14 @@ function createLifestyleRouter(getCollection, adminKey, jwtSecret) {
                 ["translations." + language]: localizedPayload(req.body),
                 updatedAt: new Date(),
               },
-        result = await getCollection().findOneAndUpdate(
-          { _id: new ObjectId(req.params.id) },
+        result = await collection.findOneAndUpdate(
+          { _id: id },
           { $set: updates },
           { returnDocument: "after" },
         );
       if (!result)
         return res.status(404).json({ message: "Chapter not found." });
+      await deleteReplacedImages(existing, result);
       res.json({ data: publicItem(result, "en", true) });
     } catch (e) {
       res.status(500).json({ message: "Unable to update chapter." });
@@ -304,6 +311,7 @@ function createLifestyleRouter(getCollection, adminKey, jwtSecret) {
       return res
         .status(409)
         .json({ message: "Delete the chapters inside this category first." });
+    await deleteStoredImages(existing);
     await collection.deleteOne({ _id: existing._id });
     res.json({
       message:

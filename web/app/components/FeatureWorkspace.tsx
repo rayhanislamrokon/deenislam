@@ -8,6 +8,15 @@ import { DeenIcon } from "./DeenIcon";
 const API = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 ).replace(/\/$/, "");
+const descriptionText = (value = "") =>
+  value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
 type Props = { feature: string; onBack: () => void; language?: string };
 type Surah = {
   number: number;
@@ -48,7 +57,8 @@ type AmolBook = {
   description?: string;
   content?: string;
   coverImageUrl?: string;
-  pages?: Array<{ number: number; text?: string; markdown?: string }>;
+  sourceUrl?: string;
+  pages?: Array<{ number: number; title?: string; reference?: string; text?: string; markdown?: string }>;
 };
 type LibraryBook = {
   id: string;
@@ -60,6 +70,17 @@ type LibraryBook = {
   coverImageUrl?: string;
   sourceUrl?: string;
   publicDomain?: boolean;
+  description?: string;
+  content?: string;
+  pages?: Array<{
+    number: number;
+    title?: string;
+    reference?: string;
+    text?: string;
+    markdown?: string;
+    pages?: Array<{ number: number; originalPage?: number; text?: string; markdown?: string }>;
+  }>;
+  extraction?: { sourceFile?: string; method?: string };
 };
 type LifestyleItem = {
   id: string;
@@ -239,11 +260,20 @@ export function FeatureWorkspace({ feature, onBack, language = "en" }: Props) {
       {showHeader && (
         <header>
           <button onClick={onBack} aria-label='Back to home'>
-            ←
+            ‹
           </button>
           <div>
-            <small>{quran ? "QURAN KAREEM" : "DEEN ISLAM WEB"}</small>
-            <h1>{quran ? "Al Quran" : feature}</h1>
+            {quran ? (
+              <>
+                <h1>Al Quran</h1>
+                <small>QURAN KAREEM</small>
+              </>
+            ) : (
+              <>
+                <small>DEEN ISLAM WEB</small>
+                <h1>{feature}</h1>
+              </>
+            )}
           </div>
           <label>
             <span>⌕</span>
@@ -259,6 +289,7 @@ export function FeatureWorkspace({ feature, onBack, language = "en" }: Props) {
         <Feature
           feature={feature}
           query={q}
+          onQueryChange={setQ}
           language={language}
           onBack={onBack}
         />
@@ -269,11 +300,13 @@ export function FeatureWorkspace({ feature, onBack, language = "en" }: Props) {
 function Feature({
   feature,
   query,
+  onQueryChange,
   language,
   onBack,
 }: {
   feature: string;
   query: string;
+  onQueryChange: (value: string) => void;
   language: string;
   onBack: () => void;
 }) {
@@ -282,7 +315,7 @@ function Feature({
   if (feature === "Islamic History")
     return <IslamicHistoryWorkspace query={query} language={language} />;
   if (feature === "Quran")
-    return <Quran tafsir={false} query={query} language={language} />;
+    return <Quran tafsir={false} query={query} onQueryChange={onQueryChange} language={language} />;
   if (feature === "Hadith")
     return <HadithWorkspace query={query} language={language} />;
   if (feature === "Masala") return <Duas query={query} language={language} />;
@@ -307,7 +340,109 @@ function Feature({
     return <IslamicBooks query={query} language={language} />;
   if (feature === "Sahaba")
     return <SahabaLibrary query={query} language={language} onBack={onBack} />;
+  if (feature === "About Us")
+    return <ManagedInfoPage endpoint='/api/about-content' fallbackTitle='About DeenIslam' fallbackSubtitle='Your daily Islamic companion' />;
+  if (feature === "Privacy Policy")
+    return <ManagedInfoPage endpoint='/api/privacy-content' fallbackTitle='Your Privacy Matters' fallbackSubtitle='Clear information about your data and choices' />;
+  if (feature === "Terms & Conditions")
+    return <ManagedInfoPage endpoint='/api/terms-content' fallbackTitle='Terms & Conditions' fallbackSubtitle='Guidelines for using DeenIslam' />;
+  if (feature === "Help Center")
+    return <ManagedInfoPage endpoint='/api/help-content' fallbackTitle='Help Center' fallbackSubtitle='Answers, guidance and support for DeenIslam' />;
+  if (["Help Center", "Contact", "Privacy Policy", "Terms & Conditions"].includes(feature))
+    return <SupportContent feature={feature} />;
   return <Knowledge title={feature} query={query} />;
+}
+
+type ManagedInfoContent = { title: string; subtitle: string; body: string };
+
+function ManagedInfoPage({ endpoint, fallbackTitle, fallbackSubtitle }: { endpoint: string; fallbackTitle: string; fallbackSubtitle: string }) {
+  const [content, setContent] = useState<ManagedInfoContent>({ title: fallbackTitle, subtitle: fallbackSubtitle, body: "" });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`${API}${endpoint}?refresh=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } });
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) throw new Error("Help content service is not available yet. Please restart the backend server.");
+      const result = await response.json();
+      if (!response.ok || !result.data) throw new Error(result.message || "Unable to load content");
+      setContent({ title: result.data.title || fallbackTitle, subtitle: result.data.subtitle || fallbackSubtitle, body: result.data.body || "" });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to load content");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void load(); }, [endpoint]);
+
+  return <div className='support-page legal-page managed-info-page'>
+    <section className='support-hero'><small>ADMIN MANAGED CONTENT</small><h1>{content.title}</h1><p>{content.subtitle}</p></section>
+    <article className='support-card'>
+      {loading ? <p className='managed-info-status'>Loading latest content…</p> : error ? <div className='managed-info-error'><p>{error}</p><button type='button' onClick={()=>void load()}>Try Again</button></div> : <div className='managed-rich-content' dangerouslySetInnerHTML={{ __html: content.body }} />}
+    </article>
+  </div>;
+}
+
+function SupportContent({ feature }: { feature: string }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const sendMessage = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSending(true);setNotice("");setSent(false);
+    try {
+      const response = await fetch(`${API}/api/contact-support`, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,subject,message,source:"Website",website:""})});
+      const contentType=response.headers.get("content-type")||"";
+      if(!contentType.includes("application/json"))throw new Error("Contact service is unavailable. Please try again later.");
+      const result=await response.json();
+      if(!response.ok)throw new Error(result.message||"Unable to send your message.");
+      setSent(true);setNotice(result.message||"Your message has been sent successfully.");setSubject("");setMessage("");
+    } catch(reason) {setNotice(reason instanceof Error?reason.message:"Unable to send your message.");}
+    finally {setSending(false);}
+  };
+
+  if (feature === "Help Center") {
+    return <div className='support-page'>
+      <section className='support-hero'><small>DEEN ISLAM SUPPORT</small><h1>How can we help?</h1><p>Find quick answers or contact our support team.</p></section>
+      <section className='support-card'><h2>Frequently Asked Questions</h2>
+        <details><summary>How do I change the Quran translation or reciter?</summary><p>Open Settings, then select Language or Quran Reciter and choose your preferred option.</p></details>
+        <details><summary>How are prayer times calculated?</summary><p>Prayer times use your selected location and calculation settings. Allow location access for the most relevant results.</p></details>
+        <details><summary>How do I save Quran verses or Islamic content?</summary><p>Use the bookmark button beside supported content, then open Bookmarks from the main menu.</p></details>
+        <details><summary>Can I use downloaded content offline?</summary><p>Content saved through Downloads remains available from the Downloads section when supported by your device.</p></details>
+      </section>
+      <section className='support-contact-strip'><div><h2>Still need help?</h2><p>Our support team is available by email.</p></div><a href='mailto:info@deenislam.com'>Email Support</a></section>
+    </div>;
+  }
+
+  if (feature === "Contact") {
+    return <div className='support-page contact-page'>
+      <section className='support-hero contact-hero'><div><small>CONTACT DEEN ISLAM</small><h1>We would love to hear from you</h1><p>Send feedback, report an issue or ask for assistance.</p></div><span aria-hidden='true'>✉</span></section>
+      <div className='support-contact-grid'>
+        <section className='support-card contact-info'><div><small>GET IN TOUCH</small><h2>Contact information</h2><p>Our support team is ready to help with your questions, feedback and technical issues.</p></div><div className='contact-methods'><a href='mailto:info@deenislam.com'><i>✉</i><span><small>EMAIL US</small><b>info@deenislam.com</b></span></a><a href='tel:+15551234567'><i>☎</i><span><small>CALL US</small><b>+1 (555) 123-4567</b></span></a><div><i>⌖</i><span><small>LOCATION</small><b>New York, NY, USA</b></span></div></div><aside><b>Typical response time</b><span>We usually respond within 24–48 hours.</span></aside></section>
+        <form className='support-card support-form contact-form' onSubmit={sendMessage}><div><small>SUPPORT REQUEST</small><h2>Send a message</h2><p>Complete the form and your message will be delivered securely to our team.</p></div><div className='contact-form-row'><label>Name<input required minLength={2} placeholder='Your full name' value={name} onChange={event=>setName(event.target.value)} /></label><label>Email address<input required type='email' placeholder='you@example.com' value={email} onChange={event=>setEmail(event.target.value)} /></label></div><label>Subject<input required minLength={3} placeholder='How can we help?' value={subject} onChange={event=>setSubject(event.target.value)} /></label><label>Message<textarea required minLength={10} rows={5} placeholder='Describe your question or issue' value={message} onChange={event=>setMessage(event.target.value)} /></label>{notice&&<p className={`contact-notice ${sent?"success":"error"}`}>{notice}</p>}<button type='submit' disabled={sending}>{sending?"Sending…":"Send Message"}<span aria-hidden='true'>→</span></button></form>
+      </div>
+    </div>;
+  }
+
+  return <div className='support-page legal-page'>
+    <section className='support-hero'><small>DEEN ISLAM LEGAL</small><h1>{feature}</h1><p>Last updated: October 17, 2026</p></section>
+    <article className='support-card'>
+      <h2>Acceptance of terms</h2><p>By using Deen Islam, you agree to these terms and applicable laws. If you do not agree, please discontinue use of the service.</p>
+      <h2>Service and Islamic content</h2><p>Deen Islam provides educational and worship-support resources. Content is not a substitute for advice from a qualified Islamic scholar, legal professional or medical professional.</p>
+      <h2>Acceptable use</h2><p>You may not misuse the service, attempt unauthorized access, disrupt its operation, scrape protected content or use it for unlawful or harmful activities.</p>
+      <h2>Accounts and availability</h2><p>You are responsible for your account security. Features may change, be interrupted or be withdrawn as the service is improved.</p>
+      <h2>Contact</h2><p>Questions about these terms can be sent to <a href='mailto:info@deenislam.com'>info@deenislam.com</a>.</p>
+    </article>
+  </div>;
 }
 
 function IslamicBooks({
@@ -318,7 +453,11 @@ function IslamicBooks({
   language: string;
 }) {
   const [rows, setRows] = useState<LibraryBook[]>([]),
-    [category, setCategory] = useState("All"),
+    [selected, setSelected] = useState<LibraryBook | null>(null),
+    [selectedPart, setSelectedPart] = useState<number | null>(null),
+    [selectedPage, setSelectedPage] = useState(0),
+    [search, setSearch] = useState(""),
+    [bookFilter, setBookFilter] = useState<"all" | "new">("all"),
     [grid, setGrid] = useState(true),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
@@ -330,7 +469,15 @@ function IslamicBooks({
       `/api/books?language=${encodeURIComponent(language)}&refresh=${Date.now()}`,
     )
       .then((body) => {
-        if (active) setRows(Array.isArray(body.data) ? body.data : []);
+        if (active)
+          setRows(
+            (Array.isArray(body.data) ? body.data : []).filter(
+              (item: LibraryBook) =>
+                !["Sahaba", "Male Sahaba", "Female Sahabiyat", "Amol"].includes(
+                  item.category || "",
+                ),
+            ),
+          );
       })
       .catch(
         (reason) =>
@@ -344,46 +491,128 @@ function IslamicBooks({
       active = false;
     };
   }, [language]);
-  const categories = useMemo(
-    () => [
-      "All",
-      ...Array.from(new Set(rows.map((item) => item.category || "Books"))),
-    ],
-    [rows],
-  );
   const shown = useMemo(() => {
-    const value = query.trim().toLowerCase();
-    return rows.filter(
+    const value = (search || query).trim().toLowerCase();
+    const matches = rows.filter(
       (item) =>
-        (category === "All" || (item.category || "Books") === category) &&
-        (!value ||
+        !value ||
           `${item.title} ${item.author || ""} ${item.category || ""}`
             .toLowerCase()
-            .includes(value)),
+            .includes(value),
     );
-  }, [rows, category, query]);
-  const open = (item: LibraryBook) => {
-    if (item.slug)
-      window.history.pushState({}, "", `/islamic-books/${item.slug}`);
-    else if (item.sourceUrl)
-      window.open(item.sourceUrl, "_blank", "noopener,noreferrer");
+    return bookFilter === "new" ? matches.slice(0, 8) : matches;
+  }, [rows, bookFilter, query, search]);
+  const open = async (item: LibraryBook, updateUrl = true) => {
+    if (!item.slug) {
+      if (item.sourceUrl) window.open(item.sourceUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const body = await json(`/api/books/${encodeURIComponent(item.slug)}?language=${encodeURIComponent(language)}&refresh=${Date.now()}`);
+      setSelected(body.data);
+      setSelectedPart(null);
+      setSelectedPage(0);
+      if (updateUrl) window.history.pushState({}, "", `/islamic-books/${item.slug}`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to open book.");
+    } finally {
+      setLoading(false);
+    }
   };
+  useEffect(() => {
+    if (!rows.length) return;
+    const syncPath = () => {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      if (parts[0] !== "islamic-books" || !parts[1]) {
+        setSelected(null);
+        setSelectedPart(null);
+        return;
+      }
+      const item = rows.find(row => row.slug === decodeURIComponent(parts[1]));
+      if (item && selected?.slug !== item.slug) void open(item, false);
+    };
+    syncPath();
+    window.addEventListener("popstate", syncPath);
+    return () => window.removeEventListener("popstate", syncPath);
+  }, [rows, selected?.slug]);
+  if (selected) {
+    const isPdfBook =
+      selected.category === "PDF Books" || Boolean(selected.extraction?.sourceFile);
+    const parts = selected.pages?.length
+      ? selected.pages.map((part) => ({
+          title: part.title || selected.title,
+          reference: part.reference || "",
+          pages: part.pages?.length
+            ? part.pages.map(page => page.text || page.markdown || "")
+            : [part.text || part.markdown || ""],
+        }))
+      : [{ title: selected.title, reference: selected.sourceUrl || "", pages: [selected.content || ""] }];
+    const activePart = selectedPart ?? (parts.length === 1 ? 0 : null);
+    if (activePart !== null) {
+      const part = parts[activePart], content = part.pages[selectedPage] || "";
+      return <div className={`amol-reader sahaba-detail-reader${isPdfBook ? " pdf-book-reader" : ""}`}>
+        <button className='section-back' onClick={() => {
+          setSelectedPage(0);
+          if (parts.length === 1) {
+            setSelected(null);
+            window.history.pushState({}, "", "/islamic-books");
+          } else setSelectedPart(null);
+        }}>← {parts.length === 1 ? "All Books" : "All parts"}</button>
+        <article>
+          <header className='amol-reader-head sahaba-detail-head'>
+            {selected.coverImageUrl ? <img src={selected.coverImageUrl} alt={selected.title} /> : <i className='amol-reader-mark'>◆</i>}
+            <div><small>{selected.category || "ISLAMIC BOOK"}{parts.length > 1 ? ` · PART ${activePart + 1}` : ""}</small><h2>{parts.length === 1 ? selected.title : part.title}</h2><b>{selected.author || "DeenIslam Editorial"}</b></div>
+          </header>
+          {selectedPage === 0 && selected.description && !isPdfBook && (
+            <div className='amol-reader-intro book-reader-description'>
+              {/<[a-z][\s\S]*>/i.test(selected.description)
+                ? <div dangerouslySetInnerHTML={{ __html: selected.description }} />
+                : <p>{selected.description}</p>}
+            </div>
+          )}
+          <div className='amol-reader-content'><section><span>PAGE {selectedPage + 1} OF {part.pages.length}</span>{/<[a-z][\s\S]*>/i.test(content) ? <div dangerouslySetInnerHTML={{ __html: content }} /> : content.split(/\n{2,}/).filter(Boolean).map((paragraph,index)=><p key={index}>{paragraph.replace(/^#{1,6}\s+/,"")}</p>)}{part.reference && <aside><b>Reference</b><p>{part.reference}</p></aside>}</section></div>
+          <nav className='sahaba-page-nav'><button disabled={selectedPage===0} onClick={()=>setSelectedPage(value=>Math.max(0,value-1))}>← Previous page</button><span>{selectedPage+1} / {part.pages.length}</span><button disabled={selectedPage===part.pages.length-1} onClick={()=>setSelectedPage(value=>Math.min(part.pages.length-1,value+1))}>Next page →</button></nav>
+        </article>
+      </div>;
+    }
+    return <div className='amol-reader amol-overview sahaba-detail-reader'>
+      <button className='section-back' onClick={() => { setSelected(null); window.history.pushState({},"","/islamic-books"); }}>← All Books</button>
+      <header className='amol-profile sahaba-detail-profile'>
+        {selected.coverImageUrl ? <img src={selected.coverImageUrl} alt={selected.title} /> : <div className='book-detail-fallback'>◆</div>}
+        <h2>{selected.title}</h2><p>{selected.description || "Read this Islamic book part by part."}</p><small>{parts.length} {parts.length===1?"PART":"PARTS"}</small>
+      </header>
+      <div className='amol-parts'>{parts.map((part,index)=><button key={index} onClick={()=>{setSelectedPart(index);setSelectedPage(0)}}><span>PART {index+1} · {part.pages.length} {part.pages.length===1?"PAGE":"PAGES"}</span><h3>{part.title}</h3><p>{part.pages.join(" ").replace(/<[^>]+>/g," ").replace(/[\*_>`-]/g,"").replace(/\s+/g," ").trim().slice(0,260) || selected.description}</p><footer>Open book part <b>›</b></footer></button>)}</div>
+    </div>;
+  }
   return (
     <div className='app-books'>
-      <div className='app-books-categories'>
-        {categories.map((item) => (
-          <button
-            key={item}
-            className={category === item ? "active" : ""}
-            onClick={() => setCategory(item)}
-          >
-            {item}
-          </button>
-        ))}
+      <div className='app-books-tools'>
+        <label className='app-books-search'>
+          <span aria-hidden='true'>⌕</span>
+          <input
+            type='search'
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder='Search by book, author or category...'
+            aria-label='Search Islamic books'
+          />
+        </label>
+        <select
+          value={bookFilter}
+          onChange={(event) =>
+            setBookFilter(event.target.value as "all" | "new")
+          }
+          aria-label='Filter Islamic books'
+        >
+          <option value='all'>All Books</option>
+          <option value='new'>New</option>
+        </select>
       </div>
       <header>
         <div>
-          <h2>{category === "All" ? "All Books" : category}</h2>
+          <h2>{bookFilter === "new" ? "New Books" : "All Books"}</h2>
           <p>{shown.length} available books</p>
         </div>
         <nav>
@@ -427,6 +656,11 @@ function IslamicBooks({
             <section>
               <h3>{item.title}</h3>
               <p>{item.author || "Unknown author"}</p>
+              {descriptionText(item.description) && (
+                <p className='app-book-description'>
+                  {descriptionText(item.description)}
+                </p>
+              )}
               <small>{item.language || language.toUpperCase()}</small>
               {item.publicDomain && <em>PUBLIC DOMAIN · SOURCE VERIFIED</em>}
             </section>
@@ -468,6 +702,9 @@ function SahabaLibrary({
   onBack: () => void;
 }) {
   const [rows, setRows] = useState<LibraryBook[]>([]),
+    [selected, setSelected] = useState<LibraryBook | null>(null),
+    [selectedPart, setSelectedPart] = useState<number | null>(null),
+    [selectedPage, setSelectedPage] = useState(0),
     [group, setGroup] = useState<"All" | "Male" | "Female">("All"),
     [search, setSearch] = useState(""),
     [grid, setGrid] = useState(true),
@@ -503,6 +740,42 @@ function SahabaLibrary({
       active = false;
     };
   }, [language]);
+  const openBiography = async (item: LibraryBook, updateUrl = true) => {
+    setLoading(true);
+    setError("");
+    try {
+      const body = await json(
+        `/api/books/${encodeURIComponent(item.slug)}?language=${encodeURIComponent(language)}&refresh=${Date.now()}`,
+      );
+      setSelected(body.data);
+      setSelectedPart(null);
+      setSelectedPage(0);
+      if (updateUrl)
+        window.history.pushState({}, "", `/sahaba/${item.slug}`);
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Unable to open biography.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (!rows.length) return;
+    const syncPath = () => {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      if (parts[0] !== "sahaba" || !parts[1]) {
+        setSelected(null);
+        setSelectedPart(null);
+        return;
+      }
+      const item = rows.find((row) => row.slug === decodeURIComponent(parts[1]));
+      if (item && selected?.slug !== item.slug) void openBiography(item, false);
+    };
+    syncPath();
+    window.addEventListener("popstate", syncPath);
+    return () => window.removeEventListener("popstate", syncPath);
+  }, [rows, selected?.slug]);
   const shown = useMemo(() => {
     const value = (search || query).trim().toLowerCase();
     return rows.filter(
@@ -519,6 +792,77 @@ function SahabaLibrary({
   const cover = (item: LibraryBook) =>
     item.coverImageUrl ||
     `/images/sahaba/${SAHABA_WEB_COVERS[item.slug] || (item.category === "Female Sahabiyat" ? "sahabiyat-female-cover.png" : "sahaba-male-cover.png")}`;
+  if (selected) {
+    const parts = selected.pages?.length
+      ? selected.pages.map((page) => ({
+          title: page.title || "",
+          reference: page.reference || "",
+          pages: page.pages?.length
+            ? page.pages.map(item => item.markdown || item.text || "")
+            : [page.markdown || page.text || ""],
+        }))
+      : [{ title: selected.title, reference: selected.sourceUrl || "", pages: [selected.content || ""] }];
+    if (selectedPart !== null) {
+      const active = parts[selectedPart], activeContent = active.pages[selectedPage] || "";
+      return (
+        <div className='amol-reader sahaba-detail-reader'>
+          <button className='section-back' onClick={() => setSelectedPart(null)}>
+            ← All parts
+          </button>
+          <article>
+            <header className='amol-reader-head sahaba-detail-head'>
+              <img src={cover(selected)} alt={selected.title} />
+              <div>
+                <small>{selected.category || "SAHABA"} · BIOGRAPHY</small>
+                <h2>{active.title || selected.title}</h2>
+                <b>{selected.author || "DeenIslam Editorial"}</b>
+              </div>
+            </header>
+            <div className='amol-reader-content'>
+              <section>
+                <span>PART {selectedPart + 1} · PAGE {selectedPage + 1} OF {active.pages.length}</span>
+                {activeContent.split(/\n{2,}/).filter(Boolean).map((paragraph, index) => (
+                  <p key={index}>{paragraph.replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "")}</p>
+                ))}
+                {active.reference && <aside><b>Source</b><p>{active.reference}</p></aside>}
+              </section>
+            </div>
+            <nav className='sahaba-page-nav'>
+              <button disabled={selectedPage === 0} onClick={() => setSelectedPage(value => Math.max(0, value - 1))}>← Previous page</button>
+              <span>{selectedPage + 1} / {active.pages.length}</span>
+              <button disabled={selectedPage === active.pages.length - 1} onClick={() => setSelectedPage(value => Math.min(active.pages.length - 1, value + 1))}>Next page →</button>
+            </nav>
+          </article>
+        </div>
+      );
+    }
+    return (
+      <div className='amol-reader amol-overview sahaba-detail-reader'>
+        <button className='section-back' onClick={() => {
+          setSelected(null);
+          window.history.pushState({}, "", "/sahaba");
+        }}>
+          ← All Sahaba
+        </button>
+        <header className='amol-profile sahaba-detail-profile'>
+          <img src={cover(selected)} alt={selected.title} />
+          <h2>{selected.title}</h2>
+          <p>{selected.description || "Read the complete biography and lessons."}</p>
+          <small>{parts.length} {parts.length === 1 ? "PART" : "PARTS"}</small>
+        </header>
+        <div className='amol-parts'>
+          {parts.map((part, index) => (
+            <button key={index} onClick={() => { setSelectedPart(index); setSelectedPage(0); }}>
+              <span>PART {index + 1} · {part.pages.length} {part.pages.length === 1 ? "PAGE" : "PAGES"}</span>
+              <h3>{part.title || selected.title}</h3>
+              <p>{part.pages.join(" ").replace(/<[^>]+>/g, " ").replace(/^#{1,6}\s+/gm, "").replace(/[\*_>`-]/g, "").replace(/\s+/g, " ").trim().slice(0, 260) || selected.description}</p>
+              <footer>Read full biography <b>›</b></footer>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className='app-books sahaba-library'>
       <button type='button' className='sahaba-back' onClick={onBack}>
@@ -606,9 +950,7 @@ function SahabaLibrary({
         {shown.map((item) => (
           <article
             key={item.id || item.slug}
-            onClick={() =>
-              window.history.pushState({}, "", `/sahaba/${item.slug}`)
-            }
+            onClick={() => void openBiography(item)}
           >
             <div className='app-book-cover'>
               <img src={cover(item)} alt={item.title} />
@@ -848,6 +1190,9 @@ function Lifestyle({ query, language }: { query: string; language: string }) {
   );
   return (
     <div className='lifestyle-hub'>
+      <a className='sahaba-back' href='/'>
+        <b>‹</b> Back to Home
+      </a>
       <div className='feature-hero'>
         <span>ONE SHARED APP & WEB LIBRARY</span>
         <h2>Islamic Lifestyle</h2>
@@ -1087,10 +1432,12 @@ function WebFullQuran({ language }: { language: string }) {
 function Quran({
   tafsir,
   query,
+  onQueryChange,
   language,
 }: {
   tafsir: boolean;
   query: string;
+  onQueryChange: (value: string) => void;
   language: string;
 }) {
   const [list, setList] = useState<Surah[]>([]),
@@ -1189,6 +1536,12 @@ function Quran({
     const sync = () => {
       const parts = window.location.pathname.split("/").filter(Boolean);
       if (parts[0] !== base) return;
+      const requestedSurah = Number(new URLSearchParams(window.location.search).get("surah"));
+      if (requestedSurah) {
+        const match = list.find((item) => item.number === requestedSurah);
+        if (match && selected?.number !== match.number) void open(match, false);
+        return;
+      }
       if (!parts[1]) {
         setSelected(null);
         return;
@@ -1204,6 +1557,18 @@ function Quran({
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
   }, [list, tafsir, language]);
+  useEffect(() => {
+    if (!selected) return;
+    const ayah = Number(new URLSearchParams(window.location.search).get("ayah"));
+    if (!ayah) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(`ayah-${selected.number}-${ayah}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [selected]);
   const closeSurah = () => {
     setSelected(null);
     window.history.pushState({}, "", tafsir ? "/tafsir" : "/quran");
@@ -1302,7 +1667,7 @@ function Quran({
           <b>{selected.name}</b>
         </div>
         {selected.ayahs?.map((a) => (
-          <article key={a.numberInSurah}>
+          <article id={`ayah-${selected.number}-${a.numberInSurah}`} key={a.numberInSurah}>
             <span>
               {selected.number}:{a.numberInSurah}
             </span>
@@ -1393,6 +1758,22 @@ function Quran({
     browseMode === "sajdah"
       ? shown.filter((s) => sajdahSurahs.has(s.number))
       : shown;
+  const submitQuranSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    const value = query.trim();
+    if (!value) {
+      setBrowseMode("quran");
+      return;
+    }
+    setBrowseMode("surah");
+    const exact = shown.find(
+      (surah) =>
+        String(surah.number) === value ||
+        surah.englishName.toLowerCase() === value.toLowerCase() ||
+        surah.name === value,
+    );
+    if (exact) void open(exact);
+  };
   return (
     <>
       <Status loading={loading} error={error} />
@@ -1410,6 +1791,24 @@ function Quran({
           </button>
         ))}
       </nav>
+      <form className='quran-inline-search' onSubmit={submitQuranSearch}>
+        <span aria-hidden='true'>⌕</span>
+        <input
+          value={query}
+          onChange={(event) => {
+            onQueryChange(event.target.value);
+            if (event.target.value.trim()) setBrowseMode("surah");
+          }}
+          placeholder='Search Surah or Quran…'
+          aria-label='Search Surah or Quran'
+        />
+        {query && (
+          <button className='quran-search-clear' type='button' onClick={() => {onQueryChange("");setBrowseMode("quran")}} aria-label='Clear search'>
+            ×
+          </button>
+        )}
+        <button className='quran-search-submit' type='submit'>Search</button>
+      </form>
       {browseMode === "quran" ? (
         <WebFullQuran language={language} />
       ) : browseMode === "juz" ? (
@@ -1600,6 +1999,9 @@ function DuasAmol({ query, language }: { query: string; language: string }) {
     );
   return (
     <div className='duas-amol-hub'>
+      <a className='sahaba-back' href='/'>
+        <b>‹</b> Back to Home
+      </a>
       <div className='duas-amol-hero'>
         <small>DAILY SPIRITUAL COMPANION</small>
         <h2>
@@ -1655,6 +2057,8 @@ function DuasAmol({ query, language }: { query: string; language: string }) {
 function AmolLibrary({ query, language }: { query: string; language: string }) {
   const [rows, setRows] = useState<AmolBook[]>([]),
     [selected, setSelected] = useState<AmolBook | null>(null),
+    [selectedPart, setSelectedPart] = useState<number | null>(null),
+    [localQuery, setLocalQuery] = useState(""),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
@@ -1691,9 +2095,9 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
           (item.description || "")
         )
           .toLowerCase()
-          .includes(query.trim().toLowerCase()),
+          .includes((localQuery || query).trim().toLowerCase()),
       ),
-    [rows, query],
+    [rows, query, localQuery],
   );
   const open = async (item: AmolBook) => {
     setLoading(true);
@@ -1708,6 +2112,7 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
           Date.now(),
       );
       setSelected(x.data);
+      setSelectedPart(null);
       window.history.pushState({}, "", "/duas-amol/amol/" + item.slug);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to open Amol");
@@ -1716,82 +2121,156 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
     }
   };
   if (selected) {
-    const pages = selected.pages?.length
-      ? selected.pages.map((page) => page.markdown || page.text || "")
-      : [selected.content || ""];
+    const parts = selected.pages?.length
+      ? selected.pages.map((page) => ({
+          title: page.title || "",
+          reference: page.reference || "",
+          content: page.markdown || page.text || "",
+        }))
+      : [{ title: "", reference: "", content: selected.content || "" }];
+    if (selectedPart === null) {
+      return (
+        <div className='amol-reader amol-overview'>
+          <button
+            className='section-back'
+            onClick={() => {
+              setSelected(null);
+              window.history.pushState({}, "", "/duas-amol/amol");
+            }}
+          >
+            ← All Amol
+          </button>
+          <header className='amol-profile'>
+            <i>✦</i>
+            <h2>{selected.title}</h2>
+            <p>{selected.description || "Authentic daily deeds and beneficial guidance."}</p>
+            <small>{parts.length} {parts.length === 1 ? "PART" : "PARTS"}</small>
+          </header>
+          <div className='amol-parts'>
+            {parts.map((part, index) => {
+              const clean = part.content
+                .replace(/<[^>]+>/g, " ")
+                .replace(/^#{1,6}\s+/gm, "")
+                .replace(/[\*_>`-]/g, "")
+                .replace(/\s+/g, " ")
+                .trim();
+              const sectionHeading = part.content.match(/^#{2,6}\s+(.+)$/m)?.[1]?.trim();
+              const partTitle = part.title || sectionHeading || (parts.length === 1 ? selected.title : `${selected.title} · Part ${index + 1}`);
+              const preview = clean
+                .replace(new RegExp(`^${selected.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`, "i"), "")
+                .trim();
+              return (
+                <button key={index} onClick={() => setSelectedPart(index)}>
+                  <span>PART {index + 1}</span>
+                  <h3>{partTitle}</h3>
+                  <p>{preview || selected.description || "Open this part to read the complete guidance."}</p>
+                  <aside>
+                    <small>AUTHENTIC AMOL GUIDE</small>
+                    <b>{part.reference || selected.sourceUrl || selected.author || "DeenIslam Editorial"}</b>
+                  </aside>
+                  <footer>Read full guide <b>›</b></footer>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    const activePage = parts[selectedPart]?.content || "";
     return (
       <div className='amol-reader'>
         <button
           className='section-back'
-          onClick={() => {
-            setSelected(null);
-            window.history.pushState({}, "", "/duas-amol/amol");
-          }}
+          onClick={() => setSelectedPart(null)}
         >
-          ← All Amol
+          ← All parts
         </button>
         <article>
-          <small>{selected.category || "AMOL"}</small>
-          <h2>{selected.title}</h2>
-          <b>{selected.author || "DeenIslam Editorial"}</b>
-          {selected.description && <p>{selected.description}</p>}
-          {pages.map((page, index) => (
-            <section key={index}>
-              <span>PAGE {index + 1}</span>
-              {page
-                .split(/\n{2,}/)
-                .filter(Boolean)
-                .map((paragraph, n) => (
-                  <p key={n}>{paragraph.replace(/^#{1,6}\s+/, "")}</p>
-                ))}
-            </section>
-          ))}
+          <header className='amol-reader-head'>
+            <div className='amol-reader-mark'>✦</div>
+            <div>
+              <small>{selected.category || "AMOL"} · DAILY GUIDANCE</small>
+              <h2>{selected.title}</h2>
+              <b>{selected.author || "DeenIslam Editorial"}</b>
+            </div>
+          </header>
+          {selected.description && (
+            <p className='amol-reader-intro'>{selected.description}</p>
+          )}
+          <div className='amol-reader-content'>
+              <section>
+                <span>PART {selectedPart + 1} OF {parts.length}</span>
+                {activePage
+                  .split(/\n{2,}/)
+                  .filter(Boolean)
+                  .map((paragraph, n) => (
+                    <p key={n}>{paragraph.replace(/^#{1,6}\s+/, "")}</p>
+                  ))}
+              </section>
+          </div>
         </article>
       </div>
     );
   }
   return (
-    <>
-      <div className='feature-hero'>
-        <span>APP AMOL LIBRARY</span>
-        <h2>Amol</h2>
-        <p>
-          {shown.length} authentic daily deeds · served from the same backend as
-          the App.
-        </p>
+    <div className='amol-app'>
+      <div className='amol-heading'>
+        <i>✦</i>
+        <div>
+          <h2>Amol</h2>
+          <p>Daily deeds and authentic guidance</p>
+        </div>
+        <span>{rows.length}</span>
       </div>
+      <label className='amol-search'>
+        <b>⌕</b>
+        <input
+          value={localQuery}
+          onChange={(event) => setLocalQuery(event.target.value)}
+          placeholder='Search Amol...'
+        />
+        <button
+          type='button'
+          aria-label='Clear search'
+          className={localQuery ? "show" : ""}
+          onClick={() => setLocalQuery("")}
+        >
+          ×
+        </button>
+      </label>
       <Status loading={loading} error={error} />
-      <div className='amol-grid'>
+      <div className='amol-list'>
         {shown.map((item, index) => (
           <button
             key={item.slug || item.id || index}
             onClick={() => void open(item)}
           >
-            {item.coverImageUrl ? (
-              <img src={item.coverImageUrl} alt='' />
-            ) : (
-              <i>✦</i>
-            )}
-            <span>
-              <small>AMOL {String(index + 1).padStart(2, "0")}</small>
-              <strong>{item.title}</strong>
-              <p>{item.description || item.author || "DeenIslam Editorial"}</p>
-              <b>Read guidance →</b>
-            </span>
+            <div className='amol-row'>
+              <i>{String(index + 1).padStart(2, "0")}</i>
+              <div>
+                <h3>{item.title}</h3>
+                <b>{item.author || "DeenIslam Editorial"}</b>
+                <p>{item.description || "Open to read the complete Amol and guidance."}</p>
+              </div>
+              <span>›</span>
+            </div>
           </button>
         ))}
       </div>
       {!loading && !error && !shown.length ? (
         <div className='empty-state'>
           <h2>No Amol found</h2>
-          <p>Start the backend so the App Amol library can load.</p>
+          <p>Try searching with another word.</p>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
 function Duas({ query, language }: { query: string; language: string }) {
   const [rows, setRows] = useState<Dua[]>([]),
+    [localQuery, setLocalQuery] = useState(""),
+    [selectedCategory, setSelectedCategory] = useState<string | null>(null),
+    [selected, setSelected] = useState<Dua | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   useEffect(() => {
@@ -1818,9 +2297,10 @@ function Duas({ query, language }: { query: string; language: string }) {
     };
   }, [language]);
   const shown = useMemo(() => {
-    const value = query.trim().toLowerCase();
-    return value
-      ? rows.filter((item) =>
+    const value = (localQuery || query).trim().toLowerCase();
+    return rows.filter((item) => {
+      const category = !item.category || item.category === "General" || item.category === "App collection" ? "Dua & Azkar" : item.category;
+      return (!selectedCategory || category === selectedCategory) && (!value ||
           (
             item.name +
             " " +
@@ -1831,50 +2311,59 @@ function Duas({ query, language }: { query: string; language: string }) {
             item.source
           )
             .toLowerCase()
-            .includes(value),
-        )
-      : rows;
-  }, [rows, query]);
-  return (
-    <>
-      <div className='feature-hero'>
-        <span>ADMIN-MANAGED DUA LIBRARY</span>
-        <h2>Dua & Azkar</h2>
-        <p>
-          {shown.length} supplications · {language.toUpperCase()} meaning where
-          available, otherwise English.
-        </p>
+            .includes(value));
+    });
+  }, [rows, query, localQuery, selectedCategory]);
+  const categories = useMemo(() => {
+    const values = new Map<string, number>();
+    rows.forEach((item) => {
+      const category = !item.category || item.category === "General" || item.category === "App collection" ? "Dua & Azkar" : item.category;
+      values.set(category, (values.get(category) || 0) + 1);
+    });
+    return [...values.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [rows]);
+  if (selected)
+    return (
+      <div className='dua-reader'>
+        <button className='section-back' onClick={() => setSelected(null)}>← All Duas</button>
+        <article className='dua-full-card'>
+          <small>DUA</small><h2>{selected.name}</h2>
+          <p className='dua-full-arabic' dir='rtl'>{selected.arabic}</p>
+          {selected.pronunciation && <em>{selected.pronunciation}</em>}
+          <hr /><span>MEANING</span><p className='dua-full-meaning'>{selected.meaning}</p>
+          {selected.source && <aside><small>AUTHENTIC SOURCE</small><b>{selected.source}</b></aside>}
+          <footer><button onClick={() => bookmark(selected.name, "Dua & Azkar")}>♡ Bookmark</button><button onClick={() => navigator.clipboard?.writeText(`${selected.arabic}\n${selected.pronunciation || ""}\n${selected.meaning}`)}>Copy</button></footer>
+        </article>
       </div>
+    );
+  if (!selectedCategory) {
+    const categoryRows = categories.filter(([name]) => name.toLowerCase().includes(localQuery.toLowerCase()));
+    return <div className='dua-app'>
+      <div className='dua-category-hero'><i>🤲</i><div><small>DUA LIBRARY</small><h2>Find the right Dua</h2><p>Browse authentic supplications by category and stay connected with Allah.</p></div></div>
+      <label className='amol-search'><b>⌕</b><input value={localQuery} onChange={(event) => setLocalQuery(event.target.value)} placeholder='Search categories...' /><button type='button' aria-label='Clear search' className={localQuery ? "show" : ""} onClick={() => setLocalQuery("")}>×</button></label>
+      <div className='dua-category-title'><div><h3>Categories</h3><p>Choose a collection to continue</p></div><b>{categoryRows.length}</b></div>
+      <div className='dua-categories'>{categoryRows.map(([name, count], index) => <button key={name} onClick={() => {setSelectedCategory(name);setLocalQuery("")}}><i>{index % 3 === 0 ? "🤲" : index % 3 === 1 ? "✦" : "☾"}</i><div><h3>{name}</h3><b>{count} {count === 1 ? "Dua" : "Duas"}</b><p>Arabic, pronunciation and meaning</p></div><span>›</span></button>)}</div>
+    </div>;
+  }
+  return (
+    <div className='dua-app'>
+      <div className='dua-heading'>
+        <button type='button' onClick={() => {setSelectedCategory(null);setLocalQuery("")}}>‹</button><div><h2>{selectedCategory}</h2><p>Supplications and authentic remembrance</p></div><span>{shown.length}</span>
+      </div>
+      <label className='amol-search'>
+        <b>⌕</b><input value={localQuery} onChange={(event) => setLocalQuery(event.target.value)} placeholder='Search Duas...' />
+        <button type='button' aria-label='Clear search' className={localQuery ? "show" : ""} onClick={() => setLocalQuery("")}>×</button>
+      </label>
       <Status loading={loading} error={error} />
-      <div className='content-grid dua-library'>
+      <div className='dua-list'>
         {shown.map((item, index) => (
-          <article
-            className='content-card dua-card'
+          <button
             key={item.id || item.key || item.name + "-" + index}
+            onClick={() => setSelected(item)}
           >
-            <span>DUA {String(index + 1).padStart(3, "0")}</span>
-            <h2>{item.name}</h2>
-            <p className='dua-arabic' dir='rtl'>
-              {item.arabic}
-            </p>
-            {item.pronunciation && <em>{item.pronunciation}</em>}
-            <p>{item.meaning}</p>
-            {item.source && <b>{item.source}</b>}
-            <footer>
-              <button onClick={() => bookmark(item.name, "Dua & Azkar")}>
-                ♡ Bookmark
-              </button>
-              <button
-                onClick={() =>
-                  navigator.clipboard?.writeText(
-                    item.arabic + "\n" + item.meaning,
-                  )
-                }
-              >
-                Copy
-              </button>
-            </footer>
-          </article>
+            <i>{String(index + 1).padStart(2, "0")}</i>
+            <div><h3>{item.name}</h3><b dir='rtl'>{item.arabic}</b><p>{item.meaning}</p></div><span>›</span>
+          </button>
         ))}
       </div>
       {!loading && !error && !shown.length ? (
@@ -1884,7 +2373,7 @@ function Duas({ query, language }: { query: string; language: string }) {
           <p>Try another name, meaning or source.</p>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
 function Hadith({ query }: { query: string }) {
@@ -2619,6 +3108,9 @@ function DailyTasks() {
         <p className='daily-notice'>{error} Showing your saved plan.</p>
       )}
       <section className='daily-reference-hero'>
+        <a className='daily-reference-back' href='/'>
+          <b>‹</b> Back to Home
+        </a>
         <div className='daily-greeting'>
           <h2>Assalamu Alaikum</h2>
           <p>May Allah make today easy for you 💚</p>

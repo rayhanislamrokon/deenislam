@@ -2,7 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-function createDeletionApprovalRouter(getRequests, jwtSecret, port) {
+function createDeletionApprovalRouter(getRequests, getUsers, jwtSecret, port) {
   const router = express.Router(),
     internalSecret = crypto.randomBytes(32).toString("hex");
   const actor = (req) => {
@@ -30,13 +30,24 @@ function createDeletionApprovalRouter(getRequests, jwtSecret, port) {
         message: "Only Super Admin or Admin can review deletion requests.",
       });
     const items = await getRequests()
-      .find({})
+      .find({ resourceType: { $ne: "user-account" } })
       .sort({ createdAt: -1 })
       .limit(300)
       .toArray();
     res.json({
       data: items.map((x) => ({ ...x, id: x._id.toString(), _id: undefined })),
     });
+  });
+  router.get("/api/admin/user-deletion-requests", async (req, res) => {
+    const user = actor(req);
+    if (!canApprove(user))
+      return res.status(403).json({ message: "Only Super Admin or Admin can review user deletion requests." });
+    const items = await getRequests()
+      .find({ resourceType: "user-account" })
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .toArray();
+    res.json({ data: items.map((item) => ({ ...item, id: item._id.toString(), _id: undefined })) });
   });
   router.patch(
     "/api/admin/deletion-requests/:id",
@@ -53,18 +64,45 @@ function createDeletionApprovalRouter(getRequests, jwtSecret, port) {
           return res.status(400).json({ message: "Invalid request ID." });
         const id = new ObjectId(req.params.id),
           decision = String(req.body.decision || "");
-        if (!["approve", "reject"].includes(decision))
-          return res.status(400).json({ message: "Choose approve or reject." });
+        if (!["approve", "reject", "restore"].includes(decision))
+          return res.status(400).json({ message: "Choose approve, reject or restore." });
         const item = await getRequests().findOne({ _id: id });
         if (!item)
           return res
             .status(404)
             .json({ message: "Deletion request not found." });
+        if (decision === "restore") {
+          if (item.resourceType !== "user-account" || !item.userId)
+            return res.status(400).json({ message: "Only a user account request can be restored." });
+          if (!["approved", "rejected", "restored"].includes(item.status))
+            return res.status(409).json({ message: "Accept the request before restoring this account." });
+          const { ObjectId } = require("mongodb");
+          if (!ObjectId.isValid(item.userId)) return res.status(400).json({ message: "Invalid user account ID." });
+          await getUsers().updateOne(
+            { _id: new ObjectId(item.userId) },
+            { $set: { accountStatus: "active", restoredAt: new Date(), restoredBy: user.email || user.sub, updatedAt: new Date() }, $unset: { deletionRequestedAt: "", deletionRequestId: "" } },
+          );
+          await getRequests().updateOne(
+            { _id: id },
+            {
+              $set: { status: "restored", restoredAt: new Date(), reviewedAt: new Date(), reviewedBy: user.email || user.sub, result: "Account restored without removing stored user data." },
+              $push: { activityHistory: { action: "restored", at: new Date(), by: user.email || user.sub } },
+            },
+          );
+          return res.json({ message: "User account restored successfully. The user can now use the account normally." });
+        }
         if (item.status !== "pending")
           return res
             .status(409)
             .json({ message: "This request was already reviewed." });
         if (decision === "reject") {
+          if (item.resourceType === "user-account" && item.userId) {
+            const { ObjectId } = require("mongodb");
+            if (ObjectId.isValid(item.userId)) await getUsers().updateOne(
+              { _id: new ObjectId(item.userId) },
+              { $set: { accountStatus: "active", deletionRejectedAt: new Date(), updatedAt: new Date() }, $unset: { deletionRequestedAt: "" } },
+            );
+          }
           await getRequests().updateOne(
             { _id: id, status: "pending" },
             {
@@ -73,6 +111,7 @@ function createDeletionApprovalRouter(getRequests, jwtSecret, port) {
                 reviewedAt: new Date(),
                 reviewedBy: user.email || user.sub,
               },
+              $push: { activityHistory: { action: "restored", at: new Date(), by: user.email || user.sub } },
             },
           );
           return res.json({ message: "Deletion request rejected." });
@@ -87,6 +126,16 @@ function createDeletionApprovalRouter(getRequests, jwtSecret, port) {
             },
           },
         );
+        if (item.manualReviewOnly || item.resourceType === "user-account") {
+          await getRequests().updateOne(
+            { _id: id },
+            {
+              $set: { status: "approved", completedAt: new Date(), result: "Account disabled; retained data awaits retention-policy processing." },
+              $push: { activityHistory: { action: "accepted", at: new Date(), by: user.email || user.sub } },
+            },
+          );
+          return res.json({ message: "Account deletion request approved. The account remains disabled and its data was not physically deleted." });
+        }
         const response = await fetch("http://127.0.0.1:" + port + item.path, {
             method: "DELETE",
             headers: { "x-deletion-approval": internalSecret },

@@ -2,7 +2,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { FeatureWorkspace } from "./components/FeatureWorkspace";
 import { DeenIcon } from "./components/DeenIcon";
+import { SiteFooter } from "./components/SiteFooter";
 import { HOME_LANGUAGES } from "./data/homeLanguages";
+import { getSeoForSlug, SITE_URL, slugFromPath } from "./seo";
 const QURAN_TRANSLATION_LANGUAGES = new Set([
   "ab",
   "ace",
@@ -93,6 +95,15 @@ import {
 const WEB_API = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:6002"
 ).replace(/\/$/, "");
+type HomeEvent = { id: string; label: string; title: string; eventDate: string; imageUrl?: string; link?: string; order?: number };
+const fallbackHomeEvents: HomeEvent[] = [{ id: "fallback", label: "Upcoming Islamic Event", title: "Milad un Nabi", eventDate: "2026-10-08", imageUrl: "/images/milad-event-card.png" }];
+type DailyFeaturedCard = { arabic: string; translation: string; source: string; link: string; published: boolean; sourceType?: string; surahNumber?: number; ayahNumber?: number; hadithId?: string };
+type DailyFeaturedContent = { ayah: DailyFeaturedCard; hadith: DailyFeaturedCard };
+type WebNotice = { id: string; title: string; body: string; fullBody?: string; createdAt: string; unread: boolean; imageUrl?: string; data?: { screen?: string; contentId?: string; surahNumber?: number; ayahNumber?: number } };
+const fallbackDailyFeatured: DailyFeaturedContent = {
+  ayah: { arabic: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", translation: "Indeed, with hardship comes ease.", source: "Surah Ash-Sharh (94:6)", link: "/quran", published: true },
+  hadith: { arabic: "مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ", translation: "Whoever guides someone to goodness will have a reward like the one who does it.", source: "Sahih Muslim (1893)", link: "/hadith", published: true },
+};
 const nav = [
   ["⌂", "Home"],
   ["▣", "Quran"],
@@ -182,7 +193,16 @@ const tasks = [
   ["▣", "Quran Reading", "Read from Juz 1 – 2", "0/2", 20],
   ["▢", "Today’s Question", "Answer the question", "0/1", 0],
 ] as const;
-const extraRoutes = ["Profile", "Notifications", "Billing History"];
+const extraRoutes = [
+  "Profile",
+  "Notifications",
+  "Billing History",
+  "About Us",
+  "Help Center",
+  "Contact",
+  "Privacy Policy",
+  "Terms & Conditions",
+];
 const routeFeatures = Array.from(
   new Set([
     "Home",
@@ -204,6 +224,26 @@ const featureFromPath = (pathname: string) => {
   return (
     routeFeatures.find((feature) => featureSlug(feature) === slug) || "Home"
   );
+};
+const applyClientSeo = (pathname: string) => {
+  const slug = slugFromPath(pathname);
+  const seo = getSeoForSlug(slug);
+  const canonical = slug === "home" ? `${SITE_URL}/` : `${SITE_URL}/${slug}`;
+  const setMeta = (selector: string, attribute: string, value: string) => {
+    const element = document.querySelector<HTMLMetaElement>(selector);
+    if (element) element.setAttribute(attribute, value);
+  };
+
+  document.title = seo.title;
+  setMeta('meta[name="description"]', "content", seo.description);
+  setMeta('meta[name="keywords"]', "content", seo.keywords.join(", "));
+  setMeta('meta[property="og:title"]', "content", seo.title);
+  setMeta('meta[property="og:description"]', "content", seo.description);
+  setMeta('meta[property="og:url"]', "content", canonical);
+  setMeta('meta[name="twitter:title"]', "content", seo.title);
+  setMeta('meta[name="twitter:description"]', "content", seo.description);
+  const canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (canonicalLink) canonicalLink.href = canonical;
 };
 type AppLanguage = string;
 const bnCopy: Record<string, string> = {
@@ -267,19 +307,107 @@ export default function Home() {
     [notice, setNotice] = useState(""),
     [profileOpen, setProfileOpen] = useState(false),
     [notificationsOpen, setNotificationsOpen] = useState(false),
-    [unread, setUnread] = useState(3),
+    [webNotices, setWebNotices] = useState<WebNotice[]>([]),
+    [unread, setUnread] = useState(0),
     [account, setAccount] = useState<{ name: string; email: string } | null>(
       null,
     ),
     [language, setLanguage] = useState<AppLanguage>("en"),
     [translations, setTranslations] = useState<WebTranslationTable>({}),
     [languageOpen, setLanguageOpen] = useState(false),
-    [languageQuery, setLanguageQuery] = useState("");
+    [languageQuery, setLanguageQuery] = useState(""),
+    [homeEvents, setHomeEvents] = useState<HomeEvent[]>(fallbackHomeEvents),
+    [homeEventIndex, setHomeEventIndex] = useState(0),
+    [dailyFeatured, setDailyFeatured] = useState<DailyFeaturedContent>(fallbackDailyFeatured);
+  const notificationDeviceId = () => {
+    const key = "deenislam_web_notification_device", existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const value = `web:${crypto.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(key, value);
+    return value;
+  };
+  const loadWebNotices = async () => {
+    try {
+      const response = await fetch(`${WEB_API}/api/notifications?deviceId=${encodeURIComponent(notificationDeviceId())}&refresh=${Date.now()}`, { cache: "no-store" });
+      const result = await response.json();
+      if (response.ok) { setWebNotices(result.data || []); setUnread(result.unread || 0); }
+    } catch {}
+  };
+  useEffect(() => {
+    void loadWebNotices();
+    const timer = window.setInterval(() => void loadWebNotices(), 10000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const notificationUrl = (item: WebNotice) => {
+    const data = item.data || {};
+    if (data.surahNumber) return `/quran?surah=${data.surahNumber}${data.ayahNumber ? `&ayah=${data.ayahNumber}` : ""}`;
+    if (data.contentId?.trim()) return data.contentId.trim();
+    return `/notification/${item.id}`;
+  };
+  const openWebNotice = (item: WebNotice) => {
+    void fetch(`${WEB_API}/api/notifications/${encodeURIComponent(item.id)}/read`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deviceId: notificationDeviceId() }) });
+    window.location.href = notificationUrl(item);
+  };
+  const deleteWebNotice = async (item: WebNotice) => {
+    setWebNotices(current => current.filter(row => row.id !== item.id));
+    if (item.unread) setUnread(value => Math.max(0, value - 1));
+    try {
+      await fetch(`${WEB_API}/api/notifications/${encodeURIComponent(item.id)}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deviceId: notificationDeviceId() }) });
+    } catch { void loadWebNotices(); }
+  };
   useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => {
+    let live = true;
+    fetch(`${WEB_API}/api/home-events?refresh=${Date.now()}`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : Promise.reject())
+      .then(body => { if (live && Array.isArray(body.data) && body.data.length) setHomeEvents(body.data); })
+      .catch(() => undefined);
+    return () => { live = false; };
+  }, []);
+  useEffect(() => {
+    let live = true;
+    fetch(`${WEB_API}/api/daily-featured-content?language=${encodeURIComponent(language)}&refresh=${Date.now()}`, { cache: "no-store" })
+      .then(response => response.ok ? response.json() : Promise.reject())
+      .then(body => { if (live && body.data) setDailyFeatured(body.data); })
+      .catch(() => undefined);
+    return () => { live = false; };
+  }, [language]);
+  useEffect(() => {
+    const sectionMap: Record<string, string> = {
+      Quran: "quran", Tafsir: "tafsir", Hadith: "hadith", "Islamic Books": "books",
+      "Duas & Amol": "duas", Sahaba: "sahaba", Prophets: "prophets",
+      "Islamic History": "islamic_history", "Islamic Lifestyle": "islamic_lifestyle", "Daily Tasks": "daily_prayer",
+    };
+    const section = sectionMap[active];
+    if (!section) return;
+    let visitorId = localStorage.getItem("deenislam_web_visitor_id");
+    if (!visitorId) {
+      visitorId = `web:${typeof crypto?.randomUUID === "function" ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(36).slice(2)}`;
+      localStorage.setItem("deenislam_web_visitor_id", visitorId);
+    }
+    const startedAt = Date.now();
+    const send = (type: "content_view" | "content_heartbeat" | "content_complete", durationSeconds = 0) => fetch(`${WEB_API}/api/analytics/events`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+      body: JSON.stringify({ type, deviceId: visitorId, section, contentId: active.toLowerCase().replace(/[^a-z0-9]+/g, "-"), contentTitle: active, platform: "web", durationSeconds }),
+    }).catch(() => undefined);
+    void send("content_view");
+    const timer = window.setInterval(() => void send("content_heartbeat", 10), 10000);
+    return () => {
+      window.clearInterval(timer);
+      const seconds = Math.floor((Date.now() - startedAt) / 1000);
+      if (seconds >= 15) void send("content_complete");
+    };
+  }, [active]);
+  useEffect(() => {
+    setHomeEventIndex(index => Math.min(index, Math.max(0, homeEvents.length - 1)));
+    if (homeEvents.length < 2) return;
+    const timer = window.setInterval(() => setHomeEventIndex(index => (index + 1) % homeEvents.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [homeEvents.length]);
   useEffect(() => {
     let cancelled = false;
     const recordVisit = async () => {
@@ -488,10 +616,7 @@ export default function Home() {
     const sync = () => {
       const feature = featureFromPath(window.location.pathname);
       setActive(feature);
-      document.title =
-        feature === "Home"
-          ? "Deen Islam — Muslim Guide & Path"
-          : `${feature} | Deen Islam`;
+      applyClientSeo(window.location.pathname);
     };
     sync();
     window.addEventListener("popstate", sync);
@@ -512,10 +637,7 @@ export default function Home() {
         "",
         path,
       );
-    document.title =
-      feature === "Home"
-        ? "Deen Islam — Muslim Guide & Path"
-        : `${feature} | Deen Islam`;
+    applyClientSeo(path);
   };
   const goBack = () => {
     const parts = window.location.pathname.split("/").filter(Boolean);
@@ -579,6 +701,13 @@ export default function Home() {
     return { name, date: prayerDate(prayerTimes[name], now, 1) };
   }, [prayerTimes, now]);
   useEffect(() => setActivePrayer(nextPrayer.name), [nextPrayer.name]);
+  const currentHomeEvent = homeEvents[homeEventIndex] || fallbackHomeEvents[0];
+  const homeEventDate = new Date(currentHomeEvent.eventDate + "T23:59:59");
+  const homeEventDays = Math.max(0, Math.ceil((homeEventDate.getTime() - Math.max(now.getTime(), Date.now())) / 86400000));
+  const openHomeEvent = () => {
+    if (/^https?:\/\//i.test(currentHomeEvent.link || "")) window.location.href = currentHomeEvent.link || "";
+    else navigate("Islamic Calendar");
+  };
   return (
     <main className={dark ? "app dark" : "app"}>
       <aside className='sidebar'>
@@ -694,7 +823,6 @@ export default function Home() {
                 onClick={() => {
                   setNotificationsOpen((v) => !v);
                   setProfileOpen(false);
-                  if (!notificationsOpen) setUnread(0);
                 }}
                 aria-label='Notifications'
               >
@@ -709,24 +837,36 @@ export default function Home() {
                       ×
                     </button>
                   </div>
-                  <article>
-                    <i>✓</i>
-                    <span>
-                      <b>Welcome to Deen Islam</b>
-                      <small>
-                        Your web account and saved progress are ready.
-                      </small>
-                    </span>
-                  </article>
-                  <article>
-                    <i>◷</i>
-                    <span>
-                      <b>Prayer reminder</b>
-                      <small>
-                        Enable browser permission from Prayer Times.
-                      </small>
-                    </span>
-                  </article>
+                  {webNotices.slice(0, 5).map((item) => (
+                    <article
+                      key={item.id}
+                      onClick={() => openWebNotice(item)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <i>{item.unread ? "•" : "✓"}</i>
+                      <span>
+                        <b>{item.title}</b>
+                        <small>{item.body}</small>
+                      </span>
+                      <button
+                        aria-label='Delete notification'
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void deleteWebNotice(item);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </article>
+                  ))}
+                  {!webNotices.length && (
+                    <article>
+                      <span>
+                        <b>No notifications yet</b>
+                        <small>New Deen Islam updates will appear here.</small>
+                      </span>
+                    </article>
+                  )}
                   <button
                     onClick={() => {
                       setNotificationsOpen(false);
@@ -1131,45 +1271,42 @@ export default function Home() {
                   <span>{currentHijriDate}</span>
                 </div>
               </button>
-              <section className='event'>
-                <div>
-                  <small>Upcoming Islamic Event</small>
-                  <strong>Milad un Nabi</strong>
-                  <span>8 October 2026</span>
+              <section className='event eventSlider' role='button' tabIndex={0} aria-label={`${currentHomeEvent.title}, ${currentHomeEvent.eventDate}`} onClick={openHomeEvent} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") openHomeEvent(); }} style={currentHomeEvent.imageUrl ? { backgroundImage: `linear-gradient(90deg,rgba(255,252,245,.99) 0%,rgba(255,252,245,.95) 47%,rgba(255,252,245,.24) 76%),url(${currentHomeEvent.imageUrl})` } : undefined}>
+                <div key={currentHomeEvent.id} className='eventSlideCopy'>
+                  <small>{currentHomeEvent.label || "Upcoming Islamic Event"}</small>
+                  <strong>{currentHomeEvent.title}</strong>
+                  <span>{Number.isNaN(homeEventDate.getTime()) ? currentHomeEvent.eventDate : homeEventDate.toLocaleDateString(language === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
                 </div>
-                <b>12 Days Left</b>
+                <b>{homeEventDays} {homeEventDays === 1 ? "Day" : "Days"} Left</b>
                 <i>♜</i>
               </section>
-              <section className='panel railcard'>
+              {dailyFeatured.ayah.published && <section className='panel railcard'>
                 <Heading
                   title={t("Daily Ayah")}
-                  onClick={() => act("All ayahs opened")}
+                  onClick={() => navigate("Quran")}
                 />
-                <p dir='rtl'>فَإِنَّ مَعَ الْعُسْرِ يُسْرًا</p>
+                <p dir='rtl'>{dailyFeatured.ayah.arabic}</p>
                 <blockquote>
-                  “Indeed, with hardship comes ease.”
-                  <small>— Surah Ash-Sharh (94:6)</small>
+                  “{dailyFeatured.ayah.translation}”
+                  <small>— {dailyFeatured.ayah.source}</small>
                 </blockquote>
-              </section>
-              <section className='panel railcard'>
+              </section>}
+              {dailyFeatured.hadith.published && <section className='panel railcard'>
                 <Heading
                   title={t("Hadith of the Day")}
-                  onClick={() => act("All hadith opened")}
+                  onClick={() => navigate("Hadith")}
                 />
-                <p dir='rtl'>
-                  مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ
-                </p>
+                <p dir='rtl'>{dailyFeatured.hadith.arabic}</p>
                 <blockquote>
-                  “Whoever guides someone to goodness will have a reward like
-                  the one who does it.”
+                  “{dailyFeatured.hadith.translation}”
                 </blockquote>
                 <footer>
-                  ▤ Sahih Muslim (1893)
-                  <button onClick={() => act("Hadith opened")}>
+                  ▤ {dailyFeatured.hadith.source}
+                  <button onClick={() => navigate("Hadith")}>
                     Read More →
                   </button>
                 </footer>
-              </section>
+              </section>}
               <section className='aicard'>
                 <div>
                   <small>DEEN ISLAM AI</small>
@@ -1214,6 +1351,9 @@ export default function Home() {
             language={language}
             onBack={goBack}
           />
+        )}
+        {active === "Home" && (
+          <SiteFooter navigate={navigate} act={act} />
         )}
       </section>
       <nav className='mobile'>

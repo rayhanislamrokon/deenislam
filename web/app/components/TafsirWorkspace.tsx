@@ -37,14 +37,41 @@ const APP_TAFSIR_LANGUAGE: Record<string, string> = {
 };
 const clean = (value: string) =>
   String(value || "")
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (_list, body: string) => {
+      let number = 0;
+      return body.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_item: string, text: string) => `\n${++number}. ${text}\n`);
+    })
+    .replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (_list, body: string) =>
+      body.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_item: string, text: string) => `\n• ${text}\n`),
+    )
     .replace(/<br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/h[1-4]>/gi, "\n\n")
+    .replace(/<\/blockquote>/gi, "\n\n")
     .replace(/<\/p>/gi, "\n\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&quot;/g, "“")
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, "&")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
+const commentaryParts = (value: string) =>
+  value
+    .split(/\n+/)
+    .flatMap(line => line.split(/(?=\d+\.\s)/))
+    .map(part => part.trim())
+    .filter(Boolean)
+    .map(part => {
+      const numbered = part.match(/^(\d+)\.\s*([\s\S]*)$/);
+      return numbered
+        ? { number: numbered[1], text: numbered[2] }
+        : { number: "", text: part };
+    });
+const safeRichTafsir = (value: string) =>
+  String(value || "")
+    .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(/\s(?:href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\1/gi, "");
 
 export function TafsirWorkspace({
   query,
@@ -59,7 +86,9 @@ export function TafsirWorkspace({
   const [surah, setSurah] = useState<Surah | null>(null);
   const [ayah, setAyah] = useState<Ayah | null>(null);
   const [commentaryTitle, setCommentaryTitle] = useState("");
+  const [adminPronunciation, setAdminPronunciation] = useState("");
   const [text, setText] = useState("");
+  const [richText, setRichText] = useState("");
   const [step, setStep] = useState<"sources" | "surahs" | "ayahs" | "reader">(
     "sources",
   );
@@ -208,7 +237,9 @@ export function TafsirWorkspace({
     setLoading(true);
     setError("");
     setText("");
+    setRichText("");
     setCommentaryTitle("");
+    setAdminPronunciation("");
     window.history.pushState(
       {},
       "",
@@ -226,7 +257,10 @@ export function TafsirWorkspace({
         const body = await backendRes.json();
         if (body.data?.text) {
           setCommentaryTitle(body.data.title || "");
+          setAdminPronunciation(String(body.data.pronunciation || "").trim());
+          setRichText(String(body.data.text || ""));
           setText(clean(body.data.text));
+          setLoading(false);
           return;
         }
       }
@@ -246,6 +280,7 @@ export function TafsirWorkspace({
         : (Object.values(body.tafsir?.verses || {})[0] as
             | { text?: string }
             | undefined);
+      setRichText(String(record?.text || ""));
       setText(clean(record?.text || ""));
     } catch {
       setError("This Tafsir is not available for the selected Ayah.");
@@ -291,7 +326,12 @@ export function TafsirWorkspace({
           <p className='tafsir-arabic' dir='rtl'>
             {ayah.text}
           </p>
-          {ayah.transliteration && <em>{ayah.transliteration}</em>}
+          {(adminPronunciation || ayah.transliteration) && (
+            <p className='tafsir-pronunciation'>
+              <b>Pronunciation</b>
+              <em>{adminPronunciation || ayah.transliteration}</em>
+            </p>
+          )}
           <blockquote>{ayah.translation}</blockquote>
         </article>
         <section>
@@ -302,10 +342,20 @@ export function TafsirWorkspace({
           ) : error ? (
             <p className='error'>{error}</p>
           ) : (
-            text
-              .split(/\n{2,}/)
-              .filter(Boolean)
-              .map((p, i) => <p key={i}>{p}</p>)
+            /<(?:h[1-4]|p|ul|ol|li|blockquote|strong|em)\b/i.test(richText) ? (
+              <div className='tafsir-managed-rich' dangerouslySetInnerHTML={{ __html: safeRichTafsir(richText) }} />
+            ) : <div className='tafsir-commentary-body'>
+              {commentaryParts(text).map((part, index) =>
+                part.number ? (
+                  <div className='tafsir-commentary-point' key={`${part.number}-${index}`}>
+                    <b>{part.number}.</b>
+                    <p>{part.text}</p>
+                  </div>
+                ) : (
+                  <p className='tafsir-commentary-intro' key={`intro-${index}`}>{part.text}</p>
+                ),
+              )}
+            </div>
           )}
           <footer>Source: {source.name}</footer>
         </section>

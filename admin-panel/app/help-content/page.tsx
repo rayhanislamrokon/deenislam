@@ -1,0 +1,64 @@
+"use client";
+
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
+import RichTextEditor from "../islamic-lifestyle/RichTextEditor";
+
+const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
+const fallback = { title: "Help Center", subtitle: "Answers, guidance and support for DeenIslam", body: "", published: true };
+
+export default function HelpContentPage() {
+  const [form, setForm] = useState(fallback);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const token = () => typeof window === "undefined" ? "" : sessionStorage.getItem("deenislam_admin_token") || "";
+  const headers = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${token()}` });
+
+  async function load(showMessage = false) {
+    setLoading(true);
+    if (showMessage) setMessage("");
+    try {
+      const response = await fetch(`${API}/api/admin/help-content?refresh=${Date.now()}`, { headers: { ...headers(), "Cache-Control": "no-cache" } });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      setForm({ ...fallback, ...result.data });
+      if (showMessage) setMessage("Help Center content reloaded.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to load Help Center.");
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+    try {
+      const response = await fetch(`${API}/api/admin/help-content`, { method: "PUT", headers: headers(), body: JSON.stringify(form) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      setForm({ ...fallback, ...result.data });
+      setMessage(result.message);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to save Help Center.");
+    } finally { setSaving(false); }
+  }
+
+  return <main>
+    <header><div><Link href="/">‹ Back to Dashboard</Link><small>APP &amp; WEB SUPPORT</small><h1>Help Center Content</h1><p>Control the Help Center shown in the mobile app and website.</p></div><b>LIVE<span>ADMIN MANAGED</span></b></header>
+    {message && <div className="message">{message}</div>}
+    <section className="workspace">
+      <form className="panel" onSubmit={save}>
+        <div className="panelHead"><div><small>CONTENT EDITOR</small><h2>Help Center</h2></div><div className="actions"><button type="button" className="reload" disabled={saving || loading} onClick={() => void load(true)}>{loading ? "Reloading..." : "Reload"}</button><button disabled={saving || loading}>{saving ? "Saving..." : "Save & Publish"}</button></div></div>
+        <label>Page title<input value={form.title} onChange={event => setForm({ ...form, title: event.target.value })} required maxLength={100} /></label>
+        <label>Hero subtitle<input value={form.subtitle} onChange={event => setForm({ ...form, subtitle: event.target.value })} required maxLength={180} /></label>
+        <div className="editor"><label>Help articles and FAQs</label><RichTextEditor value={form.body} onChange={body => setForm({ ...form, body })} api={API} token={token()} onMessage={setMessage} recordId="help-page:en" /></div>
+        <label className="publish"><input type="checkbox" checked={form.published} onChange={event => setForm({ ...form, published: event.target.checked })} /><span><b>Publish in mobile app and website</b><small>When disabled, the built-in support content is used.</small></span></label>
+      </form>
+      <aside className="preview"><small>LIVE APP PREVIEW</small><div className="phone"><div className="phoneHead"><i>‹</i><b>Help Center</b><span /></div><div className="hero"><i>?</i><strong>{form.title || "Help Center"}</strong><span>{form.subtitle}</span></div><article dangerouslySetInnerHTML={{ __html: form.body }} /></div></aside>
+    </section>
+    <style jsx>{`*{box-sizing:border-box}main{min-height:100vh;padding:28px;background:#f3f8f4;color:#173d2e;font-family:Arial}header,.message,.workspace{max-width:1400px;margin-left:auto;margin-right:auto}header{display:flex;justify-content:space-between;gap:24px;padding:28px 34px;border-radius:22px;background:linear-gradient(135deg,#064b32,#088154);color:#fff}header a{color:#dcefe3;text-decoration:none}header small,.panelHead small,.preview>small{display:block;margin-top:8px;color:#d9bd65;font-size:10px;font-weight:900;letter-spacing:1.2px}header h1{margin:6px 0;font-size:30px}header p{margin:0;color:#dfefe5}header>b{font-size:25px;text-align:center}header>b span{display:block;font-size:8px}.message{margin-top:14px;padding:13px 16px;border-radius:11px;background:#def2e5}.workspace{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,.75fr);gap:18px;margin-top:18px}.panel,.preview{padding:22px;border:1px solid #d7e6db;border-radius:18px;background:#fff}.panelHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.panelHead h2{margin:4px 0}.actions{display:flex;gap:8px}.actions button{padding:11px 18px;border:0;border-radius:10px;background:#087a4d;color:#fff;font-weight:800;cursor:pointer}.actions button:disabled{opacity:.55}.actions .reload{border:1px solid #b9d2c1;background:#edf6ef;color:#176043}label{display:block;margin-top:15px;font-size:11px;font-weight:800}input{width:100%;margin-top:7px;padding:12px;border:1px solid #cbded1;border-radius:10px;font:14px Arial}.editor{margin-top:15px}.editor>label{margin-bottom:7px}.publish{display:flex;align-items:center;gap:11px;padding:14px;border-radius:13px;background:#eff7f1}.publish input{width:18px;height:18px;margin:0;accent-color:#087a4d}.publish b,.publish small{display:block}.publish small{margin-top:4px;color:#748079}.preview{align-self:start;background:#e8f2e9}.phone{margin-top:12px;overflow:hidden;border:8px solid #17372c;border-radius:30px;background:#f8fbf7;box-shadow:0 18px 42px #16452d33}.phoneHead{height:58px;padding:0 14px;background:#fff;display:flex;align-items:center;justify-content:space-between}.phoneHead i{font-size:31px;color:#087a4d}.phoneHead b{font:700 18px Georgia}.phoneHead span{width:25px}.hero{padding:22px 16px;border-radius:0 0 22px 22px;background:#087a4d;color:#fff;text-align:center}.hero i{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 12px;border-radius:15px;background:#ffffff26;font:700 25px Georgia}.hero strong{display:block;font:700 22px Georgia}.hero span{display:block;margin-top:7px;font-size:10px;color:#d7ecdf}.phone article{max-height:520px;overflow:auto;margin:13px;padding:17px;border:1px solid #dce7de;border-radius:17px;background:#fff}.phone article :global(h1),.phone article :global(h2),.phone article :global(h3){color:#087a4d;font-family:Georgia;font-weight:800}.phone article :global(p){font-size:11px;line-height:1.55;color:#536159}.phone article :global(a){color:#087a4d;font-weight:800}@media(max-width:900px){.workspace{grid-template-columns:1fr}.preview{order:-1}}`}</style>
+  </main>;
+}

@@ -1,15 +1,1029 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
-import Link from"next/link";import{FormEvent,useEffect,useMemo,useState}from"react";import{prepareWebPUpload}from"../lib/imageUpload";import UploadedContentPicker from"./UploadedContentPicker";
-const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:4000").replace(/\/$/,"");
-const iso=(date=new Date())=>{const local=new Date(date.getTime()-date.getTimezoneOffset()*60000);return local.toISOString().slice(0,10)};
-const taskTypes=[['quran','Quran'],['tafsir','Tafsir'],['hadith','Hadith'],['duas','Duas'],['books','Books'],['islamicLifestyle','Islamic Lifestyle'],['prophets','Prophets'],['sahaba','Sahaba'],['islamicHistory','Islamic History'],['dhikr','Dhikr'],['lesson','Islamic Lesson'],['goodDeed','Good Deed'],['reflection','Reflection']];
-const starterTasks=[{id:'dua',type:'dua',title:"Today's Dua",subtitle:'Rabbi zidni ilma',instruction:'Read 3 times',rewardPoints:10,contentId:''},{id:'dhikr',type:'dhikr',title:"Today's Dhikr",subtitle:'SubhanAllahi wa bihamdihi',instruction:'Target: 100 times',rewardPoints:20,target:100,contentId:''},{id:'quran',type:'quran',title:'Quran Reading',subtitle:'Surah Al-Mulk - Ayah 1–15',instruction:'',rewardPoints:30,contentId:''},{id:'lesson',type:'lesson',title:'Learn Something New',subtitle:'Short Islamic lesson',instruction:'',rewardPoints:10,contentId:''},{id:'goodDeed',type:'goodDeed',title:'Do a Good Deed',subtitle:'Help someone today',instruction:'',rewardPoints:15,contentId:''},{id:'reflection',type:'reflection',title:'Daily Reflection',subtitle:'Write a short reflection',instruction:'',rewardPoints:10,contentId:''}];
-const blank=()=>({date:iso(),greetingTitle:'Assalamu Alaikum',greetingSubtitle:'May Allah make today easy for you',quote:'And whoever does a good deed, We will increase for him in good.',quoteReference:"Qur'an 42:23",focusText:'Small sincere deeds bring us closer to Allah.',published:true,prayers:[{time:'5:12 AM'},{time:'12:28 PM'},{time:'3:52 PM'},{time:'6:47 PM'},{time:'8:14 PM'}],tasks:starterTasks.map(x=>({...x}))});
-async function json(r:Response){if(!(r.headers.get('content-type')||'').includes('application/json'))throw Error('Restart the backend server, then refresh this page.');return r.json()}
-export default function DailyPrayerControl(){const[plans,setPlans]=useState<any[]>([]),[form,setForm]=useState<any>(blank()),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[uploadingCard,setUploadingCard]=useState<number|null>(null),[message,setMessage]=useState('');const token=()=>typeof window==='undefined'?'':sessionStorage.getItem('deenislam_admin_token')||'',headers=()=>({'Content-Type':'application/json',Authorization:'Bearer '+token()});async function load(){setLoading(true);try{const r=await fetch(API+'/api/admin/daily-prayer',{headers:headers()}),j=await json(r);if(!r.ok)throw Error(j.message);setPlans(j.data||[])}catch(e:any){setMessage(e.message)}finally{setLoading(false)}}useEffect(()=>{void load()},[]);const sorted=useMemo(()=>[...plans].sort((a,b)=>b.date.localeCompare(a.date)),[plans]);function task(index:number,key:string,value:any){setForm((x:any)=>({...x,tasks:x.tasks.map((item:any,i:number)=>i===index?{...item,[key]:value}:item)}))}function changeTaskType(index:number,type:string){const titles:any={dua:"Today's Dua",dhikr:"Today's Dhikr",quran:'Quran Reading',lesson:'Learn Something New',goodDeed:'Do a Good Deed',reflection:'Daily Reflection'};setForm((current:any)=>({...current,tasks:current.tasks.map((item:any,i:number)=>i===index?{...item,type,title:titles[type]||'Daily Task',subtitle:'',instruction:'',detailArabic:'',detailMeaning:'',contentId:'',target:type==='dhikr'?100:undefined}:item)}))}function prayer(index:number,value:string){setForm((x:any)=>({...x,prayers:x.prayers.map((item:any,i:number)=>i===index?{...item,time:value}:item)}))}async function uploadTaskImage(index:number,file?:File){if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type))return setMessage('Choose a JPG, PNG or WebP card image.');setUploadingCard(index);setMessage('Uploading card image...');try{const prepared=await prepareWebPUpload(file),response=await fetch(API+'/api/admin/books/cover-upload',{method:'POST',headers:headers(),body:JSON.stringify({fileName:prepared.fileName,contentType:prepared.contentType})}),body=await json(response);if(!response.ok)throw Error(body.message||'Unable to prepare card image upload.');const uploaded=await fetch(body.data.uploadUrl,{method:'PUT',headers:{'Content-Type':'image/webp'},body:prepared.file});if(!uploaded.ok)throw Error('Card image upload failed.');task(index,'imageUrl',body.data.publicUrl);task(index,'imageKey',body.data.key);setMessage('Card image uploaded. Save Plan to publish it.')}catch(error:any){setMessage(error.message||'Card image upload failed.')}finally{setUploadingCard(null)}}function addTask(){setForm((x:any)=>({...x,tasks:[...x.tasks,{id:'task-'+Date.now(),type:'goodDeed',title:'',subtitle:'',instruction:'',rewardPoints:10,contentId:''}]}));requestAnimationFrame(()=>document.getElementById('daily-task-builder')?.scrollIntoView({behavior:'smooth',block:'start'}))}function editTaskCard(index:number){const card=document.getElementById('task-card-'+index);card?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>card?.querySelector<HTMLInputElement>('input[data-card-title]')?.focus(),350)}function duplicateTask(index:number){setForm((x:any)=>{const original=x.tasks[index];const copy={...original,id:(original.id||'task')+'-copy-'+Date.now(),title:(original.title||'Card')+' Copy'};return{...x,tasks:[...x.tasks.slice(0,index+1),copy,...x.tasks.slice(index+1)]}});requestAnimationFrame(()=>document.getElementById('daily-task-builder')?.scrollIntoView({behavior:'smooth',block:'start'}))}function newPlan(){const used=new Set(plans.map(plan=>plan.date));const next=new Date();next.setDate(next.getDate()+1);while(used.has(iso(next)))next.setDate(next.getDate()+1);setForm({...blank(),date:iso(next)});setMessage('New scheduled plan ready for '+iso(next)+'. Add content and click Save Plan.');window.scrollTo({top:0,behavior:'smooth'})}async function save(e:FormEvent){e.preventDefault();setSaving(true);setMessage('');try{const r=await fetch(API+'/api/admin/daily-prayer/'+form.date,{method:'PUT',headers:headers(),body:JSON.stringify(form)}),j=await json(r);if(!r.ok)throw Error(j.message);setMessage(j.message);await load()}catch(e:any){setMessage(e.message)}finally{setSaving(false)}}function edit(plan:any){setForm({...blank(),...plan,prayers:plan.prayers?.length?plan.prayers:blank().prayers,tasks:plan.tasks?.length?plan.tasks:starterTasks.map(x=>({...x}))});window.scrollTo({top:0,behavior:'smooth'})}async function remove(plan:any){if(!confirm('Delete Daily Prayer plan for '+plan.date+'?'))return;try{const r=await fetch(API+'/api/admin/daily-prayer/'+plan.date,{method:'DELETE',headers:headers()}),j=await json(r);if(!r.ok)throw Error(j.message);setMessage(j.message);if(form.date===plan.date)setForm(blank());await load()}catch(e:any){setMessage(e.message)}}return <main><header><div><Link href="/">{"\u2039"} Back to Dashboard</Link><small>DAILY PRAYER MANAGEMENT</small><h1>Daily Prayer Control</h1><p>Assign each day's worship plan and control what appears in the mobile app.</p></div><b>{plans.length}<span>SAVED PLANS</span></b></header>{message&&<div className="message">{message}</div>}<section className="layout"><form className="panel editor" onSubmit={save}><div className="panelHead"><div><small>DAILY ASSIGNMENT</small><h2>{form.date===iso()?"Today's plan":form.date}</h2></div><div className="panelActions"><button type="button" className="createCard" onClick={addTask}>+ Create Card</button><button disabled={saving}>{saving?'Saving...':'Save Plan'}</button></div></div><div className="topFields"><label>Schedule date (starts at 12:00 AM)<input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})} required/></label><label className="publish"><input type="checkbox" checked={form.published} onChange={e=>setForm({...form,published:e.target.checked})}/><span><b>Publish automatically on this date</b><small>The app loads it at local midnight; uncheck to keep it as draft</small></span></label><label>Greeting title<input value={form.greetingTitle||''} onChange={e=>setForm({...form,greetingTitle:e.target.value})}/></label><label>Greeting subtitle<input value={form.greetingSubtitle||''} onChange={e=>setForm({...form,greetingSubtitle:e.target.value})}/></label><label className="wide">Hero quote<textarea value={form.quote} onChange={e=>setForm({...form,quote:e.target.value})}/></label><label>Quote reference<input value={form.quoteReference} onChange={e=>setForm({...form,quoteReference:e.target.value})}/></label><label>Focus message<input value={form.focusText} onChange={e=>setForm({...form,focusText:e.target.value})}/></label></div><h3>Prayer display times</h3><div className="prayers">{['Fajr','Dhuhr','Asr','Maghrib','Isha'].map((name,i)=><label key={name}>{name}<input value={form.prayers[i]?.time||''} onChange={e=>prayer(i,e.target.value)} placeholder="5:12 AM"/></label>)}</div><div className="taskHead" id="daily-task-builder"><div><h3>Today's tasks</h3><p>Tasks appear in this order in the app.</p></div><button type="button" onClick={addTask}>+ Create Card</button></div><div className="tasks">{form.tasks.map((item:any,index:number)=><article key={item.id||index} id={'task-card-'+index}><div className="taskNumber">{index+1}</div><div className="taskFields"><UploadedContentPicker api={API} token={token()} type={item.type} onSelect={selected=>setForm((current:any)=>({...current,tasks:current.tasks.map((row:any,i:number)=>i===index?{...row,...selected}:row)}))}/><label>Type<select value={item.type} onChange={e=>changeTaskType(index,e.target.value)}>{taskTypes.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Title<input data-card-title value={item.title} onChange={e=>task(index,'title',e.target.value)} required/></label><label className="wide">Subtitle / assignment<input value={item.subtitle} onChange={e=>task(index,'subtitle',e.target.value)}/></label><label className="wide">Detail Arabic text<textarea dir="rtl" value={item.detailArabic||''} onChange={e=>task(index,'detailArabic',e.target.value)} placeholder="Arabic text shown after Continue"/></label><label className="wide">Detail meaning / content<textarea value={item.detailMeaning||''} onChange={e=>task(index,'detailMeaning',e.target.value)} placeholder="Meaning or main task content shown on the detail page"/></label><label className="wide">Instruction<textarea value={item.instruction||''} onChange={e=>task(index,'instruction',e.target.value)} placeholder="Steps the user should complete"/></label><label>Content ID / slug<input value={item.contentId||''} onChange={e=>task(index,'contentId',e.target.value)} placeholder="Optional linked content"/></label><label className="wide cardImageField">Card image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploadingCard===index} onChange={e=>{void uploadTaskImage(index,e.target.files?.[0]);e.currentTarget.value='' }}/><small>{uploadingCard===index?'Uploading image...':item.imageUrl?'Custom image ready':'Choose JPG, PNG or WebP; type image is used when empty'}</small>{item.imageUrl?<span className="cardImagePreview"><img src={item.imageUrl} alt="Card preview"/><button type="button" onClick={()=>{task(index,'imageUrl','');task(index,'imageKey','')}}>Remove image</button></span>:null}</label><label>Reward points<input type="number" min="0" max="1000" value={item.rewardPoints} onChange={e=>task(index,'rewardPoints',Number(e.target.value))}/></label><label>Target count<input type="number" min="1" value={item.target||''} onChange={e=>task(index,'target',e.target.value?Number(e.target.value):undefined)} placeholder="Dhikr only"/></label></div><nav className="cardActions"><button type="button" className="editCard" onClick={()=>editTaskCard(index)}>Edit Card</button><button type="button" className="duplicateCard" onClick={()=>duplicateTask(index)}>Duplicate</button><button type="button" className="remove" onClick={()=>setForm({...form,tasks:form.tasks.filter((_:any,i:number)=>i!==index)})}>Remove</button></nav></article>)}</div></form><section className="panel library"><div className="panelHead"><div><small>PLAN LIBRARY</small><h2>Saved assignments</h2></div><button type="button" onClick={newPlan}>New Plan</button></div>{loading?<p className="empty">Loading plans...</p>:sorted.map(plan=><article className="plan" key={plan.date}><div className="date"><b>{new Date(plan.date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}</b><span>{new Date(plan.date+'T00:00:00').getFullYear()}</span></div><div><b>{plan.date===iso()?"Today's plan":plan.date}</b><small>{plan.tasks?.length||0} tasks - {plan.published?(plan.date===iso()?'Live today':plan.date>iso()?'Scheduled':'Expired'):'Draft'}</small><p>{plan.focusText||plan.quote}</p></div><nav><button onClick={()=>edit(plan)}>Edit</button><button className="delete" onClick={()=>void remove(plan)}>Delete</button></nav></article>)}{!loading&&!plans.length&&<p className="empty">No plans saved yet. Create the first assignment.</p>}</section></section><style jsx>{`*{box-sizing:border-box}main{min-height:100vh;padding:28px;background:#f3f8f4;color:#173d2e;font-family:Arial}header,.message,.layout{max-width:1500px;margin-left:auto;margin-right:auto}header{display:flex;justify-content:space-between;gap:24px;padding:28px 34px;border-radius:22px;background:linear-gradient(135deg,#064b32,#088154);color:#fff}header :global(a){color:#dcefe3;text-decoration:none}header small,.panelHead small{display:block;margin-top:8px;color:#d9bd65;font-size:10px;font-weight:900;letter-spacing:1.2px}header h1{margin:6px 0;font-size:30px}header p{margin:0;color:#dfefe5}header>b{font-size:30px;text-align:center}header>b span{display:block;font-size:8px}.message{margin-top:14px;padding:13px 16px;border-radius:11px;background:#def2e5}.layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(380px,.65fr);gap:17px;margin-top:17px}.panel{padding:22px;border:1px solid #d7e6db;border-radius:18px;background:#fff}.panelHead,.taskHead{display:flex;align-items:center;justify-content:space-between;gap:12px}.panelActions{display:flex;gap:8px}.panelActions .createCard{background:#e4f3e9;color:#087a4d;border:1px solid #bcdcc8}.panelHead h2,.taskHead h3{margin:4px 0}.panelHead button,.taskHead button,.plan button{padding:10px 14px;border:0;border-radius:9px;background:#087a4d;color:#fff;font-weight:800}.topFields,.taskFields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:17px}.wide{grid-column:1/-1}label{font-size:11px;font-weight:800}input,select,textarea{width:100%;margin-top:6px;padding:11px;border:1px solid #cbded1;border-radius:9px;background:#fff}textarea{min-height:75px;resize:vertical}.publish{margin-top:18px;display:flex;align-items:center;gap:10px}.publish input{width:18px;height:18px;margin:0;accent-color:#087a4d}.publish b,.publish small{display:block}.publish small{margin-top:3px;color:#79877f}.editor>h3{margin:23px 0 9px}.prayers{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.taskHead{margin-top:24px;padding-top:18px;border-top:1px solid #e1ebe4}.taskHead p{margin:0;color:#78877f;font-size:10px}.tasks{display:grid;gap:11px;margin-top:13px}.tasks article{display:flex;align-items:flex-start;gap:11px;padding:14px;border:1px solid #dce9e0;border-radius:14px;background:#f8fbf9}.taskNumber{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:11px;background:#087a4d;color:#fff;font-weight:900}.taskFields{flex:1;margin:0}.cardImageField{padding:10px;border:1px dashed #9bc9aa;border-radius:10px;background:#f2f9f4}.cardImageField small{display:block;margin-top:5px;color:#708078}.cardImagePreview{display:flex;align-items:center;gap:10px;margin-top:8px}.cardImagePreview img{width:72px;height:58px;border-radius:10px;object-fit:cover}.cardImagePreview button{padding:7px 9px;border:0;border-radius:7px;background:#fff0ed;color:#ad4335;font-weight:800}.cardActions{margin-top:22px;display:grid;gap:6px;flex:none}.cardActions button{padding:8px 10px;border:0;border-radius:8px;font-size:10px;font-weight:800;white-space:nowrap}.cardActions .editCard{background:#087a4d;color:#fff}.cardActions .duplicateCard{background:#e5f3e9;color:#176043}.tasks .remove{margin:0;background:#fff0ed;color:#ad4335}.library{align-self:start}.plan{display:flex;gap:11px;padding:14px 0;border-bottom:1px solid #e3ece6}.date{width:58px;height:58px;display:grid;place-items:center;align-content:center;flex:none;border-radius:13px;background:#e5f4e9;color:#087a4d}.date b,.date span{display:block}.date span{font-size:9px}.plan>div:nth-child(2){min-width:0;flex:1}.plan>div:nth-child(2)>b,.plan small{display:block}.plan small{margin-top:4px;color:#8a792f}.plan p{margin:7px 0 0;color:#718078;font-size:10px;line-height:1.4}.plan nav{display:flex;align-items:center;gap:5px}.plan .delete{background:#fff0ed;color:#ad4335}.empty{padding:45px;text-align:center;color:#718078}@media(max-width:1050px){.layout{grid-template-columns:1fr}.library{order:-1}}@media(max-width:700px){main{padding:14px}.topFields,.taskFields{grid-template-columns:1fr}.wide{grid-column:auto}.prayers{grid-template-columns:1fr 1fr}.tasks article{flex-wrap:wrap}.cardActions{width:100%;margin:0 0 0 45px;grid-template-columns:repeat(3,max-content)}}`}</style></main>}
-
-
-
-
-
+import Link from "next/link";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { deleteManagedImage, uploadImageToS3 } from "../lib/imageUpload";
+import UploadedContentPicker from "./UploadedContentPicker";
+const API = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+).replace(/\/$/, "");
+const iso = (date = new Date()) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+};
+const taskTypes = [
+  ["quran", "Quran"],
+  ["tafsir", "Tafsir"],
+  ["hadith", "Hadith"],
+  ["duas", "Duas"],
+  ["books", "Books"],
+  ["islamicLifestyle", "Islamic Lifestyle"],
+  ["prophets", "Prophets"],
+  ["sahaba", "Sahaba"],
+  ["islamicHistory", "Islamic History"],
+  ["dhikr", "Dhikr"],
+  ["lesson", "Islamic Lesson"],
+  ["goodDeed", "Good Deed"],
+  ["reflection", "Reflection"],
+];
+const starterTasks = [
+  {
+    id: "dua",
+    type: "dua",
+    title: "Today's Dua",
+    subtitle: "Rabbi zidni ilma",
+    instruction: "Read 3 times",
+    rewardPoints: 10,
+    contentId: "",
+  },
+  {
+    id: "dhikr",
+    type: "dhikr",
+    title: "Today's Dhikr",
+    subtitle: "SubhanAllahi wa bihamdihi",
+    instruction: "Target: 100 times",
+    rewardPoints: 20,
+    target: 100,
+    contentId: "",
+  },
+  {
+    id: "quran",
+    type: "quran",
+    title: "Quran Reading",
+    subtitle: "Surah Al-Mulk - Ayah 1–15",
+    instruction: "",
+    rewardPoints: 30,
+    contentId: "",
+  },
+  {
+    id: "lesson",
+    type: "lesson",
+    title: "Learn Something New",
+    subtitle: "Short Islamic lesson",
+    instruction: "",
+    rewardPoints: 10,
+    contentId: "",
+  },
+  {
+    id: "goodDeed",
+    type: "goodDeed",
+    title: "Do a Good Deed",
+    subtitle: "Help someone today",
+    instruction: "",
+    rewardPoints: 15,
+    contentId: "",
+  },
+  {
+    id: "reflection",
+    type: "reflection",
+    title: "Daily Reflection",
+    subtitle: "Write a short reflection",
+    instruction: "",
+    rewardPoints: 10,
+    contentId: "",
+  },
+];
+const blank = () => ({
+  date: iso(),
+  greetingTitle: "Assalamu Alaikum",
+  greetingSubtitle: "May Allah make today easy for you",
+  quote: "And whoever does a good deed, We will increase for him in good.",
+  quoteReference: "Qur'an 42:23",
+  focusText: "Small sincere deeds bring us closer to Allah.",
+  published: true,
+  prayers: [
+    { time: "5:12 AM" },
+    { time: "12:28 PM" },
+    { time: "3:52 PM" },
+    { time: "6:47 PM" },
+    { time: "8:14 PM" },
+  ],
+  tasks: starterTasks.map((x) => ({ ...x })),
+});
+async function json(r: Response) {
+  if (!(r.headers.get("content-type") || "").includes("application/json"))
+    throw Error("Restart the backend server, then refresh this page.");
+  return r.json();
+}
+export default function DailyPrayerControl() {
+  const [plans, setPlans] = useState<any[]>([]),
+    [form, setForm] = useState<any>(blank()),
+    [loading, setLoading] = useState(true),
+    [saving, setSaving] = useState(false),
+    [uploadingCard, setUploadingCard] = useState<number | null>(null),
+    [message, setMessage] = useState("");
+  const token = () =>
+      typeof window === "undefined"
+        ? ""
+        : sessionStorage.getItem("deenislam_admin_token") || "",
+    headers = () => ({
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token(),
+    });
+  async function load() {
+    setLoading(true);
+    try {
+      const r = await fetch(API + "/api/admin/daily-prayer", {
+          headers: headers(),
+        }),
+        j = await json(r);
+      if (!r.ok) throw Error(j.message);
+      setPlans(j.data || []);
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    void load();
+  }, []);
+  const sorted = useMemo(
+    () => [...plans].sort((a, b) => b.date.localeCompare(a.date)),
+    [plans],
+  );
+  function task(index: number, key: string, value: any) {
+    setForm((x: any) => ({
+      ...x,
+      tasks: x.tasks.map((item: any, i: number) =>
+        i === index ? { ...item, [key]: value } : item,
+      ),
+    }));
+  }
+  function changeTaskType(index: number, type: string) {
+    const titles: any = {
+      dua: "Today's Dua",
+      dhikr: "Today's Dhikr",
+      quran: "Quran Reading",
+      lesson: "Learn Something New",
+      goodDeed: "Do a Good Deed",
+      reflection: "Daily Reflection",
+    };
+    setForm((current: any) => ({
+      ...current,
+      tasks: current.tasks.map((item: any, i: number) =>
+        i === index
+          ? {
+              ...item,
+              type,
+              title: titles[type] || "Daily Task",
+              subtitle: "",
+              instruction: "",
+              detailArabic: "",
+              detailMeaning: "",
+              contentId: "",
+              target: type === "dhikr" ? 100 : undefined,
+            }
+          : item,
+      ),
+    }));
+  }
+  function prayer(index: number, value: string) {
+    setForm((x: any) => ({
+      ...x,
+      prayers: x.prayers.map((item: any, i: number) =>
+        i === index ? { ...item, time: value } : item,
+      ),
+    }));
+  }
+  async function uploadTaskImage(index: number, file?: File) {
+    if (!file) return;
+    setUploadingCard(index);
+    setMessage("Uploading card image...");
+    try {
+      const body = await uploadImageToS3(API, token(), file);
+      task(index, "imageUrl", body.publicUrl);
+      task(index, "imageKey", body.key);
+      setMessage("Card image uploaded. Save Plan to publish it.");
+    } catch (error: any) {
+      setMessage(error.message || "Card image upload failed.");
+    } finally {
+      setUploadingCard(null);
+    }
+  }
+  function addTask() {
+    setForm((x: any) => ({
+      ...x,
+      tasks: [
+        ...x.tasks,
+        {
+          id: "task-" + Date.now(),
+          type: "goodDeed",
+          title: "",
+          subtitle: "",
+          instruction: "",
+          rewardPoints: 10,
+          contentId: "",
+        },
+      ],
+    }));
+    requestAnimationFrame(() =>
+      document
+        .getElementById("daily-task-builder")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  }
+  function editTaskCard(index: number) {
+    const card = document.getElementById("task-card-" + index);
+    card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(
+      () =>
+        card
+          ?.querySelector<HTMLInputElement>("input[data-card-title]")
+          ?.focus(),
+      350,
+    );
+  }
+  function duplicateTask(index: number) {
+    setForm((x: any) => {
+      const original = x.tasks[index];
+      const copy = {
+        ...original,
+        id: (original.id || "task") + "-copy-" + Date.now(),
+        title: (original.title || "Card") + " Copy",
+      };
+      return {
+        ...x,
+        tasks: [
+          ...x.tasks.slice(0, index + 1),
+          copy,
+          ...x.tasks.slice(index + 1),
+        ],
+      };
+    });
+    requestAnimationFrame(() =>
+      document
+        .getElementById("daily-task-builder")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  }
+  function newPlan() {
+    const used = new Set(plans.map((plan) => plan.date));
+    const next = new Date();
+    next.setDate(next.getDate() + 1);
+    while (used.has(iso(next))) next.setDate(next.getDate() + 1);
+    setForm({ ...blank(), date: iso(next) });
+    setMessage(
+      "New scheduled plan ready for " +
+        iso(next) +
+        ". Add content and click Save Plan.",
+    );
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  async function save(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setMessage("");
+    try {
+      const r = await fetch(API + "/api/admin/daily-prayer/" + form.date, {
+          method: "PUT",
+          headers: headers(),
+          body: JSON.stringify(form),
+        }),
+        j = await json(r);
+      if (!r.ok) throw Error(j.message);
+      setMessage(j.message);
+      await load();
+    } catch (e: any) {
+      setMessage(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+  function edit(plan: any) {
+    setForm({
+      ...blank(),
+      ...plan,
+      prayers: plan.prayers?.length ? plan.prayers : blank().prayers,
+      tasks: plan.tasks?.length
+        ? plan.tasks
+        : starterTasks.map((x) => ({ ...x })),
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  async function remove(plan: any) {
+    if (!confirm("Delete Daily Prayer plan for " + plan.date + "?")) return;
+    try {
+      const r = await fetch(API + "/api/admin/daily-prayer/" + plan.date, {
+          method: "DELETE",
+          headers: headers(),
+        }),
+        j = await json(r);
+      if (!r.ok) throw Error(j.message);
+      setMessage(j.message);
+      if (form.date === plan.date) setForm(blank());
+      await load();
+    } catch (e: any) {
+      setMessage(e.message);
+    }
+  }
+  return (
+    <main>
+      <header>
+        <div>
+          <Link href="/">{"\u2039"} Back to Dashboard</Link>
+          <small>DAILY PRAYER MANAGEMENT</small>
+          <h1>Daily Prayer Control</h1>
+          <p>
+            Assign each day's worship plan and control what appears in the
+            mobile app.
+          </p>
+        </div>
+        <b>
+          {plans.length}
+          <span>SAVED PLANS</span>
+        </b>
+      </header>
+      {message && <div className="message">{message}</div>}
+      <section className="layout">
+        <form className="panel editor" onSubmit={save}>
+          <div className="panelHead">
+            <div>
+              <small>DAILY ASSIGNMENT</small>
+              <h2>{form.date === iso() ? "Today's plan" : form.date}</h2>
+            </div>
+            <div className="panelActions">
+              <button type="button" className="createCard" onClick={addTask}>
+                + Create Card
+              </button>
+              <button disabled={saving}>
+                {saving ? "Saving..." : "Save Plan"}
+              </button>
+            </div>
+          </div>
+          <div className="topFields">
+            <label>
+              Schedule date (starts at 12:00 AM)
+              <input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                required
+              />
+            </label>
+            <label className="publish">
+              <input
+                type="checkbox"
+                checked={form.published}
+                onChange={(e) =>
+                  setForm({ ...form, published: e.target.checked })
+                }
+              />
+              <span>
+                <b>Publish automatically on this date</b>
+                <small>
+                  The app loads it at local midnight; uncheck to keep it as
+                  draft
+                </small>
+              </span>
+            </label>
+            <label>
+              Greeting title
+              <input
+                value={form.greetingTitle || ""}
+                onChange={(e) =>
+                  setForm({ ...form, greetingTitle: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Greeting subtitle
+              <input
+                value={form.greetingSubtitle || ""}
+                onChange={(e) =>
+                  setForm({ ...form, greetingSubtitle: e.target.value })
+                }
+              />
+            </label>
+            <label className="wide">
+              Hero quote
+              <textarea
+                value={form.quote}
+                onChange={(e) => setForm({ ...form, quote: e.target.value })}
+              />
+            </label>
+            <label>
+              Quote reference
+              <input
+                value={form.quoteReference}
+                onChange={(e) =>
+                  setForm({ ...form, quoteReference: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Focus message
+              <input
+                value={form.focusText}
+                onChange={(e) =>
+                  setForm({ ...form, focusText: e.target.value })
+                }
+              />
+            </label>
+          </div>
+          <h3>Prayer display times</h3>
+          <div className="prayers">
+            {["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"].map((name, i) => (
+              <label key={name}>
+                {name}
+                <input
+                  value={form.prayers[i]?.time || ""}
+                  onChange={(e) => prayer(i, e.target.value)}
+                  placeholder="5:12 AM"
+                />
+              </label>
+            ))}
+          </div>
+          <div className="taskHead" id="daily-task-builder">
+            <div>
+              <h3>Today's tasks</h3>
+              <p>Tasks appear in this order in the app.</p>
+            </div>
+            <button type="button" onClick={addTask}>
+              + Create Card
+            </button>
+          </div>
+          <div className="tasks">
+            {form.tasks.map((item: any, index: number) => (
+              <article key={item.id || index} id={"task-card-" + index}>
+                <div className="taskNumber">{index + 1}</div>
+                <div className="taskFields">
+                  <UploadedContentPicker
+                    api={API}
+                    token={token()}
+                    type={item.type}
+                    onSelect={(selected) =>
+                      setForm((current: any) => ({
+                        ...current,
+                        tasks: current.tasks.map((row: any, i: number) =>
+                          i === index ? { ...row, ...selected } : row,
+                        ),
+                      }))
+                    }
+                  />
+                  <label>
+                    Type
+                    <select
+                      value={item.type}
+                      onChange={(e) => changeTaskType(index, e.target.value)}
+                    >
+                      {taskTypes.map(([value, label]) => (
+                        <option value={value} key={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Title
+                    <input
+                      data-card-title
+                      value={item.title}
+                      onChange={(e) => task(index, "title", e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="wide">
+                    Subtitle / assignment
+                    <input
+                      value={item.subtitle}
+                      onChange={(e) => task(index, "subtitle", e.target.value)}
+                    />
+                  </label>
+                  <label className="wide">
+                    Detail Arabic text
+                    <textarea
+                      dir="rtl"
+                      value={item.detailArabic || ""}
+                      onChange={(e) =>
+                        task(index, "detailArabic", e.target.value)
+                      }
+                      placeholder="Arabic text shown after Continue"
+                    />
+                  </label>
+                  <label className="wide">
+                    Detail meaning / content
+                    <textarea
+                      value={item.detailMeaning || ""}
+                      onChange={(e) =>
+                        task(index, "detailMeaning", e.target.value)
+                      }
+                      placeholder="Meaning or main task content shown on the detail page"
+                    />
+                  </label>
+                  <label className="wide">
+                    Instruction
+                    <textarea
+                      value={item.instruction || ""}
+                      onChange={(e) =>
+                        task(index, "instruction", e.target.value)
+                      }
+                      placeholder="Steps the user should complete"
+                    />
+                  </label>
+                  <label>
+                    Content ID / slug
+                    <input
+                      value={item.contentId || ""}
+                      onChange={(e) => task(index, "contentId", e.target.value)}
+                      placeholder="Optional linked content"
+                    />
+                  </label>
+                  <label className="wide cardImageField">
+                    Card image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingCard === index}
+                      onChange={(e) => {
+                        void uploadTaskImage(index, e.target.files?.[0]);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+                    <small>
+                      {uploadingCard === index
+                        ? "Uploading image..."
+                        : item.imageUrl
+                          ? "Custom image ready"
+                          : "Choose JPG, PNG or WebP; type image is used when empty"}
+                    </small>
+                    {item.imageUrl ? (
+                      <span className="cardImagePreview">
+                        <img src={item.imageUrl} alt="Card preview" />
+                        <button
+                          type="button"
+                          onClick={() => void deleteManagedImage(API, token(), { key: item.imageKey, url: item.imageUrl }).then(() => { task(index, "imageUrl", ""); task(index, "imageKey", ""); }).catch((error) => setMessage(error.message))}
+                        >
+                          Remove image
+                        </button>
+                      </span>
+                    ) : null}
+                  </label>
+                  <label>
+                    Reward points
+                    <input
+                      type="number"
+                      min="0"
+                      max="1000"
+                      value={item.rewardPoints}
+                      onChange={(e) =>
+                        task(index, "rewardPoints", Number(e.target.value))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Target count
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.target || ""}
+                      onChange={(e) =>
+                        task(
+                          index,
+                          "target",
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
+                      placeholder="Dhikr only"
+                    />
+                  </label>
+                </div>
+                <nav className="cardActions">
+                  <button
+                    type="button"
+                    className="editCard"
+                    onClick={() => editTaskCard(index)}
+                  >
+                    Edit Card
+                  </button>
+                  <button
+                    type="button"
+                    className="duplicateCard"
+                    onClick={() => duplicateTask(index)}
+                  >
+                    Duplicate
+                  </button>
+                  <button
+                    type="button"
+                    className="remove"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        tasks: form.tasks.filter(
+                          (_: any, i: number) => i !== index,
+                        ),
+                      })
+                    }
+                  >
+                    Remove
+                  </button>
+                </nav>
+              </article>
+            ))}
+          </div>
+        </form>
+        <section className="panel library">
+          <div className="panelHead">
+            <div>
+              <small>PLAN LIBRARY</small>
+              <h2>Saved assignments</h2>
+            </div>
+            <button type="button" onClick={newPlan}>
+              New Plan
+            </button>
+          </div>
+          {loading ? (
+            <p className="empty">Loading plans...</p>
+          ) : (
+            sorted.map((plan) => (
+              <article className="plan" key={plan.date}>
+                <div className="date">
+                  <b>
+                    {new Date(plan.date + "T00:00:00").toLocaleDateString(
+                      "en-GB",
+                      { day: "2-digit", month: "short" },
+                    )}
+                  </b>
+                  <span>{new Date(plan.date + "T00:00:00").getFullYear()}</span>
+                </div>
+                <div>
+                  <b>{plan.date === iso() ? "Today's plan" : plan.date}</b>
+                  <small>
+                    {plan.tasks?.length || 0} tasks -{" "}
+                    {plan.published
+                      ? plan.date === iso()
+                        ? "Live today"
+                        : plan.date > iso()
+                          ? "Scheduled"
+                          : "Expired"
+                      : "Draft"}
+                  </small>
+                  <p>{plan.focusText || plan.quote}</p>
+                </div>
+                <nav>
+                  <button onClick={() => edit(plan)}>Edit</button>
+                  <button className="delete" onClick={() => void remove(plan)}>
+                    Delete
+                  </button>
+                </nav>
+              </article>
+            ))
+          )}
+          {!loading && !plans.length && (
+            <p className="empty">
+              No plans saved yet. Create the first assignment.
+            </p>
+          )}
+        </section>
+      </section>
+      <style jsx>{`
+        * {
+          box-sizing: border-box;
+        }
+        main {
+          min-height: 100vh;
+          padding: 28px;
+          background: #f3f8f4;
+          color: #173d2e;
+          font-family: Arial;
+        }
+        header,
+        .message,
+        .layout {
+          max-width: 1500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        header {
+          display: flex;
+          justify-content: space-between;
+          gap: 24px;
+          padding: 28px 34px;
+          border-radius: 22px;
+          background: linear-gradient(135deg, #064b32, #088154);
+          color: #fff;
+        }
+        header :global(a) {
+          color: #dcefe3;
+          text-decoration: none;
+        }
+        header small,
+        .panelHead small {
+          display: block;
+          margin-top: 8px;
+          color: #d9bd65;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 1.2px;
+        }
+        header h1 {
+          margin: 6px 0;
+          font-size: 30px;
+        }
+        header p {
+          margin: 0;
+          color: #dfefe5;
+        }
+        header > b {
+          font-size: 30px;
+          text-align: center;
+        }
+        header > b span {
+          display: block;
+          font-size: 8px;
+        }
+        .message {
+          margin-top: 14px;
+          padding: 13px 16px;
+          border-radius: 11px;
+          background: #def2e5;
+        }
+        .layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1.35fr) minmax(380px, 0.65fr);
+          gap: 17px;
+          margin-top: 17px;
+        }
+        .panel {
+          padding: 22px;
+          border: 1px solid #d7e6db;
+          border-radius: 18px;
+          background: #fff;
+        }
+        .panelHead,
+        .taskHead {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .panelActions {
+          display: flex;
+          gap: 8px;
+        }
+        .panelActions .createCard {
+          background: #e4f3e9;
+          color: #087a4d;
+          border: 1px solid #bcdcc8;
+        }
+        .panelHead h2,
+        .taskHead h3 {
+          margin: 4px 0;
+        }
+        .panelHead button,
+        .taskHead button,
+        .plan button {
+          padding: 10px 14px;
+          border: 0;
+          border-radius: 9px;
+          background: #087a4d;
+          color: #fff;
+          font-weight: 800;
+        }
+        .topFields,
+        .taskFields {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: 17px;
+        }
+        .wide {
+          grid-column: 1/-1;
+        }
+        label {
+          font-size: 11px;
+          font-weight: 800;
+        }
+        input,
+        select,
+        textarea {
+          width: 100%;
+          margin-top: 6px;
+          padding: 11px;
+          border: 1px solid #cbded1;
+          border-radius: 9px;
+          background: #fff;
+        }
+        textarea {
+          min-height: 75px;
+          resize: vertical;
+        }
+        .publish {
+          margin-top: 18px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .publish input {
+          width: 18px;
+          height: 18px;
+          margin: 0;
+          accent-color: #087a4d;
+        }
+        .publish b,
+        .publish small {
+          display: block;
+        }
+        .publish small {
+          margin-top: 3px;
+          color: #79877f;
+        }
+        .editor > h3 {
+          margin: 23px 0 9px;
+        }
+        .prayers {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 8px;
+        }
+        .taskHead {
+          margin-top: 24px;
+          padding-top: 18px;
+          border-top: 1px solid #e1ebe4;
+        }
+        .taskHead p {
+          margin: 0;
+          color: #78877f;
+          font-size: 10px;
+        }
+        .tasks {
+          display: grid;
+          gap: 11px;
+          margin-top: 13px;
+        }
+        .tasks article {
+          display: flex;
+          align-items: flex-start;
+          gap: 11px;
+          padding: 14px;
+          border: 1px solid #dce9e0;
+          border-radius: 14px;
+          background: #f8fbf9;
+        }
+        .taskNumber {
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          flex: none;
+          border-radius: 11px;
+          background: #087a4d;
+          color: #fff;
+          font-weight: 900;
+        }
+        .taskFields {
+          flex: 1;
+          margin: 0;
+        }
+        .cardImageField {
+          padding: 10px;
+          border: 1px dashed #9bc9aa;
+          border-radius: 10px;
+          background: #f2f9f4;
+        }
+        .cardImageField small {
+          display: block;
+          margin-top: 5px;
+          color: #708078;
+        }
+        .cardImagePreview {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 8px;
+        }
+        .cardImagePreview img {
+          width: 72px;
+          height: 58px;
+          border-radius: 10px;
+          object-fit: cover;
+        }
+        .cardImagePreview button {
+          padding: 7px 9px;
+          border: 0;
+          border-radius: 7px;
+          background: #fff0ed;
+          color: #ad4335;
+          font-weight: 800;
+        }
+        .cardActions {
+          margin-top: 22px;
+          display: grid;
+          gap: 6px;
+          flex: none;
+        }
+        .cardActions button {
+          padding: 8px 10px;
+          border: 0;
+          border-radius: 8px;
+          font-size: 10px;
+          font-weight: 800;
+          white-space: nowrap;
+        }
+        .cardActions .editCard {
+          background: #087a4d;
+          color: #fff;
+        }
+        .cardActions .duplicateCard {
+          background: #e5f3e9;
+          color: #176043;
+        }
+        .tasks .remove {
+          margin: 0;
+          background: #fff0ed;
+          color: #ad4335;
+        }
+        .library {
+          align-self: start;
+        }
+        .plan {
+          display: flex;
+          gap: 11px;
+          padding: 14px 0;
+          border-bottom: 1px solid #e3ece6;
+        }
+        .date {
+          width: 58px;
+          height: 58px;
+          display: grid;
+          place-items: center;
+          align-content: center;
+          flex: none;
+          border-radius: 13px;
+          background: #e5f4e9;
+          color: #087a4d;
+        }
+        .date b,
+        .date span {
+          display: block;
+        }
+        .date span {
+          font-size: 9px;
+        }
+        .plan > div:nth-child(2) {
+          min-width: 0;
+          flex: 1;
+        }
+        .plan > div:nth-child(2) > b,
+        .plan small {
+          display: block;
+        }
+        .plan small {
+          margin-top: 4px;
+          color: #8a792f;
+        }
+        .plan p {
+          margin: 7px 0 0;
+          color: #718078;
+          font-size: 10px;
+          line-height: 1.4;
+        }
+        .plan nav {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .plan .delete {
+          background: #fff0ed;
+          color: #ad4335;
+        }
+        .empty {
+          padding: 45px;
+          text-align: center;
+          color: #718078;
+        }
+        @media (max-width: 1050px) {
+          .layout {
+            grid-template-columns: 1fr;
+          }
+          .library {
+            order: -1;
+          }
+        }
+        @media (max-width: 700px) {
+          main {
+            padding: 14px;
+          }
+          .topFields,
+          .taskFields {
+            grid-template-columns: 1fr;
+          }
+          .wide {
+            grid-column: auto;
+          }
+          .prayers {
+            grid-template-columns: 1fr 1fr;
+          }
+          .tasks article {
+            flex-wrap: wrap;
+          }
+          .cardActions {
+            width: 100%;
+            margin: 0 0 0 45px;
+            grid-template-columns: repeat(3, max-content);
+          }
+        }
+      `}</style>
+    </main>
+  );
+}

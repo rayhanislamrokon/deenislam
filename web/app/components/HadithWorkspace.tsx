@@ -813,10 +813,20 @@ export function HadithWorkspace({
     );
   }
   if (selected) {
-    const progress =
-      typeof window !== "undefined" ? savedProgress(selected.id) : null;
     return (
       <div className='hadith-collection'>
+        <button
+          type='button'
+          className='hadith-collection-back'
+          onClick={() => {
+            setSelected(null);
+            setReading(null);
+            setPendingHadith("");
+            window.history.pushState({}, "", "/hadith");
+          }}
+        >
+          <span>←</span> Hadith Collections
+        </button>
         <div className='hadith-collection-head'>
           <div>
             <span>{selected.mark}</span>
@@ -828,18 +838,6 @@ export function HadithWorkspace({
               </p>
             </section>
           </div>
-          {progress && items.length > 0 && (
-            <button
-              onClick={() => {
-                const item =
-                  items.find((row) => row.no === progress.no) ||
-                  items[Math.min(progress.index, items.length - 1)];
-                if (item) openHadith(item);
-              }}
-            >
-              Continue Hadith {progress.no} →
-            </button>
-          )}
         </div>
         {loading && (
           <div className='hadith-state'>
@@ -888,6 +886,15 @@ export function HadithWorkspace({
   }
   return (
     <div className='hadith-home'>
+      <button
+        type='button'
+        className='hadith-home-back'
+        onClick={() => {
+          window.location.href = "/";
+        }}
+      >
+        <span>←</span> Back to Home
+      </button>
       <div className='feature-hero'>
         <span>AUTHENTIC HADITH LIBRARY</span>
         <h2>Hadith Collections</h2>

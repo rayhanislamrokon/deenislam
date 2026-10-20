@@ -18,8 +18,9 @@ export const metadata: Metadata = {
   title: "DeenIslam Admin",
   description: "Secure web control panel for the DeenIslam app.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: [{ url: "/deen-islam-app-icon.png", type: "image/png" }],
+    shortcut: "/deen-islam-app-icon.png",
+    apple: "/deen-islam-app-icon.png",
   },
 };
 

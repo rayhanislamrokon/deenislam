@@ -7,7 +7,9 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "check": "node --check src/index.js && node --check src/seed-quran.js",
-    "seed:quran": "node src/seed-quran.js"
+    "seed:quran": "node src/seed-quran.js",
+    "seed:pdf-demo": "node src/seed-pdf-demo-book.js",
+    "format:tafsir": "node src/format-tafsir-content.js"
   },
   "keywords": [],
   "author": "",
@@ -20,12 +22,15 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "firebase-admin": "^14.5.0",
     "google-auth-library": "^11.0.2",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.6.0",
     "multer": "^2.3.0",
     "nodemailer": "^9.1.0",
-    "scribe.js-ocr": "^0.15.0"
+    "scribe.js-ocr": "^0.15.0",
+    "sharp": "^0.35.5",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
