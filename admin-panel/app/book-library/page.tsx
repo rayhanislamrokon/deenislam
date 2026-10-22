@@ -152,6 +152,7 @@ export default function BookLibrary() {
       const form = new FormData();
       form.append("pdf", pdfFile);
       form.append("language", languageName);
+      form.append("languageCode", pdfLanguage);
       const extracted = await fetch(API + "/api/admin/books/extract-pdf", {
           method: "POST",
           headers: { Authorization: "Bearer " + token },

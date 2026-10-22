@@ -18,6 +18,21 @@ const descriptionText = (value = "") =>
     .replace(/\s+/g, " ")
     .trim();
 type Props = { feature: string; onBack: () => void; language?: string };
+type WebNotification = {
+  id: string;
+  title: string;
+  body: string;
+  fullBody?: string;
+  createdAt: string;
+  unread: boolean;
+  imageUrl?: string;
+  data?: {
+    contentId?: string;
+    url?: string;
+    surahNumber?: number;
+    ayahNumber?: number;
+  };
+};
 type Surah = {
   number: number;
   name: string;
@@ -78,7 +93,10 @@ type LibraryBook = {
     reference?: string;
     text?: string;
     markdown?: string;
-    pages?: Array<{ number: number; originalPage?: number; text?: string; markdown?: string }>;
+    imageUrl?: string;
+    imageWidth?: number;
+    imageHeight?: number;
+    pages?: Array<{ number: number; originalPage?: number; text?: string; markdown?: string; imageUrl?: string; imageWidth?: number; imageHeight?: number }>;
   }>;
   extraction?: { sourceFile?: string; method?: string };
 };
@@ -244,6 +262,7 @@ export function FeatureWorkspace({ feature, onBack, language = "en" }: Props) {
   const account = feature === "Profile" || feature === "Settings",
     ai = feature === "Islamic AI",
     quran = feature === "Quran",
+    tafsir = feature === "Tafsir",
     showHeader = quran || feature === "Tafsir" || feature === "Tasbih";
   return (
     <section
@@ -254,13 +273,16 @@ export function FeatureWorkspace({ feature, onBack, language = "en" }: Props) {
             ? "feature-page ai-feature-page"
             : quran
               ? "feature-page quran-feature-page"
+              : tafsir
+                ? "feature-page tafsir-feature-page"
               : "feature-page"
       }
     >
       {showHeader && (
         <header>
           <button onClick={onBack} aria-label='Back to home'>
-            ‹
+            <b>‹</b>
+            <span>Home</span>
           </button>
           <div>
             {quran ? (
@@ -311,7 +333,9 @@ function Feature({
   onBack: () => void;
 }) {
   if (feature === "Tafsir")
-    return <TafsirWorkspace query={query} language={language} />;
+    return (
+      <TafsirWorkspace query={query} language={language} onBack={onBack} />
+    );
   if (feature === "Islamic History")
     return <IslamicHistoryWorkspace query={query} language={language} />;
   if (feature === "Quran")
@@ -340,6 +364,10 @@ function Feature({
     return <IslamicBooks query={query} language={language} />;
   if (feature === "Sahaba")
     return <SahabaLibrary query={query} language={language} onBack={onBack} />;
+  if (feature === "Islamic Calendar")
+    return <IslamicCalendar onBack={onBack} language={language} />;
+  if (feature === "Notifications")
+    return <NotificationsInbox onBack={onBack} />;
   if (feature === "About Us")
     return <ManagedInfoPage endpoint='/api/about-content' fallbackTitle='About DeenIslam' fallbackSubtitle='Your daily Islamic companion' />;
   if (feature === "Privacy Policy")
@@ -351,6 +379,334 @@ function Feature({
   if (["Help Center", "Contact", "Privacy Policy", "Terms & Conditions"].includes(feature))
     return <SupportContent feature={feature} />;
   return <Knowledge title={feature} query={query} />;
+}
+
+type CalendarEvent = {
+  id: string;
+  title: string;
+  label?: string;
+  eventDate: string;
+  description?: string;
+  imageUrl?: string;
+  link?: string;
+};
+
+const calendarCountries = [
+  { code: "BD", name: "Bangladesh", locale: "bn-BD", method: "HJCoSA" },
+  { code: "SA", name: "Saudi Arabia", locale: "en-SA", method: "UAQ" },
+  { code: "TR", name: "Türkiye", locale: "tr-TR", method: "DIYANET" },
+  { code: "AE", name: "United Arab Emirates", locale: "en-AE", method: "UAQ" },
+  { code: "QA", name: "Qatar", locale: "en-QA", method: "UAQ" },
+  { code: "KW", name: "Kuwait", locale: "en-KW", method: "UAQ" },
+  { code: "PK", name: "Pakistan", locale: "en-PK", method: "HJCoSA" },
+  { code: "IN", name: "India", locale: "en-IN", method: "HJCoSA" },
+  { code: "ID", name: "Indonesia", locale: "id-ID", method: "MATHEMATICAL" },
+  { code: "MY", name: "Malaysia", locale: "ms-MY", method: "MATHEMATICAL" },
+  { code: "EG", name: "Egypt", locale: "en-EG", method: "HJCoSA" },
+  { code: "JO", name: "Jordan", locale: "en-JO", method: "HJCoSA" },
+  { code: "GB", name: "United Kingdom", locale: "en-GB", method: "HJCoSA" },
+  { code: "US", name: "United States", locale: "en-US", method: "HJCoSA" },
+  { code: "CA", name: "Canada", locale: "en-CA", method: "HJCoSA" },
+  { code: "AU", name: "Australia", locale: "en-AU", method: "HJCoSA" },
+] as const;
+
+type HijriCalendarDay = {
+  day: string;
+  month: { en: string; ar: string };
+  year: string;
+  holidays?: string[];
+};
+
+function IslamicCalendar({ onBack, language }: { onBack: () => void; language: string }) {
+  const today = new Date();
+  const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selected, setSelected] = useState(() => new Date(today.getFullYear(), today.getMonth(), today.getDate()));
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [countryCode, setCountryCode] = useState("BD");
+  const [hijriDays, setHijriDays] = useState<Record<string, HijriCalendarDay>>({});
+  const [calendarLoading, setCalendarLoading] = useState(false);
+
+  useEffect(() => {
+    json(`/api/home-events?refresh=${Date.now()}`)
+      .then((body) => setEvents(Array.isArray(body.data) ? body.data : []))
+      .catch(() => setEvents([]));
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("deenislam_calendar_country");
+    if (saved && calendarCountries.some((country) => country.code === saved))
+      setCountryCode(saved);
+  }, []);
+
+  const country = calendarCountries.find((item) => item.code === countryCode) || calendarCountries[0];
+
+  useEffect(() => {
+    let active = true;
+    setCalendarLoading(true);
+    fetch(
+      `https://api.aladhan.com/v1/gToHCalendar/${month.getMonth() + 1}/${month.getFullYear()}?calendarMethod=${country.method}`,
+      { cache: "no-store" },
+    )
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((body) => {
+        if (!active || !Array.isArray(body.data)) return;
+        const next: Record<string, HijriCalendarDay> = {};
+        body.data.forEach((row: { gregorian?: { date?: string }; hijri?: HijriCalendarDay }) => {
+          const value = row.gregorian?.date?.split("-");
+          if (!value || value.length !== 3 || !row.hijri) return;
+          next[`${value[2]}-${value[1]}-${value[0]}`] = row.hijri;
+        });
+        setHijriDays(next);
+      })
+      .catch(() => { if (active) setHijriDays({}); })
+      .finally(() => { if (active) setCalendarLoading(false); });
+    return () => { active = false; };
+  }, [month, country.method]);
+
+  const locale = language === "bn" && countryCode === "BD" ? "bn-BD" : country.locale;
+  const dateKey = (date: Date) => {
+    const year = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${m}-${day}`;
+  };
+  const hijri = (date: Date, options: Intl.DateTimeFormatOptions) => {
+    const apiDate = hijriDays[dateKey(date)];
+    if (apiDate) {
+      if (options.day && options.month && options.year)
+        return `${apiDate.day} ${apiDate.month.en} · ${apiDate.month.ar} · ${apiDate.year} AH`;
+      if (options.month && options.year)
+        return `${apiDate.month.en} · ${apiDate.month.ar} · ${apiDate.year} AH`;
+      if (options.day) return apiDate.day;
+    }
+    try {
+      return new Intl.DateTimeFormat(`${locale}-u-ca-islamic`, options).format(date);
+    } catch {
+      return "";
+    }
+  };
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const cells: Array<Date | null> = [
+    ...Array.from({ length: firstDay }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => new Date(month.getFullYear(), month.getMonth(), index + 1)),
+  ];
+  while (cells.length % 7) cells.push(null);
+  const selectedEvents = events.filter((event) => event.eventDate === dateKey(selected));
+  const upcoming = events
+    .filter((event) => event.eventDate >= dateKey(today))
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate))
+    .slice(0, 5);
+  const sameDay = (a: Date, b: Date) => dateKey(a) === dateKey(b);
+  const moveMonth = (offset: number) => {
+    const next = new Date(month.getFullYear(), month.getMonth() + offset, 1);
+    setMonth(next);
+    setSelected(next);
+  };
+
+  return (
+    <div className='islamic-calendar-page'>
+      <button className='calendar-back' onClick={onBack}>← Back to home</button>
+      <section className='calendar-hero'>
+        <div>
+          <small>ISLAMIC CALENDAR</small>
+          <h1>{today.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</h1>
+          <p>{hijri(today, { day: "numeric", month: "long", year: "numeric" })}</p>
+        </div>
+        <div className='calendar-country-control'>
+          <label htmlFor='calendar-country'>Country</label>
+          <select
+            id='calendar-country'
+            value={countryCode}
+            onChange={(event) => {
+              setCountryCode(event.target.value);
+              localStorage.setItem("deenislam_calendar_country", event.target.value);
+            }}
+          >
+            {calendarCountries.map((item) => <option value={item.code} key={item.code}>{item.name}</option>)}
+          </select>
+          <small>{calendarLoading ? "Updating calendar…" : `${country.name} · ${country.method}`}</small>
+        </div>
+      </section>
+      <div className='calendar-layout'>
+        <section className='calendar-card'>
+          <header>
+            <button onClick={() => moveMonth(-1)} aria-label='Previous month'>‹</button>
+            <div>
+              <h2>{month.toLocaleDateString(locale, { month: "long", year: "numeric" })}</h2>
+              <span>{hijri(month, { month: "long", year: "numeric" })}</span>
+            </div>
+            <button onClick={() => moveMonth(1)} aria-label='Next month'>›</button>
+          </header>
+          <div className='calendar-weekdays'>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <b key={day}>{day}</b>)}
+          </div>
+          <div className='calendar-grid'>
+            {cells.map((date, index) => date ? (
+              <button
+                key={dateKey(date)}
+                className={`${sameDay(date, today) ? "today " : ""}${sameDay(date, selected) ? "selected " : ""}${events.some((event) => event.eventDate === dateKey(date)) ? "has-event" : ""}`.trim()}
+                onClick={() => setSelected(date)}
+              >
+                <strong>{date.getDate()}</strong>
+                <small>{hijri(date, { day: "numeric" })}</small>
+                <i />
+              </button>
+            ) : <span key={`blank-${index}`} />)}
+          </div>
+        </section>
+        <aside className='calendar-side'>
+          <section className='selected-date-card'>
+            <small>SELECTED DATE</small>
+            <h2>{selected.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" })}</h2>
+            <p>{hijri(selected, { day: "numeric", month: "long", year: "numeric" })}</p>
+            {selectedEvents.length ? selectedEvents.map((event) => (
+              <button key={event.id} onClick={() => { if (event.link) window.location.href = event.link; }}>
+                <i>✦</i><span><b>{event.title}</b><small>{event.description || event.label || "Islamic event"}</small></span>
+              </button>
+            )) : <div className='calendar-no-event'>No event scheduled for this date.</div>}
+          </section>
+          <section className='upcoming-events-card'>
+            <header><span><small>COMING UP</small><h2>Islamic events</h2></span><b>{upcoming.length}</b></header>
+            {upcoming.length ? upcoming.map((event) => {
+              const date = new Date(`${event.eventDate}T12:00:00`);
+              return <button key={event.id} onClick={() => { setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); setSelected(date); }}>
+                <time><b>{date.getDate()}</b><small>{date.toLocaleDateString(locale, { month: "short" })}</small></time>
+                <span><strong>{event.title}</strong><small>{event.label || hijri(date, { day: "numeric", month: "long" })}</small></span>
+                <em>›</em>
+              </button>;
+            }) : <p>No upcoming events.</p>}
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function NotificationsInbox({ onBack }: { onBack: () => void }) {
+  const [items, setItems] = useState<WebNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
+
+  const notificationDeviceId = () => {
+    const key = "deenislam_web_notification_device";
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const value = `web:${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
+    localStorage.setItem(key, value);
+    return value;
+  };
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const result = await json(
+        `/api/notifications?deviceId=${encodeURIComponent(notificationDeviceId())}&refresh=${Date.now()}`,
+      );
+      setItems(Array.isArray(result.data) ? result.data : []);
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Unable to load notifications.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const destination = (item: WebNotification) => {
+    const data = item.data || {};
+    if (data.surahNumber)
+      return `/quran?surah=${data.surahNumber}${data.ayahNumber ? `&ayah=${data.ayahNumber}` : ""}`;
+    return data.contentId?.trim() || data.url?.trim() || `/notification/${item.id}`;
+  };
+
+  const open = (item: WebNotification) => {
+    setItems((current) =>
+      current.map((row) => (row.id === item.id ? { ...row, unread: false } : row)),
+    );
+    void json(`/api/notifications/${encodeURIComponent(item.id)}/read`, {
+      method: "PATCH",
+      body: JSON.stringify({ deviceId: notificationDeviceId() }),
+    });
+    window.location.href = destination(item);
+  };
+
+  const remove = async (item: WebNotification) => {
+    setItems((current) => current.filter((row) => row.id !== item.id));
+    try {
+      await json(`/api/notifications/${encodeURIComponent(item.id)}`, {
+        method: "DELETE",
+        body: JSON.stringify({ deviceId: notificationDeviceId() }),
+      });
+    } catch {
+      void load();
+    }
+  };
+
+  const visible = filter === "unread" ? items.filter((item) => item.unread) : items;
+  const unreadCount = items.filter((item) => item.unread).length;
+
+  return (
+    <div className='notifications-page'>
+      <button className='notifications-back' onClick={onBack}>
+        <span aria-hidden='true'>←</span> Back to home
+      </button>
+      <section className='notifications-hero'>
+        <div>
+          <i aria-hidden='true'>
+            <DeenIcon name='Notifications' size={27} strokeWidth={1.8} />
+          </i>
+          <span>
+            <small>YOUR UPDATES</small>
+            <h1>Notifications</h1>
+            <p>Important updates, reminders and messages from Deen Islam.</p>
+          </span>
+        </div>
+        <b>{unreadCount}<small>Unread</small></b>
+      </section>
+      <section className='notifications-toolbar'>
+        <div>
+          <button className={filter === "all" ? "active" : ""} onClick={() => setFilter("all")}>All <b>{items.length}</b></button>
+          <button className={filter === "unread" ? "active" : ""} onClick={() => setFilter("unread")}>Unread <b>{unreadCount}</b></button>
+        </div>
+        <button className='notifications-refresh' onClick={() => void load()} disabled={loading}>↻ <span>{loading ? "Loading…" : "Refresh"}</span></button>
+      </section>
+      {error && <div className='notifications-error'>{error}</div>}
+      <div className='notifications-feed'>
+        {!loading && visible.map((item) => (
+          <article className={item.unread ? "unread" : ""} key={item.id}>
+            <button className='notification-open-area' onClick={() => open(item)}>
+              <i aria-hidden='true'>
+                <DeenIcon name='Notifications' size={21} strokeWidth={1.8} />
+              </i>
+              <span>
+                <span className='notification-meta'>
+                  {item.unread && <b>NEW</b>}
+                  <time>{new Date(item.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</time>
+                </span>
+                <strong>{item.title}</strong>
+                <small>{item.body}</small>
+              </span>
+              <em aria-hidden='true'>→</em>
+            </button>
+            <button className='notifications-delete' onClick={() => void remove(item)} aria-label={`Delete ${item.title}`}>×</button>
+          </article>
+        ))}
+        {loading && <div className='notifications-state'><i className='notifications-spinner' /><b>Loading notifications…</b></div>}
+        {!loading && !visible.length && (
+          <div className='notifications-state'>
+            <i><DeenIcon name='Notifications' size={28} strokeWidth={1.6} /></i>
+            <h2>{filter === "unread" ? "You’re all caught up" : "No notifications yet"}</h2>
+            <p>{filter === "unread" ? "There are no unread notifications." : "New updates and reminders will appear here."}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 type ManagedInfoContent = { title: string; subtitle: string; body: string };
@@ -545,13 +901,13 @@ function IslamicBooks({
           title: part.title || selected.title,
           reference: part.reference || "",
           pages: part.pages?.length
-            ? part.pages.map(page => page.text || page.markdown || "")
-            : [part.text || part.markdown || ""],
+            ? part.pages.map(page => ({ content: page.text || page.markdown || "", imageUrl: page.imageUrl || "", imageWidth: page.imageWidth || 0, imageHeight: page.imageHeight || 0 }))
+            : [{ content: part.text || part.markdown || "", imageUrl: part.imageUrl || "", imageWidth: part.imageWidth || 0, imageHeight: part.imageHeight || 0 }],
         }))
-      : [{ title: selected.title, reference: selected.sourceUrl || "", pages: [selected.content || ""] }];
+      : [{ title: selected.title, reference: selected.sourceUrl || "", pages: [{ content: selected.content || "", imageUrl: "", imageWidth: 0, imageHeight: 0 }] }];
     const activePart = selectedPart ?? (parts.length === 1 ? 0 : null);
     if (activePart !== null) {
-      const part = parts[activePart], content = part.pages[selectedPage] || "";
+      const part = parts[activePart], activePage = part.pages[selectedPage], content = activePage?.content || "";
       return <div className={`amol-reader sahaba-detail-reader${isPdfBook ? " pdf-book-reader" : ""}`}>
         <button className='section-back' onClick={() => {
           setSelectedPage(0);
@@ -572,7 +928,7 @@ function IslamicBooks({
                 : <p>{selected.description}</p>}
             </div>
           )}
-          <div className='amol-reader-content'><section><span>PAGE {selectedPage + 1} OF {part.pages.length}</span>{/<[a-z][\s\S]*>/i.test(content) ? <div dangerouslySetInnerHTML={{ __html: content }} /> : content.split(/\n{2,}/).filter(Boolean).map((paragraph,index)=><p key={index}>{paragraph.replace(/^#{1,6}\s+/,"")}</p>)}{part.reference && <aside><b>Reference</b><p>{part.reference}</p></aside>}</section></div>
+          <div className='amol-reader-content'><section><span>PAGE {selectedPage + 1} OF {part.pages.length}</span>{activePage?.imageUrl ? <img className='pdf-source-page' src={activePage.imageUrl} alt={`${selected.title} — page ${selectedPage + 1}`} /> : /<[a-z][\s\S]*>/i.test(content) ? <div dangerouslySetInnerHTML={{ __html: content }} /> : content.split(/\n{2,}/).filter(Boolean).map((paragraph,index)=><p key={index}>{paragraph.replace(/^#{1,6}\s+/,"")}</p>)}{part.reference && <aside><b>Reference</b><p>{part.reference}</p></aside>}</section></div>
           <nav className='sahaba-page-nav'><button disabled={selectedPage===0} onClick={()=>setSelectedPage(value=>Math.max(0,value-1))}>← Previous page</button><span>{selectedPage+1} / {part.pages.length}</span><button disabled={selectedPage===part.pages.length-1} onClick={()=>setSelectedPage(value=>Math.min(part.pages.length-1,value+1))}>Next page →</button></nav>
         </article>
       </div>;
@@ -583,7 +939,7 @@ function IslamicBooks({
         {selected.coverImageUrl ? <img src={selected.coverImageUrl} alt={selected.title} /> : <div className='book-detail-fallback'>◆</div>}
         <h2>{selected.title}</h2><p>{selected.description || "Read this Islamic book part by part."}</p><small>{parts.length} {parts.length===1?"PART":"PARTS"}</small>
       </header>
-      <div className='amol-parts'>{parts.map((part,index)=><button key={index} onClick={()=>{setSelectedPart(index);setSelectedPage(0)}}><span>PART {index+1} · {part.pages.length} {part.pages.length===1?"PAGE":"PAGES"}</span><h3>{part.title}</h3><p>{part.pages.join(" ").replace(/<[^>]+>/g," ").replace(/[\*_>`-]/g,"").replace(/\s+/g," ").trim().slice(0,260) || selected.description}</p><footer>Open book part <b>›</b></footer></button>)}</div>
+      <div className='amol-parts'>{parts.map((part,index)=><button key={index} onClick={()=>{setSelectedPart(index);setSelectedPage(0)}}><span>PART {index+1} · {part.pages.length} {part.pages.length===1?"PAGE":"PAGES"}</span><h3>{part.title}</h3><p>{part.pages.map(page=>page.content).join(" ").replace(/<[^>]+>/g," ").replace(/[\*_>`-]/g,"").replace(/\s+/g," ").trim().slice(0,260) || selected.description}</p><footer>Open book part <b>›</b></footer></button>)}</div>
     </div>;
   }
   return (
@@ -5487,6 +5843,18 @@ type WebProphet = {
   parts?: Array<{ title: string; story: string; reference?: string }>;
 };
 function ProphetArticle({ story }: { story: string }) {
+  if (/<(?:p|h[1-6]|ul|ol|li|blockquote|strong|em|a|img|span)\b/i.test(story)) {
+    const safeStory = String(story || "")
+      .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
+      .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+      .replace(/(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi, '$1="#"');
+    return (
+      <div
+        className='prophet-article-copy'
+        dangerouslySetInnerHTML={{ __html: safeStory }}
+      />
+    );
+  }
   return (
     <div className='prophet-article-copy'>
       {String(story || "")

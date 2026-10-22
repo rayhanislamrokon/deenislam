@@ -92,17 +92,74 @@ import {
   loadWebTranslationPack,
   type WebTranslationTable,
 } from "./services/webTranslation";
+import { detectWebLocale } from "./services/localePreference";
 const WEB_API = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:6002"
 ).replace(/\/$/, "");
-type HomeEvent = { id: string; label: string; title: string; eventDate: string; imageUrl?: string; link?: string; order?: number };
-const fallbackHomeEvents: HomeEvent[] = [{ id: "fallback", label: "Upcoming Islamic Event", title: "Milad un Nabi", eventDate: "2026-10-08", imageUrl: "/images/milad-event-card.png" }];
-type DailyFeaturedCard = { arabic: string; translation: string; source: string; link: string; published: boolean; sourceType?: string; surahNumber?: number; ayahNumber?: number; hadithId?: string };
-type DailyFeaturedContent = { ayah: DailyFeaturedCard; hadith: DailyFeaturedCard };
-type WebNotice = { id: string; title: string; body: string; fullBody?: string; createdAt: string; unread: boolean; imageUrl?: string; data?: { screen?: string; contentId?: string; surahNumber?: number; ayahNumber?: number } };
+type HomeEvent = {
+  id: string;
+  label: string;
+  title: string;
+  eventDate: string;
+  imageUrl?: string;
+  link?: string;
+  order?: number;
+};
+const fallbackHomeEvents: HomeEvent[] = [
+  {
+    id: "fallback",
+    label: "Upcoming Islamic Event",
+    title: "Milad un Nabi",
+    eventDate: "2026-10-08",
+    imageUrl: "/images/milad-event-card.png",
+  },
+];
+type DailyFeaturedCard = {
+  arabic: string;
+  translation: string;
+  source: string;
+  link: string;
+  published: boolean;
+  sourceType?: string;
+  surahNumber?: number;
+  ayahNumber?: number;
+  hadithId?: string;
+};
+type DailyFeaturedContent = {
+  ayah: DailyFeaturedCard;
+  hadith: DailyFeaturedCard;
+};
+type WebNotice = {
+  id: string;
+  title: string;
+  body: string;
+  fullBody?: string;
+  createdAt: string;
+  unread: boolean;
+  imageUrl?: string;
+  data?: {
+    screen?: string;
+    contentId?: string;
+    surahNumber?: number;
+    ayahNumber?: number;
+  };
+};
 const fallbackDailyFeatured: DailyFeaturedContent = {
-  ayah: { arabic: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", translation: "Indeed, with hardship comes ease.", source: "Surah Ash-Sharh (94:6)", link: "/quran", published: true },
-  hadith: { arabic: "مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ", translation: "Whoever guides someone to goodness will have a reward like the one who does it.", source: "Sahih Muslim (1893)", link: "/hadith", published: true },
+  ayah: {
+    arabic: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا",
+    translation: "Indeed, with hardship comes ease.",
+    source: "Surah Ash-Sharh (94:6)",
+    link: "/quran",
+    published: true,
+  },
+  hadith: {
+    arabic: "مَنْ دَلَّ عَلَى خَيْرٍ فَلَهُ مِثْلُ أَجْرِ فَاعِلِهِ",
+    translation:
+      "Whoever guides someone to goodness will have a reward like the one who does it.",
+    source: "Sahih Muslim (1893)",
+    link: "/hadith",
+    published: true,
+  },
 };
 const nav = [
   ["⌂", "Home"],
@@ -242,7 +299,9 @@ const applyClientSeo = (pathname: string) => {
   setMeta('meta[property="og:url"]', "content", canonical);
   setMeta('meta[name="twitter:title"]', "content", seo.title);
   setMeta('meta[name="twitter:description"]', "content", seo.description);
-  const canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  const canonicalLink = document.querySelector<HTMLLinkElement>(
+    'link[rel="canonical"]',
+  );
   if (canonicalLink) canonicalLink.href = canonical;
 };
 type AppLanguage = string;
@@ -313,24 +372,34 @@ export default function Home() {
       null,
     ),
     [language, setLanguage] = useState<AppLanguage>("en"),
+    [countryCode, setCountryCode] = useState(""),
     [translations, setTranslations] = useState<WebTranslationTable>({}),
     [languageOpen, setLanguageOpen] = useState(false),
     [languageQuery, setLanguageQuery] = useState(""),
     [homeEvents, setHomeEvents] = useState<HomeEvent[]>(fallbackHomeEvents),
     [homeEventIndex, setHomeEventIndex] = useState(0),
-    [dailyFeatured, setDailyFeatured] = useState<DailyFeaturedContent>(fallbackDailyFeatured);
+    [dailyFeatured, setDailyFeatured] = useState<DailyFeaturedContent>(
+      fallbackDailyFeatured,
+    );
   const notificationDeviceId = () => {
-    const key = "deenislam_web_notification_device", existing = localStorage.getItem(key);
+    const key = "deenislam_web_notification_device";
+    const existing = localStorage.getItem(key);
     if (existing) return existing;
-    const value = `web:${crypto.randomUUID?.() || Date.now() + "-" + Math.random().toString(36).slice(2)}`;
+    const value = `web:${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
     localStorage.setItem(key, value);
     return value;
   };
   const loadWebNotices = async () => {
     try {
-      const response = await fetch(`${WEB_API}/api/notifications?deviceId=${encodeURIComponent(notificationDeviceId())}&refresh=${Date.now()}`, { cache: "no-store" });
+      const response = await fetch(
+        `${WEB_API}/api/notifications?deviceId=${encodeURIComponent(notificationDeviceId())}&refresh=${Date.now()}`,
+        { cache: "no-store" },
+      );
       const result = await response.json();
-      if (response.ok) { setWebNotices(result.data || []); setUnread(result.unread || 0); }
+      if (response.ok) {
+        setWebNotices(result.data || []);
+        setUnread(result.unread || 0);
+      }
     } catch {}
   };
   useEffect(() => {
@@ -340,20 +409,37 @@ export default function Home() {
   }, []);
   const notificationUrl = (item: WebNotice) => {
     const data = item.data || {};
-    if (data.surahNumber) return `/quran?surah=${data.surahNumber}${data.ayahNumber ? `&ayah=${data.ayahNumber}` : ""}`;
+    if (data.surahNumber)
+      return `/quran?surah=${data.surahNumber}${data.ayahNumber ? `&ayah=${data.ayahNumber}` : ""}`;
     if (data.contentId?.trim()) return data.contentId.trim();
     return `/notification/${item.id}`;
   };
   const openWebNotice = (item: WebNotice) => {
-    void fetch(`${WEB_API}/api/notifications/${encodeURIComponent(item.id)}/read`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deviceId: notificationDeviceId() }) });
+    void fetch(
+      `${WEB_API}/api/notifications/${encodeURIComponent(item.id)}/read`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId: notificationDeviceId() }),
+      },
+    );
     window.location.href = notificationUrl(item);
   };
   const deleteWebNotice = async (item: WebNotice) => {
-    setWebNotices(current => current.filter(row => row.id !== item.id));
-    if (item.unread) setUnread(value => Math.max(0, value - 1));
+    setWebNotices((current) => current.filter((row) => row.id !== item.id));
+    if (item.unread) setUnread((value) => Math.max(0, value - 1));
     try {
-      await fetch(`${WEB_API}/api/notifications/${encodeURIComponent(item.id)}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deviceId: notificationDeviceId() }) });
-    } catch { void loadWebNotices(); }
+      await fetch(
+        `${WEB_API}/api/notifications/${encodeURIComponent(item.id)}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: notificationDeviceId() }),
+        },
+      );
+    } catch {
+      void loadWebNotices();
+    }
   };
   useEffect(() => {
     setNow(new Date());
@@ -362,25 +448,46 @@ export default function Home() {
   }, []);
   useEffect(() => {
     let live = true;
-    fetch(`${WEB_API}/api/home-events?refresh=${Date.now()}`, { cache: "no-store" })
-      .then(response => response.ok ? response.json() : Promise.reject())
-      .then(body => { if (live && Array.isArray(body.data) && body.data.length) setHomeEvents(body.data); })
+    fetch(`${WEB_API}/api/home-events?refresh=${Date.now()}`, {
+      cache: "no-store",
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((body) => {
+        if (live && Array.isArray(body.data) && body.data.length)
+          setHomeEvents(body.data);
+      })
       .catch(() => undefined);
-    return () => { live = false; };
+    return () => {
+      live = false;
+    };
   }, []);
   useEffect(() => {
     let live = true;
-    fetch(`${WEB_API}/api/daily-featured-content?language=${encodeURIComponent(language)}&refresh=${Date.now()}`, { cache: "no-store" })
-      .then(response => response.ok ? response.json() : Promise.reject())
-      .then(body => { if (live && body.data) setDailyFeatured(body.data); })
+    fetch(
+      `${WEB_API}/api/daily-featured-content?language=${encodeURIComponent(language)}&country=${encodeURIComponent(countryCode)}&refresh=${Date.now()}`,
+      { cache: "no-store" },
+    )
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((body) => {
+        if (live && body.data) setDailyFeatured(body.data);
+      })
       .catch(() => undefined);
-    return () => { live = false; };
-  }, [language]);
+    return () => {
+      live = false;
+    };
+  }, [language, countryCode]);
   useEffect(() => {
     const sectionMap: Record<string, string> = {
-      Quran: "quran", Tafsir: "tafsir", Hadith: "hadith", "Islamic Books": "books",
-      "Duas & Amol": "duas", Sahaba: "sahaba", Prophets: "prophets",
-      "Islamic History": "islamic_history", "Islamic Lifestyle": "islamic_lifestyle", "Daily Tasks": "daily_prayer",
+      Quran: "quran",
+      Tafsir: "tafsir",
+      Hadith: "hadith",
+      "Islamic Books": "books",
+      "Duas & Amol": "duas",
+      Sahaba: "sahaba",
+      Prophets: "prophets",
+      "Islamic History": "islamic_history",
+      "Islamic Lifestyle": "islamic_lifestyle",
+      "Daily Tasks": "daily_prayer",
     };
     const section = sectionMap[active];
     if (!section) return;
@@ -390,12 +497,29 @@ export default function Home() {
       localStorage.setItem("deenislam_web_visitor_id", visitorId);
     }
     const startedAt = Date.now();
-    const send = (type: "content_view" | "content_heartbeat" | "content_complete", durationSeconds = 0) => fetch(`${WEB_API}/api/analytics/events`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
-      body: JSON.stringify({ type, deviceId: visitorId, section, contentId: active.toLowerCase().replace(/[^a-z0-9]+/g, "-"), contentTitle: active, platform: "web", durationSeconds }),
-    }).catch(() => undefined);
+    const send = (
+      type: "content_view" | "content_heartbeat" | "content_complete",
+      durationSeconds = 0,
+    ) =>
+      fetch(`${WEB_API}/api/analytics/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          type,
+          deviceId: visitorId,
+          section,
+          contentId: active.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          contentTitle: active,
+          platform: "web",
+          durationSeconds,
+        }),
+      }).catch(() => undefined);
     void send("content_view");
-    const timer = window.setInterval(() => void send("content_heartbeat", 10), 10000);
+    const timer = window.setInterval(
+      () => void send("content_heartbeat", 10),
+      10000,
+    );
     return () => {
       window.clearInterval(timer);
       const seconds = Math.floor((Date.now() - startedAt) / 1000);
@@ -403,56 +527,61 @@ export default function Home() {
     };
   }, [active]);
   useEffect(() => {
-    setHomeEventIndex(index => Math.min(index, Math.max(0, homeEvents.length - 1)));
+    setHomeEventIndex((index) =>
+      Math.min(index, Math.max(0, homeEvents.length - 1)),
+    );
     if (homeEvents.length < 2) return;
-    const timer = window.setInterval(() => setHomeEventIndex(index => (index + 1) % homeEvents.length), 5000);
+    const timer = window.setInterval(
+      () => setHomeEventIndex((index) => (index + 1) % homeEvents.length),
+      5000,
+    );
     return () => window.clearInterval(timer);
   }, [homeEvents.length]);
   useEffect(() => {
     let cancelled = false;
     const recordVisit = async () => {
       try {
-      const key = "deenislam_web_visitor_id";
-      let visitorId = localStorage.getItem(key);
-      if (!visitorId) {
-        const randomPart =
-          typeof crypto?.randomUUID === "function"
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        visitorId = `web:${randomPart}`;
-        localStorage.setItem(key, visitorId);
-      }
-      const countryKey = "deenislam_web_country_code";
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      const locale = navigator.language || "";
-      let countryCode = sessionStorage.getItem(countryKey) || "";
-      if (!/^[A-Z]{2}$/.test(countryCode)) {
-        try {
-          const response = await fetch("https://api.country.is/", {
-            signal: AbortSignal.timeout(3500),
-          });
-          const payload = await response.json();
-          countryCode = String(payload?.country || "").toUpperCase();
-          if (/^[A-Z]{2}$/.test(countryCode))
-            sessionStorage.setItem(countryKey, countryCode);
-        } catch {
-          countryCode = timeZone === "Asia/Dhaka" ? "BD" : "";
+        const key = "deenislam_web_visitor_id";
+        let visitorId = localStorage.getItem(key);
+        if (!visitorId) {
+          const randomPart =
+            typeof crypto?.randomUUID === "function"
+              ? crypto.randomUUID()
+              : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          visitorId = `web:${randomPart}`;
+          localStorage.setItem(key, visitorId);
         }
-      }
-      if (cancelled) return;
-      await fetch(`${WEB_API}/api/analytics/visit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deviceId: visitorId,
-          page: window.location.pathname,
-          referrer: document.referrer,
-          countryCode,
-          timeZone,
-          locale,
-        }),
-        keepalive: true,
-      }).catch(() => undefined);
+        const countryKey = "deenislam_web_country_code";
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        const locale = navigator.language || "";
+        let countryCode = sessionStorage.getItem(countryKey) || "";
+        if (!/^[A-Z]{2}$/.test(countryCode)) {
+          try {
+            const response = await fetch("https://api.country.is/", {
+              signal: AbortSignal.timeout(3500),
+            });
+            const payload = await response.json();
+            countryCode = String(payload?.country || "").toUpperCase();
+            if (/^[A-Z]{2}$/.test(countryCode))
+              sessionStorage.setItem(countryKey, countryCode);
+          } catch {
+            countryCode = timeZone === "Asia/Dhaka" ? "BD" : "";
+          }
+        }
+        if (cancelled) return;
+        await fetch(`${WEB_API}/api/analytics/visit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deviceId: visitorId,
+            page: window.location.pathname,
+            referrer: document.referrer,
+            countryCode,
+            timeZone,
+            locale,
+          }),
+          keepalive: true,
+        }).catch(() => undefined);
       } catch {}
     };
     void recordVisit();
@@ -495,6 +624,7 @@ export default function Home() {
     };
   }, []);
   useEffect(() => {
+    let active = true;
     try {
       const saved = localStorage.getItem("deenislam_web_user");
       if (saved) setAccount(JSON.parse(saved));
@@ -502,13 +632,22 @@ export default function Home() {
       const savedLanguage = localStorage.getItem(
         "deenislam_language",
       ) as AppLanguage | null;
-      if (
-        savedLanguage &&
-        HOME_LANGUAGES.some((item) => item.code === savedLanguage)
-      )
+      const manual = localStorage.getItem("deenislam_language_manual") === "1";
+      if (savedLanguage && HOME_LANGUAGES.some((item) => item.code === savedLanguage))
         setLanguage(savedLanguage);
+      void detectWebLocale().then((detected) => {
+        if (!active) return;
+        setCountryCode(detected.country);
+        localStorage.setItem("deenislam_web_country_code", detected.country);
+        localStorage.setItem("deenislam_calendar_country", detected.country);
+        if (!manual) {
+          setLanguage(detected.language);
+          localStorage.setItem("deenislam_language", detected.language);
+        }
+      });
     } catch {}
-  }, [active]);
+    return () => { active = false; };
+  }, []);
   useEffect(() => {
     let live = true,
       current: number | null = null,
@@ -552,6 +691,7 @@ export default function Home() {
     setLanguageOpen(false);
     setLanguageQuery("");
     localStorage.setItem("deenislam_language", value);
+    localStorage.setItem("deenislam_language_manual", "1");
     document.documentElement.lang = value;
     document.documentElement.dir = [
       "ar",
@@ -703,9 +843,16 @@ export default function Home() {
   useEffect(() => setActivePrayer(nextPrayer.name), [nextPrayer.name]);
   const currentHomeEvent = homeEvents[homeEventIndex] || fallbackHomeEvents[0];
   const homeEventDate = new Date(currentHomeEvent.eventDate + "T23:59:59");
-  const homeEventDays = Math.max(0, Math.ceil((homeEventDate.getTime() - Math.max(now.getTime(), Date.now())) / 86400000));
+  const homeEventDays = Math.max(
+    0,
+    Math.ceil(
+      (homeEventDate.getTime() - Math.max(now.getTime(), Date.now())) /
+        86400000,
+    ),
+  );
   const openHomeEvent = () => {
-    if (/^https?:\/\//i.test(currentHomeEvent.link || "")) window.location.href = currentHomeEvent.link || "";
+    if (/^https?:\/\//i.test(currentHomeEvent.link || ""))
+      window.location.href = currentHomeEvent.link || "";
     else navigate("Islamic Calendar");
   };
   return (
@@ -788,7 +935,9 @@ export default function Home() {
                       <DeenIcon name='Search' size={20} />
                       <span>
                         <strong>No result found</strong>
-                        <small>Search Quran, Hadith, Dua or another service.</small>
+                        <small>
+                          Search Quran, Hadith, Dua or another service.
+                        </small>
                       </span>
                     </div>
                   )}
@@ -823,6 +972,7 @@ export default function Home() {
                 onClick={() => {
                   setNotificationsOpen((v) => !v);
                   setProfileOpen(false);
+                  if (!notificationsOpen) setUnread(0);
                 }}
                 aria-label='Notifications'
               >
@@ -831,49 +981,75 @@ export default function Home() {
               </button>
               {notificationsOpen && (
                 <div className='top-popover notification-popover'>
-                  <div>
-                    <strong>Notifications</strong>
-                    <button onClick={() => setNotificationsOpen(false)}>
+                  <div className='notification-heading'>
+                    <span>
+                      <i aria-hidden='true'>
+                        <DeenIcon name='Notifications' size={18} strokeWidth={2} />
+                      </i>
+                      <span>
+                        <strong>Notifications</strong>
+                        <small>Latest updates and reminders</small>
+                      </span>
+                    </span>
+                    <button
+                      className='notification-close'
+                      onClick={() => setNotificationsOpen(false)}
+                      aria-label='Close notifications'
+                    >
                       ×
                     </button>
                   </div>
-                  {webNotices.slice(0, 5).map((item) => (
-                    <article
-                      key={item.id}
-                      onClick={() => openWebNotice(item)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <i>{item.unread ? "•" : "✓"}</i>
-                      <span>
-                        <b>{item.title}</b>
-                        <small>{item.body}</small>
-                      </span>
-                      <button
-                        aria-label='Delete notification'
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void deleteWebNotice(item);
+                  <div className='notification-list'>
+                    {webNotices.slice(0, 5).map((item) => (
+                      <article
+                        className={`notification-item${item.unread ? " is-unread" : ""}`}
+                        key={item.id}
+                        role='button'
+                        tabIndex={0}
+                        onClick={() => openWebNotice(item)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ")
+                            openWebNotice(item);
                         }}
                       >
-                        ×
-                      </button>
-                    </article>
-                  ))}
-                  {!webNotices.length && (
-                    <article>
-                      <span>
+                        <i aria-hidden='true'>
+                          {item.unread ? "•" : "✓"}
+                        </i>
+                        <span className='notification-copy'>
+                          <b>{item.title}</b>
+                          <small>{item.body}</small>
+                        </span>
+                        <button
+                          className='notification-delete'
+                          aria-label={`Delete ${item.title}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void deleteWebNotice(item);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </article>
+                    ))}
+                    {!webNotices.length && (
+                      <div className='notification-empty'>
+                        <i aria-hidden='true'>
+                          <DeenIcon name='Notifications' size={21} strokeWidth={1.8} />
+                        </i>
                         <b>No notifications yet</b>
                         <small>New Deen Islam updates will appear here.</small>
-                      </span>
-                    </article>
-                  )}
+                      </div>
+                    )}
+                  </div>
                   <button
+                    className='notification-footer'
                     onClick={() => {
                       setNotificationsOpen(false);
                       navigate("Notifications");
                     }}
                   >
-                    View all notifications →
+                    <span>View all notifications</span>
+                    <span aria-hidden='true'>→</span>
                   </button>
                 </div>
               )}
@@ -1138,7 +1314,7 @@ export default function Home() {
                   <i className='next-audio-mark'>
                     <DeenIcon name='Audio' size={17} />
                   </i>
-                  <small>Next Prayer</small>
+                  <small>{t("Next Prayer")}</small>
                   <h2>
                     <span>{nextPrayer.name}</span>
                     <DeenIcon name='Audio' size={12} />
@@ -1167,7 +1343,7 @@ export default function Home() {
                       <i>
                         <DeenIcon name={name} size={24} />
                       </i>
-                      <span>{name}</span>
+                      <span>{t(name)}</span>
                       <b>{displayPrayerTime(prayerTimes[name])}</b>
                     </button>
                   ))}
@@ -1271,42 +1447,72 @@ export default function Home() {
                   <span>{currentHijriDate}</span>
                 </div>
               </button>
-              <section className='event eventSlider' role='button' tabIndex={0} aria-label={`${currentHomeEvent.title}, ${currentHomeEvent.eventDate}`} onClick={openHomeEvent} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") openHomeEvent(); }} style={currentHomeEvent.imageUrl ? { backgroundImage: `linear-gradient(90deg,rgba(255,252,245,.99) 0%,rgba(255,252,245,.95) 47%,rgba(255,252,245,.24) 76%),url(${currentHomeEvent.imageUrl})` } : undefined}>
+              <section
+                className='event eventSlider'
+                role='button'
+                tabIndex={0}
+                aria-label={`${currentHomeEvent.title}, ${currentHomeEvent.eventDate}`}
+                onClick={openHomeEvent}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ")
+                    openHomeEvent();
+                }}
+                style={
+                  currentHomeEvent.imageUrl
+                    ? {
+                        backgroundImage: `linear-gradient(90deg,rgba(255,252,245,.99) 0%,rgba(255,252,245,.95) 47%,rgba(255,252,245,.24) 76%),url(${currentHomeEvent.imageUrl})`,
+                      }
+                    : undefined
+                }
+              >
                 <div key={currentHomeEvent.id} className='eventSlideCopy'>
-                  <small>{currentHomeEvent.label || "Upcoming Islamic Event"}</small>
+                  <small>
+                    {currentHomeEvent.label || "Upcoming Islamic Event"}
+                  </small>
                   <strong>{currentHomeEvent.title}</strong>
-                  <span>{Number.isNaN(homeEventDate.getTime()) ? currentHomeEvent.eventDate : homeEventDate.toLocaleDateString(language === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+                  <span>
+                    {Number.isNaN(homeEventDate.getTime())
+                      ? currentHomeEvent.eventDate
+                      : homeEventDate.toLocaleDateString(
+                          language === "bn" ? "bn-BD" : "en-GB",
+                          { day: "numeric", month: "long", year: "numeric" },
+                        )}
+                  </span>
                 </div>
-                <b>{homeEventDays} {homeEventDays === 1 ? "Day" : "Days"} Left</b>
+                <b>
+                  {homeEventDays} {homeEventDays === 1 ? "Day" : "Days"} Left
+                </b>
                 <i>♜</i>
               </section>
-              {dailyFeatured.ayah.published && <section className='panel railcard'>
-                <Heading
-                  title={t("Daily Ayah")}
-                  onClick={() => navigate("Quran")}
-                />
-                <p dir='rtl'>{dailyFeatured.ayah.arabic}</p>
-                <blockquote>
-                  “{dailyFeatured.ayah.translation}”
-                  <small>— {dailyFeatured.ayah.source}</small>
-                </blockquote>
-              </section>}
-              {dailyFeatured.hadith.published && <section className='panel railcard'>
-                <Heading
-                  title={t("Hadith of the Day")}
-                  onClick={() => navigate("Hadith")}
-                />
-                <p dir='rtl'>{dailyFeatured.hadith.arabic}</p>
-                <blockquote>
-                  “{dailyFeatured.hadith.translation}”
-                </blockquote>
-                <footer>
-                  ▤ {dailyFeatured.hadith.source}
-                  <button onClick={() => navigate("Hadith")}>
-                    Read More →
-                  </button>
-                </footer>
-              </section>}
+              {dailyFeatured.ayah.published && (
+                <section className='panel railcard'>
+                  <Heading
+                    title={t("Daily Ayah")}
+                    onClick={() => navigate("Quran")}
+                  />
+                  <p dir='rtl'>{dailyFeatured.ayah.arabic}</p>
+                  <blockquote>
+                    “{dailyFeatured.ayah.translation}”
+                    <small>— {dailyFeatured.ayah.source}</small>
+                  </blockquote>
+                </section>
+              )}
+              {dailyFeatured.hadith.published && (
+                <section className='panel railcard'>
+                  <Heading
+                    title={t("Hadith of the Day")}
+                    onClick={() => navigate("Hadith")}
+                  />
+                  <p dir='rtl'>{dailyFeatured.hadith.arabic}</p>
+                  <blockquote>“{dailyFeatured.hadith.translation}”</blockquote>
+                  <footer>
+                    ▤ {dailyFeatured.hadith.source}
+                    <button onClick={() => navigate("Hadith")}>
+                      Read More →
+                    </button>
+                  </footer>
+                </section>
+              )}
               <section className='aicard'>
                 <div>
                   <small>DEEN ISLAM AI</small>
@@ -1352,21 +1558,19 @@ export default function Home() {
             onBack={goBack}
           />
         )}
-        {active === "Home" && (
-          <SiteFooter navigate={navigate} act={act} />
-        )}
+        {active === "Home" && <SiteFooter navigate={navigate} act={act} />}
       </section>
       <nav className='mobile'>
-        {nav.slice(0, 5).map(([, t]) => (
+        {nav.slice(0, 5).map(([, label]) => (
           <button
-            key={t}
-            className={active === t ? "active" : ""}
-            onClick={() => navigate(t)}
+            key={label}
+            className={active === label ? "active" : ""}
+            onClick={() => navigate(label)}
           >
             <i>
-              <DeenIcon name={t} />
+              <DeenIcon name={label} />
             </i>
-            <span>{t}</span>
+            <span>{t(label)}</span>
           </button>
         ))}
       </nav>

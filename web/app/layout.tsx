@@ -1,26 +1,23 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Geist, Lora } from "next/font/google";
 import Script from "next/script";
+import { AdSenseScript } from "./components/AdSenseScript";
 import "./globals.css";
-import WebPushNotifications from "./components/WebPushNotifications";
 
 const geist = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const lora = Lora({ variable: "--font-serif", subsets: ["latin"] });
-const siteUrl = "https://www.deenislam.app";
-const siteName = "Deen Islam";
-const siteTitle = "Deen Islam - Quran, Hadith, Dua & Islamic Guide";
-const siteDescription =
-  "Explore the Holy Quran, authentic Hadith, daily Duas, prayer times, Qibla direction, Tafsir, Islamic books, Zakat and Islamic AI with Deen Islam.";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  themeColor: "#0B6B50",
-};
+const siteUrl = "https://deenislam.app";
+const siteName = "DEEN ISLAM QURAN & HADITH - MUSLIM GUIDE & PATH";
+const siteDescription = [
+  "Deen Islam is a complete Islamic lifestyle app designed to help Muslims stay connected with Islam in their everyday lives. The app brings essential Islamic knowledge, worship tools, and daily guidance together in one simple, clean, modern, and user-friendly platform.",
+  "Users can read and listen to the Holy Quran, explore Hadith, Tafsir, Fiqh, Aqidah, Seerah, Islamic history, and Islamic books, check accurate daily prayer times, find the Qibla direction, use a digital Tasbih, and follow daily Islamic tasks and activities to build better habits.",
+  "Deen Islam also provides Daily Ayah, Hadith of the Day, prayer reminders, Hijri date information, Ramadan Sehri and Iftar times, Islamic events, and useful reminders for daily life.",
+  "With easy navigation and a beautiful modern design, Deen Islam makes Islamic learning and daily practice easier. It aims to become a trusted digital companion for Muslims who want to increase their knowledge, improve their worship, build good Islamic habits, and stay connected with their faith anytime and anywhere.",
+].join(" ");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: siteTitle,
+  title: siteName,
   description: siteDescription,
   applicationName: "Deen Islam",
   authors: [{ name: "Deen Islam", url: siteUrl }],
@@ -29,25 +26,23 @@ export const metadata: Metadata = {
   category: "Religion and Spirituality",
   keywords: [
     "Deen Islam",
-    "Al Quran Online",
-    "Quran Bangla",
-    "Authentic Hadith",
-    "Islamic Books",
-    "Daily Dua",
-    "Namaz Time",
-    "Prayer Times",
-    "Qibla Direction",
-    "Islamic AI",
+    "Quran",
+    "Holy Quran",
+    "Hadith",
+    "Muslim guide",
+    "Islamic app",
+    "prayer times",
+    "Qibla direction",
+    "daily duas",
+    "Islamic books",
     "Tafsir",
-    "Zakat Calculator",
-    "Islamic Calendar",
-    "Ramadan 2027",
-    "Islamic Knowledge",
+    "Prophets",
+    "Sahaba",
+    "Islamic history",
   ],
   referrer: "origin-when-cross-origin",
-  alternates: { canonical: `${siteUrl}/` },
+  alternates: { canonical: "/", languages: { "en-US": "/", "bn-BD": "/" } },
   formatDetection: { email: false, address: false, telephone: false },
-  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     title: "Deen Islam",
@@ -57,9 +52,8 @@ export const metadata: Metadata = {
     type: "website",
     url: siteUrl,
     siteName,
-    title: "Deen Islam - Quran, Hadith & Islamic Guide",
-    description:
-      "Strengthen your Deen every day. Read Quran, explore authentic Hadith, daily Duas, prayer times, Islamic books and more.",
+    title: siteName,
+    description: siteDescription,
     locale: "en_US",
     alternateLocale: ["bn_BD"],
     images: [
@@ -73,9 +67,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Deen Islam - Your Daily Islamic Guide",
-    description:
-      "Read Quran, Hadith, Dua, Tafsir and Islamic books. Explore prayer times, Qibla direction and Islamic knowledge.",
+    title: siteName,
+    description: siteDescription,
     images: ["/images/deen-islam-social.png"],
   },
   robots: {
@@ -126,77 +119,54 @@ const structuredData = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const production = process.env.NODE_ENV === "production";
   return (
     <html lang='en'>
       <head>
-        <link
-          rel='icon'
-          type='image/png'
-          href='/deen-islam-app-icon.png'
-        />
+        <link rel='manifest' href='/manifest.webmanifest' />
+        <link rel='icon' type='image/png' href='/deen-islam-app-icon.png' />
         <link rel='apple-touch-icon' href='/deen-islam-app-icon.png' />
-        <meta
-          name='google-adsense-account'
-          content='ca-pub-8168876753473960'
-        />
-        {production && (
-          <Script
-            async
-            src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8168876753473960'
-            crossOrigin='anonymous'
-            strategy='afterInteractive'
-          />
-        )}
+        <meta name='google-adsense-account' content='ca-pub-8168876753473960' />
         <script
           type='application/ld+json'
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        {production && (
-          <Script id='google-tag-manager' strategy='beforeInteractive'>
-            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        <Script id='google-tag-manager' strategy='beforeInteractive'>
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
           })(window,document,'script','dataLayer','GTM-MPD7JJJ3');`}
-          </Script>
-        )}
+        </Script>
       </head>
       <body className={`${geist.variable} ${lora.variable}`}>
-        {production && (
-          <noscript>
-            <iframe
-              src='https://www.googletagmanager.com/ns.html?id=GTM-MPD7JJJ3'
-              height='0'
-              width='0'
-              style={{ display: "none", visibility: "hidden" }}
-              title='Google Tag Manager'
-            />
-          </noscript>
-        )}
+        <AdSenseScript />
+        <noscript>
+          <iframe
+            src='https://www.googletagmanager.com/ns.html?id=GTM-MPD7JJJ3'
+            height='0'
+            width='0'
+            style={{ display: "none", visibility: "hidden" }}
+            title='Google Tag Manager'
+          />
+        </noscript>
         {children}
-        <WebPushNotifications />
-        {production && (
-          <>
-            <Script
-              src='https://www.googletagmanager.com/gtag/js?id=G-EG5N3GPH9E'
-              strategy='afterInteractive'
-            />
-            <Script id='google-analytics' strategy='afterInteractive'>
-              {`window.dataLayer = window.dataLayer || [];
+        <Script
+          src='https://www.googletagmanager.com/gtag/js?id=G-EG5N3GPH9E'
+          strategy='afterInteractive'
+        />
+        <Script id='google-analytics' strategy='afterInteractive'>
+          {`window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-EG5N3GPH9E');`}
-            </Script>
-            <Script id='microsoft-clarity' strategy='afterInteractive'>
-              {`(function(c,l,a,r,i,t,y){
+        </Script>
+        <Script id='microsoft-clarity' strategy='afterInteractive'>
+          {`(function(c,l,a,r,i,t,y){
             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
             t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
           })(window, document, "clarity", "script", "yyf3uuhd7i");`}
-            </Script>
-          </>
-        )}
+        </Script>
       </body>
     </html>
   );

@@ -27,7 +27,7 @@ const routes = [
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
   return routes.map((route, index) => ({
-    url: `https://www.deenislam.app${route}`,
+    url: `https://deenislam.app${route}`,
     lastModified,
     changeFrequency: index === 0 ? "daily" : "weekly",
     priority: index === 0 ? 1 : 0.8,

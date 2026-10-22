@@ -9,6 +9,7 @@
     "check": "node --check src/index.js && node --check src/seed-quran.js",
     "seed:quran": "node src/seed-quran.js",
     "seed:pdf-demo": "node src/seed-pdf-demo-book.js",
+    "repair:pdf-pages": "node src/repair-pdf-page-images.js",
     "format:tafsir": "node src/format-tafsir-content.js"
   },
   "keywords": [],

@@ -8,6 +8,12 @@ const { deleteStoredImages } = require("./s3-books");
 const { cert, getApps, initializeApp } = require("firebase-admin/app");
 const { getMessaging } = require("firebase-admin/messaging");
 
+// FCM's maximum retention period is four weeks. The server-side inbox below
+// remains available for 30 days so devices can still catch up after that.
+const MOBILE_PUSH_TTL_SECONDS = 28 * 24 * 60 * 60;
+const MOBILE_PUSH_TTL_MS = MOBILE_PUSH_TTL_SECONDS * 1000;
+const WEB_PUSH_TTL_SECONDS = 30 * 24 * 60 * 60;
+
 const clean = (value, max = 500) =>
   String(value || "")
     .trim()
@@ -183,7 +189,12 @@ function createNotificationRouter(getTokens, getNotices, getDeliveries, jwtSecre
         return res.status(400).json({ message: "Device ID is required." });
       const cutoff = new Date(Date.now() - 30 * 86400000), user = actor(req, jwtSecret);
       const items = await getNotices()
-        .find({ published: true, createdAt: { $gte: cutoff }, deletedBy: { $ne: deviceId } })
+        .find({
+          published: true,
+          createdAt: { $gte: cutoff },
+          expiresAt: { $gt: new Date() },
+          deletedBy: { $ne: deviceId },
+        })
         .sort({ createdAt: -1 })
         .limit(100)
         .toArray();
@@ -268,7 +279,11 @@ function createNotificationRouter(getTokens, getNotices, getDeliveries, jwtSecre
   router.get("/api/admin/notifications", async (_req, res) => {
     try {
       const [items, activeDevices] = await Promise.all([
-        getNotices().find({}).sort({ createdAt: -1 }).limit(100).toArray(),
+        getNotices()
+          .find({ expiresAt: { $gt: new Date() } })
+          .sort({ createdAt: -1 })
+          .limit(100)
+          .toArray(),
         getTokens().countDocuments({ active: true }),
       ]);
       res.json({
@@ -331,6 +346,7 @@ function createNotificationRouter(getTokens, getNotices, getDeliveries, jwtSecre
           sound: "default",
           title,
           body,
+          ttl: MOBILE_PUSH_TTL_SECONDS,
           channelId: "deenislam-updates",
           data: { type: "admin_notification", notificationId: notificationId.toString(), category, screen, imageUrl, contentId, surahNumber, ayahNumber },
           richContent: { image: imageUrl },
@@ -348,7 +364,11 @@ function createNotificationRouter(getTokens, getNotices, getDeliveries, jwtSecre
             tokens: fcmTokens.map((item) => item.fcmToken),
             notification: { title, body, imageUrl },
             data: { type: "admin_notification", notificationId: notificationId.toString(), category, screen: screen || "notifications", imageUrl, contentId, surahNumber: String(surahNumber), ayahNumber: String(ayahNumber) },
-            android: { priority: "high", notification: { channelId: "deenislam-updates", sound: "default", color: "#076B43", imageUrl } },
+            android: {
+              priority: "high",
+              ttl: MOBILE_PUSH_TTL_MS,
+              notification: { channelId: "deenislam-updates", sound: "default", color: "#076B43", imageUrl },
+            },
           });
         } catch (error) {
           sendError = [sendError, error.message || "Firebase delivery failed."].filter(Boolean).join(" ");
@@ -359,7 +379,7 @@ function createNotificationRouter(getTokens, getNotices, getDeliveries, jwtSecre
           webTokens.map((item) => webPush.sendNotification(
             item.webSubscription,
             JSON.stringify({ title, body, icon: imageUrl, image: imageUrl, badge: "/deen-islam-app-icon.png", tag: `deenislam-${Date.now()}`, data: { type: "admin_notification", notificationId: notificationId.toString(), category, screen, imageUrl, contentId, surahNumber, ayahNumber, url: destinationUrl || `/notification/${notificationId}` } }),
-            { TTL: 86400, urgency: "high" },
+            { TTL: WEB_PUSH_TTL_SECONDS, urgency: "high" },
           )),
         );
       } else if (webTokens.length) sendError = [sendError, "Web push is not configured."].filter(Boolean).join(" ");

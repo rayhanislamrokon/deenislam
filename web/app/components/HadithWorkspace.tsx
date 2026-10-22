@@ -711,8 +711,12 @@ export function HadithWorkspace({
     const commentaryLanguage = matchedCommentary?.language || "English";
     return (
       <div className='hadith-reader'>
-        <button className='soft' onClick={closeReader}>
-          ← {selected.title}
+        <button
+          type='button'
+          className='sahaba-back hadith-reader-back'
+          onClick={closeReader}
+        >
+          <b>‹</b> {selected.title}
         </button>
         <header>
           <span>HADITH {reading.no}</span>
@@ -817,7 +821,7 @@ export function HadithWorkspace({
       <div className='hadith-collection'>
         <button
           type='button'
-          className='hadith-collection-back'
+          className='sahaba-back hadith-collection-back'
           onClick={() => {
             setSelected(null);
             setReading(null);
@@ -825,7 +829,7 @@ export function HadithWorkspace({
             window.history.pushState({}, "", "/hadith");
           }}
         >
-          <span>←</span> Hadith Collections
+          <b>‹</b> Hadith Collections
         </button>
         <div className='hadith-collection-head'>
           <div>
@@ -886,15 +890,9 @@ export function HadithWorkspace({
   }
   return (
     <div className='hadith-home'>
-      <button
-        type='button'
-        className='hadith-home-back'
-        onClick={() => {
-          window.location.href = "/";
-        }}
-      >
-        <span>←</span> Back to Home
-      </button>
+      <a className='sahaba-back hadith-home-back' href='/'>
+        <b>‹</b> Back to Home
+      </a>
       <div className='feature-hero'>
         <span>AUTHENTIC HADITH LIBRARY</span>
         <h2>Hadith Collections</h2>

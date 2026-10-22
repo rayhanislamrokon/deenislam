@@ -1,0 +1,19 @@
+{
+  "name": "DEEN ISLAM QURAN & HADITH - MUSLIM GUIDE & PATH",
+  "short_name": "Deen Islam",
+  "description": "Quran, authentic Hadith, prayer times, duas and Islamic learning in one Muslim guide.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7fbf8",
+  "theme_color": "#006a4e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/deen-islam-app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

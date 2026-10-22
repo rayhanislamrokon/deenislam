@@ -23,7 +23,12 @@ export async function prepareWebPUpload(file: File) {
   return {file: webp, fileName: webp.name, contentType: "image/webp"};
 }
 
-export async function deleteManagedImage(apiBase: string, token: string, image: {key?: string; url?: string}) {
+export async function deleteManagedImage(
+  apiBase: string,
+  token: string,
+  image: {key?: string; url?: string},
+  options: {keepalive?: boolean} = {},
+) {
   if (!image.key && !image.url) return;
   const isManaged = Boolean(
     image.key ||
@@ -35,6 +40,7 @@ export async function deleteManagedImage(apiBase: string, token: string, image: 
     method: "DELETE",
     headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
     body: JSON.stringify(image),
+    keepalive: options.keepalive,
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.message || "Unable to delete image from AWS S3.");

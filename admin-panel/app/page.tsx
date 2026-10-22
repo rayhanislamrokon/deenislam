@@ -849,6 +849,61 @@ export default function Home() {
       setCoverLoading(false);
     }
   }
+  async function deletePdfPageImages(pages: any[]) {
+    const images: { key?: string; url?: string }[] = [];
+    const visit = (value: any) => {
+      if (!value || typeof value !== "object") return;
+      if (value.imageKey || value.imageUrl)
+        images.push({ key: value.imageKey, url: value.imageUrl });
+      Object.values(value).forEach(visit);
+    };
+    visit(pages || []);
+    await Promise.all(
+      images.map((image) => deleteManagedImage(api, token, image)),
+    );
+  }
+  async function removePdf() {
+    if (!window.confirm("Remove this PDF? Its extracted page data and uploaded page images will be permanently removed.")) return;
+    setPdfLoading(true);
+    setBookMessage("Removing PDF data and uploaded page images...");
+    try {
+      if (bookForm.slug && !bookForm.extraction?.pendingMedia) {
+        const response = await fetch(
+          `${api.replace(/\/$/, "")}/api/admin/library-books/${encodeURIComponent(bookForm.slug)}/pdf`,
+          { method: "DELETE", headers },
+        );
+        const body = await response.json();
+        if (!response.ok) throw Error(body.message);
+        setLibrary((items) =>
+          items.map((item) => (item.slug === bookForm.slug ? body.data : item)),
+        );
+        setBookForm((current: any) => ({
+          ...current,
+          content: "",
+          pages: [],
+          extraction: body.data.extraction || {},
+          published: false,
+        }));
+        setBookMessage(body.message);
+      } else {
+        await deletePdfPageImages(bookForm.pages || []);
+        setBookForm((current: any) => ({
+          ...current,
+          content: "",
+          pages: [],
+          extraction: {},
+          published: false,
+        }));
+        setBookMessage("Unsaved PDF pages were removed.");
+      }
+      setBookUploadProgress(0);
+      setBookUploadStage("Waiting for a PDF");
+    } catch (error: any) {
+      setBookMessage(error.message || "Unable to remove this PDF.");
+    } finally {
+      setPdfLoading(false);
+    }
+  }
   async function extractPdf(file: File | null) {
     if (!file) return;
     setPdfLoading(true);
@@ -856,9 +911,12 @@ export default function Home() {
     setBookUploadStage("Uploading PDF to secure converter");
     setBookMessage("Reading PDF pages and preserving app structure...");
     try {
+      if (bookForm.extraction?.pendingMedia)
+        await deletePdfPageImages(bookForm.pages || []);
       const form = new FormData();
       form.append("pdf", file);
       form.append("language", bookForm.language);
+      form.append("languageCode", bookForm.languageCode);
       const root = api.endsWith("/") ? api.slice(0, -1) : api,
         r = await fetch(root + "/api/admin/books/extract-pdf", {
           method: "POST",
@@ -889,6 +947,8 @@ export default function Home() {
       setBookForm((current: any) => ({
         ...current,
         title: current.title || file.name.replace(/\.pdf$/i, ""),
+        language: current.language,
+        languageCode: current.languageCode,
         content: report.text,
         pages: extractedParts,
         extraction: {
@@ -898,6 +958,9 @@ export default function Home() {
           averageConfidence: report.averageConfidence,
           needsReview: report.needsReview || [],
           sourceFile: report.fileName,
+          storage: report.storage,
+          pageDisplay: report.pageDisplay,
+          pendingMedia: true,
           extractedAt: new Date().toISOString(),
         },
       }));
@@ -912,7 +975,7 @@ export default function Home() {
           report.averageConfidence +
           "% confidence · " +
           (report.method === "embedded-text" ? "original PDF text" : "OCR") +
-          ". PDF file discarded; text is ready to save in MongoDB." +
+          ". Page images are ready to save." +
           review,
       );
     } catch (e: any) {
@@ -939,6 +1002,7 @@ export default function Home() {
               extraction: {
                 ...bookForm.extraction,
                 copyright: bookForm.copyright || "",
+              pendingMedia: false,
               },
             }),
           },
@@ -1023,6 +1087,7 @@ export default function Home() {
         const form = new FormData();
         form.append("pdf", file);
         form.append("language", bookForm.language);
+        form.append("languageCode", bookForm.languageCode);
         const root = api.replace(/\/$/, ""),
           extracted = await fetch(root + "/api/admin/books/extract-pdf", {
             method: "POST",
@@ -1051,6 +1116,8 @@ export default function Home() {
           body = {
             ...bookForm,
             title: file.name.replace(/\.pdf$/i, ""),
+            language: bookForm.language,
+            languageCode: bookForm.languageCode,
             coverImageUrl: "",
             coverImageKey: "",
             content: report.text,
@@ -1133,7 +1200,7 @@ export default function Home() {
       setBookAction("");
     }
   }
-  function clearBookForm() {
+  async function clearBookForm() {
     if (
       (bookForm.title || bookForm.content || bookForm.coverImageUrl) &&
       !window.confirm(
@@ -1141,6 +1208,15 @@ export default function Home() {
       )
     )
       return;
+    if (bookForm.extraction?.pendingMedia) {
+      setBookMessage("Removing unsaved PDF pages...");
+      try {
+        await deletePdfPageImages(bookForm.pages || []);
+      } catch (error: any) {
+        setBookMessage(error.message || "Unable to remove unsaved PDF pages.");
+        return;
+      }
+    }
     setBookForm({
       slug: "",
       title: "",
@@ -1169,7 +1245,7 @@ export default function Home() {
       !window.confirm(
         "Permanently clear " +
           book.title +
-          " from the app and database? Its uploaded cover will also be deleted. This cannot be undone.",
+          " from the app and database? Its cover and every PDF page image will also be permanently deleted. This cannot be undone.",
       )
     )
       return;
@@ -3807,11 +3883,31 @@ export default function Home() {
                   )}
                 </label>
                 {view === "book-library" && (
-                  <BookPdfUploader
-                    language={bookForm.language}
-                    loading={pdfLoading}
-                    onSelect={(file) => void extractPdf(file)}
-                  />
+                  <>
+                    <BookPdfUploader
+                      language={bookForm.language}
+                      loading={pdfLoading}
+                      onSelect={(file) => void extractPdf(file)}
+                    />
+                    {bookForm.extraction?.sourceFile && (
+                      <div className="pdfLifecycleActions">
+                        <div>
+                          <b>{bookForm.extraction?.sourceFile || "Uploaded PDF"}</b>
+                          <small>
+                            {bookForm.extraction?.pageCount || 0} page(s) ready
+                          </small>
+                        </div>
+                        <button
+                          type="button"
+                          className="danger"
+                          disabled={pdfLoading}
+                          onClick={() => void removePdf()}
+                        >
+                          Remove PDF
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
                 {(view === "books" ||
                   bookForm.extraction?.sourceFile ||

@@ -4,7 +4,7 @@ const { readFile, writeFile } = require("fs/promises");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..", "..");
-const UI_FILE = path.join(ROOT, "src", "data", "uiTranslations.json");
+const UI_FILE = path.join(ROOT, "app", "src", "data", "uiTranslations.json");
 const PROTECTED = new Set([
   "Quran",
   "Hadith",
@@ -56,6 +56,25 @@ async function main() {
     Recitation: "Recitation",
     Pronunciation: "Pronunciation",
     Meaning: "Meaning",
+    "Islamic Lifestyle": "Islamic Lifestyle",
+    Prophets: "Prophets",
+    Sahaba: "Sahaba",
+    Islamic: "Islamic",
+    "Duas & Amol": "Duas & Amol",
+    "Daily Prayer": "Daily Prayer",
+    Sajdah: "Sajdah",
+    Settings: "Settings",
+    "Surah List": "Surah List",
+    "Play All": "Play All",
+    More: "More",
+    "Quran Settings": "Quran Settings",
+    "Arabic Mushaf view is active.": "Arabic Mushaf view is active.",
+    "Quran page recitation controls are ready.": "Quran page recitation controls are ready.",
+    "More Quran reader options.": "More Quran reader options.",
+    "Ruku by Surah": "Ruku by Surah",
+    "Sajdah Surahs": "Sajdah Surahs",
+    "Full Quran": "Full Quran",
+    "Saving...": "Saving...",
   });
   const phrases = Object.keys(packs.en);
   const client = new MongoClient(process.env.MONGODB_URI);

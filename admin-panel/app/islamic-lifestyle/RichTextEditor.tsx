@@ -7,7 +7,15 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Blockquote from "@tiptap/extension-blockquote";
 import { Mark, mergeAttributes } from "@tiptap/core";
-import { uploadImageToS3 } from "../lib/imageUpload";
+import { deleteManagedImage, uploadImageToS3 } from "../lib/imageUpload";
+
+const RICH_TEXT_UPLOADS_COMMITTED = "deenislam:rich-text-uploads-committed";
+
+/** Call only after the content API confirms that the rich text was saved. */
+export const commitRichTextUploads = () => {
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new Event(RICH_TEXT_UPLOADS_COMMITTED));
+};
 
 const SelectionStyle = Mark.create({
   name: "selectionStyle",
@@ -98,6 +106,7 @@ type Props = {
   compact?: boolean;
   autoArrange?: (html: string) => string;
   showPreviewTabs?: boolean;
+  cleanupUnsavedImages?: boolean;
 };
 
 type EditorView = "editor" | "app" | "web";
@@ -119,10 +128,12 @@ export default function RichTextEditor({
   compact = false,
   autoArrange,
   showPreviewTabs = true,
+  cleanupUnsavedImages = false,
 }: Props) {
   const initializedRef = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const imagePositionRef = useRef<number | null>(null);
+  const pendingImagesRef = useRef(new Map<string, { key: string; url: string }>());
   const linkSelectionRef = useRef({ from: 1, to: 1 });
   const [uploading, setUploading] = useState(false);
   const [linkPanel, setLinkPanel] = useState(false);
@@ -131,6 +142,7 @@ export default function RichTextEditor({
   const [quotePanel, setQuotePanel] = useState(false);
   const [colorPanel, setColorPanel] = useState(false);
   const [view, setView] = useState<EditorView>("editor");
+  const [, refreshToolbar] = useState(0);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -166,8 +178,40 @@ export default function RichTextEditor({
       if (activeEditor.isEmpty)
         activeEditor.chain().setParagraph().unsetAllMarks().run();
     },
+    // A selection move does not change the document, so it does not trigger
+    // onUpdate. Re-render the toolbar to reflect the marks at the new range.
+    onSelectionUpdate: () => refreshToolbar((version) => version + 1),
     onUpdate: ({ editor: activeEditor }) => onChange(activeEditor.getHTML()),
   });
+
+  useEffect(() => {
+    if (!cleanupUnsavedImages) return;
+    const discardPendingImages = (keepalive = false) => {
+      const pending = [...pendingImagesRef.current.values()];
+      pendingImagesRef.current.clear();
+      for (const image of pending)
+        void deleteManagedImage(api, token, image, { keepalive }).catch(() => undefined);
+    };
+    const commitPendingImages = () => pendingImagesRef.current.clear();
+    const onPageHide = () => discardPendingImages(true);
+
+    window.addEventListener(RICH_TEXT_UPLOADS_COMMITTED, commitPendingImages);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.removeEventListener(RICH_TEXT_UPLOADS_COMMITTED, commitPendingImages);
+      window.removeEventListener("pagehide", onPageHide);
+      discardPendingImages(true);
+    };
+  }, [api, cleanupUnsavedImages, token]);
+
+  useEffect(() => {
+    if (!cleanupUnsavedImages) return;
+    for (const [url, image] of pendingImagesRef.current) {
+      if (value.includes(url)) continue;
+      pendingImagesRef.current.delete(url);
+      void deleteManagedImage(api, token, image).catch(() => undefined);
+    }
+  }, [api, cleanupUnsavedImages, token, value]);
 
   useEffect(() => {
     if (!editor) return;
@@ -250,28 +294,12 @@ export default function RichTextEditor({
       editor.chain().focus().unsetMark("selectionStyle").run();
     else editor.chain().focus().setMark("selectionStyle", { kind }).run();
   };
-  const selectedList = (type: "bullet" | "number", blockAction: () => void) => {
-    const selection = editor.state.selection;
-    if (selection.empty) {
-      blockAction();
-      return;
-    }
-    const { from, to, $from, $to } = selection;
-    if (!$from.sameParent($to)) {
-      blockAction();
-      return;
-    }
-    const startsInside = $from.parentOffset > 0;
-    const endsInside = $to.parentOffset < $to.parent.content.size;
-    if (endsInside)
-      editor.chain().focus().setTextSelection(to).splitBlock().run();
-    if (startsInside)
-      editor.chain().focus().setTextSelection(from).splitBlock().run();
-    const selectedBlockPosition = startsInside ? from + 1 : from;
-    const chain = editor
-      .chain()
-      .focus()
-      .setTextSelection(selectedBlockPosition);
+  const selectedList = (type: "bullet" | "number") => {
+    // TipTap already expands a text selection to every paragraph/list item it
+    // intersects. Keep that complete range intact so every selected line is
+    // converted, instead of collapsing the command onto the first block.
+    const { from, to } = editor.state.selection;
+    const chain = editor.chain().focus().setTextSelection({ from, to });
     if (type === "bullet") chain.toggleBulletList().run();
     else chain.toggleOrderedList().run();
   };
@@ -295,6 +323,11 @@ export default function RichTextEditor({
     onMessage("");
     try {
       const payload = await uploadImageToS3(api, token, file);
+      if (cleanupUnsavedImages)
+        pendingImagesRef.current.set(payload.publicUrl, {
+          key: payload.key,
+          url: payload.publicUrl,
+        });
       const position = imagePositionRef.current;
       const chain = editor.chain().focus();
       if (position !== null) chain.setTextSelection(position);
@@ -501,22 +534,14 @@ export default function RichTextEditor({
               icon="-"
               label="Bullets"
               active={editor.isActive("bulletList")}
-              action={() =>
-                selectedList("bullet", () =>
-                  editor.chain().focus().toggleBulletList().run(),
-                )
-              }
+              action={() => selectedList("bullet")}
             />
             <Tool
               title="Numbered list"
               icon="1."
               label="Numbers"
               active={editor.isActive("orderedList")}
-              action={() =>
-                selectedList("number", () =>
-                  editor.chain().focus().toggleOrderedList().run(),
-                )
-              }
+              action={() => selectedList("number")}
             />
             <Tool
               title="Add or edit link"
@@ -970,8 +995,15 @@ export default function RichTextEditor({
           outline: none;
           color: #263f34;
           font:
-            16px/1.75 Arial,
+            16px/1.75 "Nirmala UI",
+            "Vrinda",
+            "Noto Sans Bengali",
+            "Noto Sans",
+            Arial,
             sans-serif;
+          font-variant-ligatures: common-ligatures;
+          font-feature-settings: "liga" 1, "clig" 1;
+          text-rendering: optimizeLegibility;
         }
         .tiptapShell.compact .richEditorBody {
           min-height: 180px !important;
@@ -997,16 +1029,16 @@ export default function RichTextEditor({
           max-width: 100%;
           font-size: 22px !important;
           line-height: 1.85 !important;
-          overflow-wrap: anywhere !important;
-          word-break: break-word !important;
+          overflow-wrap: break-word !important;
+          word-break: normal !important;
           white-space: normal !important;
         }
         .tiptapShell.largeText .richEditorBody p {
           max-width: 100%;
           font-size: 22px !important;
           line-height: 1.85 !important;
-          overflow-wrap: anywhere !important;
-          word-break: break-word !important;
+          overflow-wrap: break-word !important;
+          word-break: normal !important;
           margin-bottom: 18px;
         }
         .richEditorBody p {
@@ -1016,7 +1048,7 @@ export default function RichTextEditor({
         .richEditorBody h2,
         .richEditorBody h3,
         .richEditorBody h4 {
-          color: #075b3b;
+          color: inherit;
           line-height: 1.3;
           margin: 22px 0 10px;
         }
@@ -1200,7 +1232,7 @@ export default function RichTextEditor({
         }
         .richEditorBody span[data-selection-style] {
           display: inline;
-          color: #075b3b;
+          color: inherit;
           font-weight: 800;
           line-height: 1.3;
         }
@@ -1474,7 +1506,7 @@ export default function RichTextEditor({
         .richPreviewContent h2,
         .richPreviewContent h3,
         .richPreviewContent h4 {
-          color: #075b3b;
+          color: inherit;
           line-height: 1.3;
           margin: 22px 0 10px;
         }
@@ -1499,10 +1531,18 @@ export default function RichTextEditor({
         }
         .richPreviewContent ul,
         .richPreviewContent ol {
+          display: block !important;
           padding-left: 30px;
           margin: 12px 0;
         }
+        .richPreviewContent ul {
+          list-style: disc outside !important;
+        }
+        .richPreviewContent ol {
+          list-style: decimal outside !important;
+        }
         .richPreviewContent li {
+          display: list-item !important;
           margin: 6px 0;
           padding-left: 4px;
         }
@@ -1539,7 +1579,7 @@ export default function RichTextEditor({
           color: #684047;
         }
         .richPreviewContent span[data-selection-style] {
-          color: #075b3b;
+          color: inherit;
           font-weight: 800;
           line-height: 1.3;
         }

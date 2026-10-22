@@ -85,6 +85,28 @@ async function storeWebPImage(token, input) {
   );
   return { key, bytes: webp.length, width: metadata.width, height: metadata.height };
 }
+async function storePdfPageImage({ input, fileName, pageNumber }) {
+  const source = Buffer.isBuffer(input) ? input : Buffer.from(input || []);
+  if (!source.length) throw new Error("Rendered PDF page is empty.");
+  const { region, bucket, uploadPrefix, publicBase } = config();
+  const safe = require("path")
+    .parse(String(fileName || "pdf-book"))
+    .name.toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 45) || "pdf-book";
+  const key = `${uploadPrefix}/pdf-pages/${Date.now()}-${crypto.randomBytes(6).toString("hex")}-${safe}-page-${pageNumber}.webp`;
+  await new S3Client({ region }).send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: source,
+      ContentType: "image/webp",
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+  return { key, publicUrl: `${publicBase}/${key}`, bytes: source.length };
+}
 async function deleteBookCover(key) {
   const safe = String(key || "").trim();
   if (!safe) return false;
@@ -158,6 +180,7 @@ async function getStoredImage(key) {
 module.exports = {
   createBookCoverUpload,
   storeWebPImage,
+  storePdfPageImage,
   deleteBookCover,
   managedMediaKey,
   collectManagedMediaKeys,

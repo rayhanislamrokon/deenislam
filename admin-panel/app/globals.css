@@ -184,6 +184,54 @@ aside nav button[hidden]{display:none!important}
   aside .logout{flex:0 0 auto;margin-top:12px}
 }
 
+.pdfLifecycleActions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  border: 1px solid #edcccc;
+  border-radius: 11px;
+  background: #fff8f7;
+}
+
+.bookContent,
+.previewPaper article {
+  font-family: "Nirmala UI", "Vrinda", "Noto Sans Bengali", "Noto Sans", Arial, sans-serif;
+  font-variant-ligatures: common-ligatures;
+  font-feature-settings: "liga" 1, "clig" 1;
+  text-rendering: optimizeLegibility;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.pdfLifecycleActions div { min-width: 0; }
+.pdfLifecycleActions b,
+.pdfLifecycleActions small { display: block; }
+.pdfLifecycleActions b {
+  overflow: hidden;
+  color: #153c2e;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdfLifecycleActions small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.pdfLifecycleActions .danger {
+  flex: 0 0 auto;
+  padding: 9px 13px;
+  border: 1px solid #edcccc;
+  background: #fff1f1;
+  color: #a52b22;
+}
+@media (max-width: 700px) {
+  .pdfLifecycleActions { align-items: stretch; flex-direction: column; }
+  .pdfLifecycleActions .danger { width: 100%; }
+}
+
 /* Mobile admin console --------------------------------------------------- */
 @media (max-width: 780px) {
   html,

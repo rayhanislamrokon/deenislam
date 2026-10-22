@@ -1,10 +1,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
 const file = new URL('../app/src/data/uiTranslations.json', import.meta.url);
+const webFile = new URL('../web/app/data/uiTranslations.json', import.meta.url);
 const output = JSON.parse(await readFile(file, 'utf8'));
 const phrases = [
   'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','January','February','March','April','May','June','July','August','September','October','November','December',
   'Home','Library','Prayer','Profile',
+  'Islamic Books','Masala','Prayer Times','Qibla Direction','Islamic AI','Daily Tasks','Islamic Lifestyle','Prophets','Sahaba','Islamic History','Ramadan','Islamic Calendar','Knowledge','Community','Settings',
+  'Read & Listen','Authentic Sayings','Knowledge & Growth','Daily Islamic Rulings','Stay on Track','Find Qibla','Ask & Learn','Build Good Habits','Quran Explanation','Calculate & Learn','Live With Deen','Stories & Lessons','Noble Companions','Explore Our Heritage','Digital Dhikr','Daily Worship','All Deen Islam services','View All Prayer Times','Starts in',
   '20 May 2024, Monday','And do not lose hope and do not be sad, and you will be superior if you are true believers.','The best of you are those who learn the Quran and teach it.','10 Dhul Hijjah 1445 AH','Select Quran recitation voice','Ayah','of','Page','Search Arabic, translation or Surah...','Did you mean?','Search the complete Quran','No Ayah found','Try another Arabic or English word.','Tap Download on a Surah to add it here.','Tap the bookmark on Continue Reading to add it here.','Search by name or style...','Popular','All Reciters','Quran Translation Editions','Languages','Editions','Search translator, language or edition...','School / methodology','Timer','Save','Tafsir Source','Author','Abridged Version',
   'Allah commands His believing servants to fast. Fasting means abstaining from food, drink, and sexual intercourse with the intention of doing so sincerely for Allah, the Exalted.',
   'This is because fasting purifies the soul, cleanses it from bad traits, and refines it. Thus, Allah mentioned that He has enjoined it upon this Ummah just as He enjoined it upon those before them, so they would have a good example in that.',
@@ -25,3 +28,4 @@ for (const [language, table] of Object.entries(output)) {
   process.stdout.write(`${language} `);
 }
 await writeFile(file, JSON.stringify(output,null,2),'utf8');
+await writeFile(webFile, JSON.stringify(output,null,2),'utf8');

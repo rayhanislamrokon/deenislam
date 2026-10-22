@@ -76,9 +76,11 @@ const safeRichTafsir = (value: string) =>
 export function TafsirWorkspace({
   query,
   language,
+  onBack,
 }: {
   query: string;
   language: string;
+  onBack: () => void;
 }) {
   const [sources, setSources] = useState<Source[]>([]);
   const [source, setSource] = useState<Source | null>(null);
@@ -101,7 +103,8 @@ export function TafsirWorkspace({
     const fetchSources = async (): Promise<Source[]> => {
       try {
         const res = await fetch(
-          `${API}/api/tafsir/sources?language=${encodeURIComponent(language)}`,
+          `${API}/api/tafsir/sources?language=${encodeURIComponent(language)}&refresh=${Date.now()}`,
+          { cache: "no-store" },
         );
         if (res.ok) {
           const json = await res.json();
@@ -139,19 +142,47 @@ export function TafsirWorkspace({
       return [];
     };
 
-    Promise.all([
-      fetchSources(),
-      fetch(
-        `${API}/api/quran/surahs?language=${encodeURIComponent(language)}`,
-        { cache: "no-store" },
-      )
-        .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .catch(() => ({ data: [] })),
-    ])
-      .then(([sourcesList, surahBody]) => {
+    const fetchSurahs = async (): Promise<Surah[]> => {
+      try {
+        const response = await fetch(
+          `${API}/api/quran/surahs?language=${encodeURIComponent(language)}`,
+          { cache: "no-store" },
+        );
+        if (response.ok) {
+          const body = await response.json();
+          if (Array.isArray(body.data) && body.data.length) return body.data;
+        }
+      } catch {
+        // Use the public Quran API fallback below.
+      }
+
+      try {
+        const response = await fetch(
+          "https://api.quran.com/api/v4/chapters?language=en",
+          { cache: "no-store" },
+        );
+        if (!response.ok) return [];
+        const body = await response.json();
+        return (Array.isArray(body.chapters) ? body.chapters : []).map(
+          (chapter: any) => ({
+            number: Number(chapter.id),
+            name: String(chapter.name_arabic || ""),
+            englishName: String(chapter.name_simple || ""),
+            englishNameTranslation: String(chapter.translated_name?.name || ""),
+            numberOfAyahs: Number(chapter.verses_count || 0),
+            revelationType: String(chapter.revelation_place || ""),
+          }),
+        );
+      } catch {
+        return [];
+      }
+    };
+
+    Promise.all([fetchSources(), fetchSurahs()])
+      .then(([sourcesList, surahList]) => {
         if (!live) return;
         setSources(sourcesList);
-        setSurahs(Array.isArray(surahBody.data) ? surahBody.data : []);
+        setSurahs(surahList);
         const wanted = APP_TAFSIR_LANGUAGE[language] || "english";
         const matched =
           sourcesList.find((x) => x.language_name.toLowerCase() === wanted) ||
@@ -163,7 +194,38 @@ export function TafsirWorkspace({
           ) ||
           sourcesList[0] ||
           null;
-        setSource(matched);
+        const path = window.location.pathname.split("/").filter(Boolean);
+        const routeSourceId = path[0] === "tafsir" ? path[1] : "";
+        const routeSource = routeSourceId
+          ? sourcesList.find(
+              (item) =>
+                String(item.id) === decodeURIComponent(routeSourceId) ||
+                String(item.sourceId || "") === decodeURIComponent(routeSourceId),
+            )
+          : null;
+        const activeSource = routeSource || matched;
+        setSource(activeSource);
+        setStep(routeSourceId ? "surahs" : "sources");
+        if (!surahList.length) {
+          setError("Surah list could not load. Please refresh and try again.");
+        }
+        const routeSurahNumber = Number(path[2]);
+        if (routeSourceId && Number.isInteger(routeSurahNumber) && routeSurahNumber > 0) {
+          fetch(
+            `${API}/api/quran/surahs/${routeSurahNumber}?language=${encodeURIComponent(language)}`,
+            { cache: "no-store" },
+          )
+            .then(async (response) => {
+              const body = await response.json();
+              if (!response.ok || !body.data) throw new Error(body.message);
+              if (!live) return;
+              setSurah(body.data);
+              setStep("ayahs");
+            })
+            .catch(() => {
+              if (live) setError("This Surah could not load. Please try again.");
+            });
+        }
       })
       .catch(() => setError("Tafsir library could not load. Please try again."))
       .finally(() => live && setLoading(false));
@@ -309,7 +371,11 @@ export function TafsirWorkspace({
   if (step === "reader" && source && surah && ayah)
     return (
       <div className='tafsir-reader'>
-        <button className='section-back' onClick={() => setStep("ayahs")}>
+        <button
+          type='button'
+          className='tafsir-reader-back'
+          onClick={() => setStep("ayahs")}
+        >
           ← {surah.englishName}
         </button>
         <header>
@@ -374,6 +440,9 @@ export function TafsirWorkspace({
           <button disabled={ayah.numberInSurah === 1} onClick={() => move(-1)}>
             ← Previous
           </button>
+          <span className='tafsir-page-count'>
+            {ayah.numberInSurah} / {surah.numberOfAyahs}
+          </span>
           <button
             disabled={ayah.numberInSurah === surah.numberOfAyahs}
             onClick={() => move(1)}
@@ -454,6 +523,9 @@ export function TafsirWorkspace({
 
   return (
     <div className='tafsir-library'>
+      <button type='button' className='section-back' onClick={onBack}>
+        ← Back to Home
+      </button>
       <div className='feature-hero'>
         <span>VERIFIED TAFSIR LIBRARY</span>
         <h2>Understand the Quran through trusted Tafsir</h2>
