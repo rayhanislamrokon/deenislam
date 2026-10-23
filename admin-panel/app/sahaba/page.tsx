@@ -1,14 +1,19 @@
 "use client";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import BookPageBuilder from "../books/BookPageBuilder";
 import { HOME_LANGUAGES } from "../../../web/app/data/homeLanguages";
 import { deleteManagedImage } from "../lib/imageUpload";
+import BaseRichTextEditor, {
+  commitRichTextUploads,
+} from "../islamic-lifestyle/RichTextEditor";
 const SAHABA_LANGUAGES = HOME_LANGUAGES.filter(
   (item) => !["iw", "jw"].includes(item.code),
 );
 const API = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 ).replace(/\/$/, "");
+const RichTextEditor = (
+  props: Parameters<typeof BaseRichTextEditor>[0],
+) => <BaseRichTextEditor {...props} cleanupUnsavedImages />;
 const empty = {
   slug: "",
   title: "",
@@ -228,6 +233,7 @@ export default function SahabaAdmin() {
         }),
         j = await json(r);
       if (!r.ok) throw Error(j.message);
+      commitRichTextUploads();
       setMessage(j.message || "Biography saved successfully.");
       setForm(empty);
       if (selectedCoverPreview.startsWith("blob:"))
@@ -425,18 +431,27 @@ export default function SahabaAdmin() {
               )}
             </label>
             <div className="wide editor">
-              <label>Biography pages</label>
-              <BookPageBuilder
-                kind="biography"
-                pages={form.pages || []}
-                content={form.content || ""}
+              <label>Complete biography text</label>
+              <RichTextEditor
+                value={form.content || ""}
                 api={API}
                 token={tokenValue}
-                language={form.language}
                 recordId={`sahaba:${form.slug || "new"}:${form.languageCode}`}
                 onMessage={setMessage}
-                onChange={(pages, content) =>
-                  setForm({ ...form, pages, content })
+                onChange={(content) =>
+                  setForm((current: any) => ({
+                    ...current,
+                    content,
+                    pages: [
+                      {
+                        number: 1,
+                        text: content,
+                        markdown: content,
+                        confidence: 100,
+                        needsReview: false,
+                      },
+                    ],
+                  }))
                 }
               />
             </div>

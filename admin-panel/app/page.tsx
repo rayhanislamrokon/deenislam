@@ -5,7 +5,7 @@ import AdminLanguagePicker, {
 import { FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import BookPageBuilder from "./books/BookPageBuilder";
-import RichTextEditor from "./islamic-lifestyle/RichTextEditor";
+import RichTextEditor, { commitRichTextUploads } from "./islamic-lifestyle/RichTextEditor";
 import BookPdfUploader from "./books/BookPdfUploader";
 import { deleteManagedImage, uploadImageToS3 } from "./lib/imageUpload";
 import VisitorAnalyticsSummary from "./components/VisitorAnalyticsSummary";
@@ -1009,6 +1009,7 @@ export default function Home() {
         ),
         j = await r.json();
       if (!r.ok) throw Error(j.message);
+      commitRichTextUploads();
       setLibrary((items) =>
         bookForm.slug
           ? items.map((item) => (item.slug === bookForm.slug ? j.data : item))

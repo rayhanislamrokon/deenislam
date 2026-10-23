@@ -171,7 +171,7 @@ const nav = [
   ["◇", "Qibla Direction"],
   ["🕌", "Nearby Mosques"],
   ["✦", "Islamic AI"],
-  ["✓", "Daily Tasks"],
+  ["✓", "Daily Prayer"],
   ["☽", "Ramadan"],
   ["▦", "Islamic Calendar"],
   ["♡", "Knowledge"],
@@ -188,7 +188,7 @@ const features = [
   ["▦", "Prayer Times", "Stay on Track"],
   ["◆", "Qibla Direction", "Find Qibla"],
   ["✿", "Islamic AI", "Ask & Learn"],
-  ["☑", "Daily Tasks", "Build Good Habits"],
+  ["☑", "Daily Prayer", "Build Good Habits"],
   ["📜", "Tafsir", "Quran Explanation"],
   ["◉", "Zakat", "Calculate & Learn"],
   ["☘", "Islamic Lifestyle", "Live With Deen"],
@@ -314,7 +314,7 @@ const bnCopy: Record<string, string> = {
   "Prayer Times": "নামাজের সময়",
   "Qibla Direction": "কিবলার দিক",
   "Islamic AI": "ইসলামিক এআই",
-  "Daily Tasks": "দৈনিক কাজ",
+  "Daily Prayer": "দৈনিক ইবাদত",
   Ramadan: "রমজান",
   "Islamic Calendar": "ইসলামিক ক্যালেন্ডার",
   Knowledge: "জ্ঞান",
@@ -487,7 +487,7 @@ export default function Home() {
       Prophets: "prophets",
       "Islamic History": "islamic_history",
       "Islamic Lifestyle": "islamic_lifestyle",
-      "Daily Tasks": "daily_prayer",
+      "Daily Prayer": "daily_prayer",
     };
     const section = sectionMap[active];
     if (!section) return;
@@ -1377,7 +1377,7 @@ export default function Home() {
               </section>
               <section className='panel tasks-panel'>
                 <Heading
-                  title={t("Daily Tasks")}
+                  title={t("Daily Prayer")}
                   onClick={() => act("Daily tasks opened")}
                 />
                 <div className='tasks'>

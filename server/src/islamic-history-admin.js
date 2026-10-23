@@ -1,7 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ObjectId } = require("mongodb");
-const { deleteStoredImages } = require("./s3-books");
+const { deleteReplacedImages, deleteStoredImages } = require("./s3-books");
 
 const clean = (value, max = 50000) =>
   String(value ?? "")
@@ -143,6 +143,13 @@ function createIslamicHistoryRouter(getCollection, adminKey, jwtSecret) {
     try {
       if (!ObjectId.isValid(req.params.id))
         return res.status(400).json({ message: "Invalid period ID." });
+      const existing = await getCollection().findOne({
+          _id: new ObjectId(req.params.id),
+        });
+      if (!existing)
+        return res
+          .status(404)
+          .json({ message: "Historical period not found." });
       const language = languageCode(req.body.language),
         set =
           language === "en"
@@ -165,6 +172,7 @@ function createIslamicHistoryRouter(getCollection, adminKey, jwtSecret) {
         return res
           .status(404)
           .json({ message: "Historical period not found." });
+      await deleteReplacedImages(existing, item);
       res.json({ data: publicItem(item, "en", true) });
     } catch {
       return res

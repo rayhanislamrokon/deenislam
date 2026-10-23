@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { deleteManagedImage, uploadImageToS3 } from "../lib/imageUpload";
-import UploadedContentPicker from "./UploadedContentPicker";
+import TaskSourceFields from "./TaskSourceFields";
 const API = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 ).replace(/\/$/, "");
@@ -15,7 +15,7 @@ const taskTypes = [
   ["quran", "Quran"],
   ["tafsir", "Tafsir"],
   ["hadith", "Hadith"],
-  ["duas", "Duas"],
+  ["dua", "Dua"],
   ["books", "Books"],
   ["islamicLifestyle", "Islamic Lifestyle"],
   ["prophets", "Prophets"],
@@ -26,7 +26,7 @@ const taskTypes = [
   ["goodDeed", "Good Deed"],
   ["reflection", "Reflection"],
 ];
-const starterTasks = [
+const defaultTaskTemplates = [
   {
     id: "dua",
     type: "dua",
@@ -83,6 +83,7 @@ const starterTasks = [
     contentId: "",
   },
 ];
+const starterTasks = defaultTaskTemplates.filter((task) => task.type === "quran");
 const blank = () => ({
   date: iso(),
   greetingTitle: "Assalamu Alaikum",
@@ -155,6 +156,13 @@ export default function DailyPrayerControl() {
       dua: "Today's Dua",
       dhikr: "Today's Dhikr",
       quran: "Quran Reading",
+      tafsir: "Tafsir Study",
+      hadith: "Hadith Reading",
+      books: "Islamic Book Reading",
+      islamicLifestyle: "Islamic Lifestyle",
+      prophets: "Stories of the Prophets",
+      sahaba: "Lives of the Sahaba",
+      islamicHistory: "Islamic History",
       lesson: "Learn Something New",
       goodDeed: "Do a Good Deed",
       reflection: "Daily Reflection",
@@ -173,6 +181,12 @@ export default function DailyPrayerControl() {
               detailMeaning: "",
               contentId: "",
               target: type === "dhikr" ? 100 : undefined,
+              rewardPoints:
+                type === "quran"
+                  ? 30
+                  : type === "hadith" || type === "tafsir"
+                    ? 20
+                    : 10,
             }
           : item,
       ),
@@ -222,6 +236,15 @@ export default function DailyPrayerControl() {
         .getElementById("daily-task-builder")
         ?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
+  }
+  function reorderTask(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    setForm((current: any) => {
+      const tasks = [...current.tasks];
+      const [moved] = tasks.splice(from, 1);
+      tasks.splice(to, 0, moved);
+      return { ...current, tasks };
+    });
   }
   function editTaskCard(index: number) {
     const card = document.getElementById("task-card-" + index);
@@ -296,7 +319,10 @@ export default function DailyPrayerControl() {
       ...plan,
       prayers: plan.prayers?.length ? plan.prayers : blank().prayers,
       tasks: plan.tasks?.length
-        ? plan.tasks
+        ? plan.tasks.map((item: any) => ({
+            ...item,
+            type: item.type === "duas" ? "dua" : item.type,
+          }))
         : starterTasks.map((x) => ({ ...x })),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -325,8 +351,9 @@ export default function DailyPrayerControl() {
           <small>DAILY PRAYER MANAGEMENT</small>
           <h1>Daily Prayer Control</h1>
           <p>
-            Assign each day's worship plan and control what appears in the
-            mobile app.
+            Assign each day&apos;s worship plan and control what appears in the
+            mobile app and website. The latest published plan remains active
+            until a newer dated plan is published.
           </p>
         </div>
         <b>
@@ -443,27 +470,47 @@ export default function DailyPrayerControl() {
               + Create Card
             </button>
           </div>
-          <div className="tasks">
+          <div className="tasks dropZone">
+            <div className="dropHint">
+              Drag task cards to reorder
+            </div>
             {form.tasks.map((item: any, index: number) => (
-              <article key={item.id || index} id={"task-card-" + index}>
-                <div className="taskNumber">{index + 1}</div>
+              <article
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  const rawFrom = event.dataTransfer.getData(
+                    "text/x-daily-task-index",
+                  );
+                  const from = Number(rawFrom);
+                  if (rawFrom !== "" && Number.isInteger(from)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    reorderTask(from, index);
+                  }
+                }}
+                key={item.id || index}
+                id={"task-card-" + index}
+              >
+                <div
+                  className="taskNumber"
+                  draggable
+                  title="Drag to reorder"
+                  onDragStart={(event) => {
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData(
+                      "text/x-daily-task-index",
+                      String(index),
+                    );
+                  }}
+                >
+                  {index + 1}
+                </div>
                 <div className="taskFields">
-                  <UploadedContentPicker
-                    api={API}
-                    token={token()}
-                    type={item.type}
-                    onSelect={(selected) =>
-                      setForm((current: any) => ({
-                        ...current,
-                        tasks: current.tasks.map((row: any, i: number) =>
-                          i === index ? { ...row, ...selected } : row,
-                        ),
-                      }))
-                    }
-                  />
                   <label>
                     Type
                     <select
+                      key={`${item.id}-${item.type}`}
+                      autoComplete="off"
                       value={item.type}
                       onChange={(e) => changeTaskType(index, e.target.value)}
                     >
@@ -474,91 +521,80 @@ export default function DailyPrayerControl() {
                       ))}
                     </select>
                   </label>
-                  <label>
-                    Title
-                    <input
-                      data-card-title
-                      value={item.title}
-                      onChange={(e) => task(index, "title", e.target.value)}
-                      required
-                    />
-                  </label>
-                  <label className="wide">
-                    Subtitle / assignment
-                    <input
-                      value={item.subtitle}
-                      onChange={(e) => task(index, "subtitle", e.target.value)}
-                    />
-                  </label>
-                  <label className="wide">
-                    Detail Arabic text
-                    <textarea
-                      dir="rtl"
-                      value={item.detailArabic || ""}
-                      onChange={(e) =>
-                        task(index, "detailArabic", e.target.value)
-                      }
-                      placeholder="Arabic text shown after Continue"
-                    />
-                  </label>
-                  <label className="wide">
-                    Detail meaning / content
-                    <textarea
-                      value={item.detailMeaning || ""}
-                      onChange={(e) =>
-                        task(index, "detailMeaning", e.target.value)
-                      }
-                      placeholder="Meaning or main task content shown on the detail page"
-                    />
-                  </label>
-                  <label className="wide">
-                    Instruction
-                    <textarea
-                      value={item.instruction || ""}
-                      onChange={(e) =>
-                        task(index, "instruction", e.target.value)
-                      }
-                      placeholder="Steps the user should complete"
-                    />
-                  </label>
-                  <label>
-                    Content ID / slug
-                    <input
-                      value={item.contentId || ""}
-                      onChange={(e) => task(index, "contentId", e.target.value)}
-                      placeholder="Optional linked content"
-                    />
-                  </label>
-                  <label className="wide cardImageField">
-                    Card image
-                    <input
-                      type="file"
-                      accept="image/*"
-                      disabled={uploadingCard === index}
-                      onChange={(e) => {
-                        void uploadTaskImage(index, e.target.files?.[0]);
-                        e.currentTarget.value = "";
-                      }}
-                    />
-                    <small>
-                      {uploadingCard === index
-                        ? "Uploading image..."
-                        : item.imageUrl
-                          ? "Custom image ready"
-                          : "Choose JPG, PNG or WebP; type image is used when empty"}
-                    </small>
-                    {item.imageUrl ? (
-                      <span className="cardImagePreview">
-                        <img src={item.imageUrl} alt="Card preview" />
-                        <button
-                          type="button"
-                          onClick={() => void deleteManagedImage(API, token(), { key: item.imageKey, url: item.imageUrl }).then(() => { task(index, "imageUrl", ""); task(index, "imageKey", ""); }).catch((error) => setMessage(error.message))}
-                        >
-                          Remove image
-                        </button>
-                      </span>
-                    ) : null}
-                  </label>
+                  <TaskSourceFields
+                    api={API}
+                    token={token()}
+                    item={item}
+                    onPatch={(patch) =>
+                      setForm((current: any) => ({
+                        ...current,
+                        tasks: current.tasks.map((row: any, i: number) =>
+                          i === index ? { ...row, ...patch } : row,
+                        ),
+                      }))
+                    }
+                    onAddExtra={(extra) =>
+                      setForm((current: any) => ({
+                        ...current,
+                        tasks: [
+                          ...current.tasks.slice(0, index + 1),
+                          extra,
+                          ...current.tasks.slice(index + 1),
+                        ],
+                      }))
+                    }
+                  />
+                  {item.type !== "tafsir" && item.type !== "quran" && item.type !== "hadith" ? (
+                    <>
+                      <label>
+                        Title
+                        <input
+                          data-card-title
+                          value={item.title}
+                          onChange={(e) => task(index, "title", e.target.value)}
+                          required
+                        />
+                      </label>
+                      <label className="wide">
+                        Subtitle / assignment
+                        <input
+                          value={item.subtitle}
+                          onChange={(e) => task(index, "subtitle", e.target.value)}
+                        />
+                      </label>
+                    </>
+                  ) : null}
+                  {item.type !== "quran" && item.type !== "tafsir" && item.type !== "hadith" ? (
+                    <>
+                      <label className="wide">
+                        Detail Arabic text
+                        <textarea dir="rtl" value={item.detailArabic || ""} onChange={(e) => task(index, "detailArabic", e.target.value)} placeholder="Arabic text shown after Continue" />
+                      </label>
+                      <label className="wide">
+                        Detail meaning / content
+                        <textarea value={item.detailMeaning || ""} onChange={(e) => task(index, "detailMeaning", e.target.value)} placeholder="Meaning or main task content shown on the detail page" />
+                      </label>
+                      <label className="wide">
+                        Instruction
+                        <textarea value={item.instruction || ""} onChange={(e) => task(index, "instruction", e.target.value)} placeholder="Steps the user should complete" />
+                      </label>
+                      <label>
+                        Content ID / slug
+                        <input value={item.contentId || ""} onChange={(e) => task(index, "contentId", e.target.value)} placeholder="Optional linked content" />
+                      </label>
+                      <label className="wide cardImageField">
+                        Card image
+                        <input type="file" accept="image/*" disabled={uploadingCard === index} onChange={(e) => { void uploadTaskImage(index, e.target.files?.[0]); e.currentTarget.value = ""; }} />
+                        <small>{uploadingCard === index ? "Uploading image..." : item.imageUrl ? "Custom image ready" : "Choose JPG, PNG or WebP; type image is used when empty"}</small>
+                        {item.imageUrl ? (
+                          <span className="cardImagePreview">
+                            <img src={item.imageUrl} alt="Card preview" />
+                            <button type="button" onClick={() => void deleteManagedImage(API, token(), { key: item.imageKey, url: item.imageUrl }).then(() => { task(index, "imageUrl", ""); task(index, "imageKey", ""); }).catch((error) => setMessage(error.message))}>Remove image</button>
+                          </span>
+                        ) : null}
+                      </label>
+                    </>
+                  ) : null}
                   <label>
                     Reward points
                     <input
@@ -571,22 +607,17 @@ export default function DailyPrayerControl() {
                       }
                     />
                   </label>
-                  <label>
-                    Target count
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.target || ""}
-                      onChange={(e) =>
-                        task(
-                          index,
-                          "target",
-                          e.target.value ? Number(e.target.value) : undefined,
-                        )
-                      }
-                      placeholder="Dhikr only"
-                    />
-                  </label>
+                  {item.type === "dhikr" ? (
+                    <label>
+                      Target count
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.target || ""}
+                        onChange={(e) => task(index, "target", e.target.value ? Number(e.target.value) : undefined)}
+                      />
+                    </label>
+                  ) : null}
                 </div>
                 <nav className="cardActions">
                   <button
@@ -851,6 +882,21 @@ export default function DailyPrayerControl() {
           gap: 11px;
           margin-top: 13px;
         }
+        .dropZone {
+          padding: 12px;
+          border: 2px dashed #a9ceb6;
+          border-radius: 16px;
+          background: #f7fcf8;
+        }
+        .dropHint {
+          padding: 11px;
+          border-radius: 10px;
+          background: #e6f4eb;
+          color: #087a4d;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 900;
+        }
         .tasks article {
           display: flex;
           align-items: flex-start;
@@ -859,10 +905,12 @@ export default function DailyPrayerControl() {
           border: 1px solid #dce9e0;
           border-radius: 14px;
           background: #f8fbf9;
+          cursor: grab;
         }
         .taskNumber {
           width: 34px;
           height: 34px;
+          cursor: grab;
           display: grid;
           place-items: center;
           flex: none;

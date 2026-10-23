@@ -76,6 +76,14 @@ async function main() {
     "Full Quran": "Full Quran",
     "Saving...": "Saving...",
   });
+  for (const [language, strings] of Object.entries(packs)) {
+    strings["Daily Prayer"] =
+      language === "en"
+        ? "Daily Prayer"
+        : language === "bn"
+          ? "দৈনিক ইবাদত"
+          : strings["Daily Worship"] || strings["Daily Tasks"] || "Daily Prayer";
+  }
   const phrases = Object.keys(packs.en);
   const client = new MongoClient(process.env.MONGODB_URI);
   await client.connect();

@@ -55,11 +55,31 @@ function createBooksRouter(getBooks, adminKey) {
       if (req.query.category) filter.category = text(req.query.category, 40);
       const language = text(req.query.language, 12).toLowerCase();
       if (language) filter.languageCode = language;
-      const items = await getBooks()
+      let items = await getBooks()
         .find(filter, { projection: { content: 0, pages: 0 } })
         .sort({ updatedAt: -1 })
         .toArray();
-      res.json({ data: items.map((x) => publicBook(x)) });
+
+      // Content is translated gradually. If the requested language has no
+      // published records, serve the complete English library instead of an
+      // empty screen in the app or website.
+      let resolvedLanguage = language || "all";
+      let fallback = false;
+      if (language && language !== "en" && items.length === 0) {
+        items = await getBooks()
+          .find(
+            { ...filter, languageCode: "en" },
+            { projection: { content: 0, pages: 0 } },
+          )
+          .sort({ updatedAt: -1 })
+          .toArray();
+        resolvedLanguage = "en";
+        fallback = true;
+      }
+      res.json({
+        data: items.map((x) => publicBook(x)),
+        language: { requested: language || "all", resolved: resolvedLanguage, fallback },
+      });
     } catch (e) {
       console.error(e);
       res.status(500).json({ message: "Unable to load books." });

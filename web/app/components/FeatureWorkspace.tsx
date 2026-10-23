@@ -2347,10 +2347,11 @@ function DuasAmol({ query, language }: { query: string; language: string }) {
   if (section === "amol")
     return (
       <div className='duas-amol-section'>
-        <button className='section-back' onClick={() => open("hub")}>
-          ← Duas & Amol
-        </button>
-        <AmolLibrary query={query} language={language} />
+        <AmolLibrary
+          query={query}
+          language={language}
+          onBack={() => open("hub")}
+        />
       </div>
     );
   return (
@@ -2410,7 +2411,15 @@ function DuasAmol({ query, language }: { query: string; language: string }) {
     </div>
   );
 }
-function AmolLibrary({ query, language }: { query: string; language: string }) {
+function AmolLibrary({
+  query,
+  language,
+  onBack,
+}: {
+  query: string;
+  language: string;
+  onBack: () => void;
+}) {
   const [rows, setRows] = useState<AmolBook[]>([]),
     [selected, setSelected] = useState<AmolBook | null>(null),
     [selectedPart, setSelectedPart] = useState<number | null>(null),
@@ -2421,7 +2430,7 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
     let active = true;
     setLoading(true);
     json(
-      "/api/books?language=" +
+      "/api/books?category=Amol&language=" +
         encodeURIComponent(language) +
         "&refresh=" +
         Date.now(),
@@ -2532,9 +2541,10 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
         </div>
       );
     }
-    const activePage = parts[selectedPart]?.content || "";
+    const activePart = parts[selectedPart];
+    const activePage = activePart?.content || "";
     return (
-      <div className='amol-reader'>
+      <div className='amol-reader amol-guide-reader'>
         <button
           className='section-back'
           onClick={() => setSelectedPart(null)}
@@ -2548,6 +2558,7 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
               <small>{selected.category || "AMOL"} · DAILY GUIDANCE</small>
               <h2>{selected.title}</h2>
               <b>{selected.author || "DeenIslam Editorial"}</b>
+              {activePart?.title && <p>{activePart.title}</p>}
             </div>
           </header>
           {selected.description && (
@@ -2556,12 +2567,22 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
           <div className='amol-reader-content'>
               <section>
                 <span>PART {selectedPart + 1} OF {parts.length}</span>
-                {activePage
-                  .split(/\n{2,}/)
-                  .filter(Boolean)
-                  .map((paragraph, n) => (
-                    <p key={n}>{paragraph.replace(/^#{1,6}\s+/, "")}</p>
-                  ))}
+                {/<[a-z][\s\S]*>/i.test(activePage) ? (
+                  <div dangerouslySetInnerHTML={{ __html: activePage }} />
+                ) : (
+                  activePage
+                    .split(/\n{2,}/)
+                    .filter(Boolean)
+                    .map((paragraph, n) => (
+                      <p key={n}>{paragraph.replace(/^#{1,6}\s+/, "")}</p>
+                    ))
+                )}
+                {(activePart?.reference || selected.sourceUrl) && (
+                  <aside>
+                    <small>VERIFIED SOURCE</small>
+                    <b>{activePart?.reference || selected.sourceUrl}</b>
+                  </aside>
+                )}
               </section>
           </div>
         </article>
@@ -2570,6 +2591,9 @@ function AmolLibrary({ query, language }: { query: string; language: string }) {
   }
   return (
     <div className='amol-app'>
+      <button className='section-back' onClick={onBack}>
+        ← Duas & Amol
+      </button>
       <div className='amol-heading'>
         <i>✦</i>
         <div>
@@ -3100,6 +3124,21 @@ type WebDailyTask = {
   title: string;
   subtitle: string;
   instruction?: string;
+  detailArabic?: string;
+  detailMeaning?: string;
+  contentId?: string;
+  surahNumber?: number;
+  surahName?: string;
+  startAyah?: number;
+  ayahCount?: number;
+  ayahs?: Array<{
+    number: number;
+    arabic: string;
+    pronunciation: string;
+    meaning: string;
+  }>;
+  tafsirSourceName?: string;
+  tafsirAyahs?: Array<{ number: number; arabic?: string; pronunciation?: string; meaning?: string; text: string }>;
   rewardPoints: number;
   target?: number;
   progress?: number;
@@ -3177,13 +3216,22 @@ const dailyFallbackPrayers: WebDailyPrayer[] = [
   status: index === 0 ? "current" : "upcoming",
 }));
 function DailyTasks() {
-  const today = new Date().toISOString().slice(0, 10),
+  const now = new Date(),
+    today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`,
     storage = `deenislam_daily_tasks_${today}`,
     [tasks, setTasks] = useState<WebDailyTask[]>(dailyFallbackTasks),
     [prayers, setPrayers] = useState<WebDailyPrayer[]>(dailyFallbackPrayers),
     [focus, setFocus] = useState(
       "Small sincere deeds bring us closer to Allah.",
     ),
+    [greetingTitle, setGreetingTitle] = useState("Assalamu Alaikum"),
+    [greetingSubtitle, setGreetingSubtitle] = useState(
+      "May Allah make today easy for you",
+    ),
+    [quote, setQuote] = useState(
+      "And whoever remembers Allah, indeed, the heart finds rest.",
+    ),
+    [quoteReference, setQuoteReference] = useState("Surah Ar-Ra’d (13:28)"),
     [filter, setFilter] = useState<"all" | "pending" | "completed">("all"),
     [activeTask, setActiveTask] = useState<WebDailyTask | null>(null),
     [reflection, setReflection] = useState(""),
@@ -3200,7 +3248,8 @@ function DailyTasks() {
     json(`/api/daily-prayer/today?date=${today}`)
       .then((body) => {
         const plan = body.data;
-        if (!plan?.tasks?.length) return;
+        if (!plan?.tasks?.length)
+          throw Error("No published Daily Prayer plan is available yet.");
         const oldTasks = new Map(
             (saved.tasks || []).map((item: WebDailyTask) => [item.id, item]),
           ),
@@ -3222,6 +3271,22 @@ function DailyTasks() {
               instruction: item.instruction
                 ? String(item.instruction)
                 : undefined,
+              detailArabic: item.detailArabic
+                ? String(item.detailArabic)
+                : undefined,
+              detailMeaning: item.detailMeaning
+                ? String(item.detailMeaning)
+                : undefined,
+              contentId: item.contentId ? String(item.contentId) : undefined,
+              surahNumber: item.surahNumber
+                ? Number(item.surahNumber)
+                : undefined,
+              surahName: item.surahName ? String(item.surahName) : undefined,
+              startAyah: item.startAyah ? Number(item.startAyah) : undefined,
+              ayahCount: item.ayahCount ? Number(item.ayahCount) : undefined,
+              ayahs: Array.isArray(item.ayahs) ? item.ayahs : undefined,
+              tafsirSourceName: item.tafsirSourceName ? String(item.tafsirSourceName) : undefined,
+              tafsirAyahs: Array.isArray(item.tafsirAyahs) ? item.tafsirAyahs : undefined,
               rewardPoints: Number(item.rewardPoints) || 0,
               target: item.target ? Number(item.target) : undefined,
               progress: old?.progress ?? (item.target ? 0 : undefined),
@@ -3243,6 +3308,17 @@ function DailyTasks() {
             }),
           );
         setFocus(String(plan.focusText || focus));
+        setGreetingTitle(String(plan.greetingTitle || "Assalamu Alaikum"));
+        setGreetingSubtitle(
+          String(plan.greetingSubtitle || "May Allah make today easy for you"),
+        );
+        setQuote(
+          String(
+            plan.quote ||
+              "And whoever remembers Allah, indeed, the heart finds rest.",
+          ),
+        );
+        setQuoteReference(String(plan.quoteReference || ""));
       })
       .catch((reason) =>
         setError(reason.message || "Today's plan could not be loaded."),
@@ -3313,7 +3389,7 @@ function DailyTasks() {
     return (
       <section className='daily-target-tasbih'>
         <button onClick={() => setActiveTask(null)}>
-          ← Back to Daily Tasks
+          ← Back to Daily Prayer
         </button>
         <header>
           <small>TODAY'S TARGETED TASBIH</small>
@@ -3409,24 +3485,68 @@ function DailyTasks() {
                     arabic: "فَاذْكُرُونِي أَذْكُرْكُمْ",
                     text: "Remember Me; I will remember you.",
                     note: "Pause for a moment and write what you are grateful for today.",
-                  };
+                  },
+      displayDetail = {
+        ...detail,
+        arabic: task.detailArabic || detail.arabic,
+        text: task.detailMeaning || detail.text,
+        note: task.instruction || detail.note,
+      };
     return (
       <section className='daily-detail'>
         <button
           className='daily-detail-back'
           onClick={() => setActiveTask(null)}
         >
-          ← Back to Daily Tasks
+          ← Back to Daily Prayer
         </button>
         <header>
-          <small>{detail.eyebrow}</small>
+          <small>{displayDetail.eyebrow}</small>
           <h2>{task.title}</h2>
           <p>{task.subtitle}</p>
         </header>
         <article>
-          <span dir='rtl'>{detail.arabic}</span>
-          <h3>{detail.text}</h3>
-          <p>{detail.note}</p>
+          {task.type === "quran" && task.ayahs?.length ? (
+            <div className='daily-ayah-list'>
+              <div className='daily-surah-heading'>
+                <h3>{task.surahName || task.title}</h3>
+                <span>{task.ayahs.length} Ayahs</span>
+              </div>
+              {task.ayahs.map((ayah) => (
+                <section className='daily-ayah-card' key={ayah.number}>
+                  <b>{ayah.number}</b>
+                  <p className='daily-ayah-arabic' dir='rtl'>{ayah.arabic}</p>
+                  {ayah.pronunciation ? <p className='daily-ayah-pronunciation'>{ayah.pronunciation}</p> : null}
+                  <p className='daily-ayah-meaning'>{ayah.meaning}</p>
+                </section>
+              ))}
+              <p>{displayDetail.note}</p>
+            </div>
+          ) : task.type === "tafsir" && task.tafsirAyahs?.length ? (
+            <div className='daily-ayah-list'>
+              <div className='daily-surah-heading'>
+                <h3>{task.surahName || task.title}</h3>
+                <span>{task.tafsirAyahs.length} Tafsir entries</span>
+              </div>
+              {task.tafsirSourceName ? <p className='daily-tafsir-source'>{task.tafsirSourceName}</p> : null}
+              {task.tafsirAyahs.map((ayah) => (
+                <section className='daily-ayah-card' key={ayah.number}>
+                  <b>{ayah.number}</b>
+                  {ayah.arabic ? <p className='daily-ayah-arabic' dir='rtl'>{ayah.arabic}</p> : null}
+                  {ayah.pronunciation ? <p className='daily-ayah-pronunciation'>{ayah.pronunciation}</p> : null}
+                  {ayah.meaning ? <p className='daily-ayah-meaning'>{ayah.meaning}</p> : null}
+                  <div className='daily-tafsir-text'><strong>Tafsir</strong><p>{ayah.text}</p></div>
+                </section>
+              ))}
+              <p>{displayDetail.note}</p>
+            </div>
+          ) : (
+            <>
+              <span dir='rtl'>{displayDetail.arabic}</span>
+              <h3>{displayDetail.text}</h3>
+              <p>{displayDetail.note}</p>
+            </>
+          )}
           {task.type === "reflection" && (
             <textarea
               value={reflection}
@@ -3468,8 +3588,8 @@ function DailyTasks() {
           <b>‹</b> Back to Home
         </a>
         <div className='daily-greeting'>
-          <h2>Assalamu Alaikum</h2>
-          <p>May Allah make today easy for you 💚</p>
+          <h2>{greetingTitle}</h2>
+          <p>{greetingSubtitle} 💚</p>
           <time>
             <DeenIcon name='Islamic Calendar' size={22} />
             <span>
@@ -3496,9 +3616,8 @@ function DailyTasks() {
           <button aria-label='Profile'>●</button>
         </div>
         <blockquote>
-          “And whoever remembers Allah,
-          <br />
-          indeed, the heart finds rest.”<small>— Surah Ar-Ra’d (13:28)</small>
+          “{quote}”
+          {quoteReference && <small>— {quoteReference}</small>}
         </blockquote>
       </section>
       <section className='daily-reference-progress'>
@@ -3599,7 +3718,7 @@ function DailyTasks() {
                   ? "Knowledge"
                   : task.type === "dhikr"
                     ? "Tasbih"
-                    : "Daily Tasks";
+                    : "Daily Prayer";
           return (
             <button
               className={`daily-reference-task ${task.type}`}

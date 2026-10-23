@@ -5,11 +5,16 @@ import AdminLanguagePicker, {
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { transliterate } from "transliteration";
-import RichTextEditor from "../islamic-lifestyle/RichTextEditor";
+import BaseRichTextEditor, {
+  commitRichTextUploads,
+} from "../islamic-lifestyle/RichTextEditor";
 import { deleteManagedImage, uploadImageToS3 } from "../lib/imageUpload";
 const API = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 ).replace(/\/$/, "");
+const RichTextEditor = (
+  props: Parameters<typeof BaseRichTextEditor>[0],
+) => <BaseRichTextEditor {...props} cleanupUnsavedImages />;
 const defaultCollections = [
   ["b", "Sahih al-Bukhari"],
   ["m", "Sahih Muslim"],
@@ -209,6 +214,7 @@ export default function HadithAdmin() {
       j = await r.json();
     setMessage(j.message || "Done");
     if (r.ok) {
+      commitRichTextUploads();
       setForm(empty);
       setLanguage("en");
       await load();

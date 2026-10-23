@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import RichTextEditor from "../islamic-lifestyle/RichTextEditor";
+import BaseRichTextEditor, { commitRichTextUploads } from "../islamic-lifestyle/RichTextEditor";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
+const RichTextEditor = (
+  props: Parameters<typeof BaseRichTextEditor>[0],
+) => <BaseRichTextEditor {...props} cleanupUnsavedImages />;
 const fallback = { title: "Help Center", subtitle: "Answers, guidance and support for DeenIslam", body: "", published: true };
 
 export default function HelpContentPage() {
@@ -39,6 +42,7 @@ export default function HelpContentPage() {
       const response = await fetch(`${API}/api/admin/help-content`, { method: "PUT", headers: headers(), body: JSON.stringify(form) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
+      commitRichTextUploads();
       setForm({ ...fallback, ...result.data });
       setMessage(result.message);
     } catch (error) {

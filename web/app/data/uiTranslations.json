@@ -372,7 +372,8 @@
     "Daily Worship": "Есыҽнытәи амҵахырхәара",
     "All Deen Islam services": "Дин Ислам амаҵзурақәа зегьы",
     "View All Prayer Times": "Аныҳәара аамҭақәа зегьы рбара",
-    "Starts in": "Иалагоит"
+    "Starts in": "Иалагоит",
+    "Daily Prayer": "Есыҽнытәи амҵахырхәара"
   },
   "ace": {
     "Next Prayer": "Doa Selanjutnya",
@@ -558,7 +559,8 @@
     "Daily Worship": "Ibadah Siuroe-uroe .",
     "All Deen Islam services": "Semua jasa Deen Islam .",
     "View All Prayer Times": "Neukalön Mandum Watèë Seumayang .",
-    "Starts in": "Mulai bak thon 2010."
+    "Starts in": "Mulai bak thon 2010.",
+    "Daily Prayer": "Ibadah Siuroe-uroe ."
   },
   "ach": {
     "Next Prayer": "Lega ma lubo",
@@ -744,7 +746,8 @@
     "Daily Worship": "Woro me nino ducu",
     "All Deen Islam services": "Tic pa Deen Islam weng",
     "View All Prayer Times": "Nen kare me lega weng",
-    "Starts in": "Cakke i"
+    "Starts in": "Cakke i",
+    "Daily Prayer": "Woro me nino ducu"
   },
   "af": {
     "Next Prayer": "Volgende Gebed",
@@ -930,7 +933,8 @@
     "Daily Worship": "Daaglikse aanbidding",
     "All Deen Islam services": "Alle Deen Islam dienste",
     "View All Prayer Times": "Bekyk alle gebedstye",
-    "Starts in": "Begin in"
+    "Starts in": "Begin in",
+    "Daily Prayer": "Daaglikse aanbidding"
   },
   "sq": {
     "Next Prayer": "Lutja e ardhshme",
@@ -1116,7 +1120,8 @@
     "Daily Worship": "Adhurimi i përditshëm",
     "All Deen Islam services": "Të gjitha shërbimet e Dinit Islam",
     "View All Prayer Times": "Shikoni të gjitha kohët e lutjes",
-    "Starts in": "Fillon në"
+    "Starts in": "Fillon në",
+    "Daily Prayer": "Adhurimi i përditshëm"
   },
   "alz": {
     "Next Prayer": "Rwo ma lubo",
@@ -1302,7 +1307,8 @@
     "Daily Worship": "Woro ma kubang ceng",
     "All Deen Islam services": "Tic pa Deen Islam zo",
     "View All Prayer Times": "Nen sawa mi rwo zo",
-    "Starts in": "Ucaku i"
+    "Starts in": "Ucaku i",
+    "Daily Prayer": "Woro ma kubang ceng"
   },
   "am": {
     "Next Prayer": "የሚቀጥለው ጸሎት",
@@ -1488,7 +1494,8 @@
     "Daily Worship": "ዕለታዊ አምልኮ",
     "All Deen Islam services": "ሁሉም የዲን እስልምና አገልግሎቶች",
     "View All Prayer Times": "ሁሉንም የጸሎት ጊዜያት ተመልከት",
-    "Starts in": "ውስጥ ይጀምራል"
+    "Starts in": "ውስጥ ይጀምራል",
+    "Daily Prayer": "ዕለታዊ አምልኮ"
   },
   "ar": {
     "Next Prayer": "الصلاة التالية",
@@ -1674,7 +1681,8 @@
     "Daily Worship": "العبادة اليومية",
     "All Deen Islam services": "جميع خدمات دين اسلام",
     "View All Prayer Times": "عرض جميع أوقات الصلاة",
-    "Starts in": "يبدأ في"
+    "Starts in": "يبدأ في",
+    "Daily Prayer": "العبادة اليومية"
   },
   "hy": {
     "Next Prayer": "Հաջորդ աղոթքը",
@@ -1860,7 +1868,8 @@
     "Daily Worship": "Ամենօրյա երկրպագություն",
     "All Deen Islam services": "Դին իսլամի բոլոր ծառայությունները",
     "View All Prayer Times": "Դիտեք բոլոր աղոթքի ժամանակները",
-    "Starts in": "Սկսվում է"
+    "Starts in": "Սկսվում է",
+    "Daily Prayer": "Ամենօրյա երկրպագություն"
   },
   "as": {
     "Next Prayer": "পৰৱৰ্তী প্ৰাৰ্থনা",
@@ -2046,7 +2055,8 @@
     "Daily Worship": "দৈনিক পূজা",
     "All Deen Islam services": "সকলো দীন ইছলাম সেৱা",
     "View All Prayer Times": "সকলো প্ৰাৰ্থনাৰ সময় চাওক",
-    "Starts in": "আৰম্ভ হয়"
+    "Starts in": "আৰম্ভ হয়",
+    "Daily Prayer": "দৈনিক পূজা"
   },
   "awa": {
     "Next Prayer": "अगली प्रार्थना",
@@ -2232,7 +2242,8 @@
     "Daily Worship": "नित्य पूजा",
     "All Deen Islam services": "सभी दीन इस्लाम सेवा",
     "View All Prayer Times": "सब प्रार्थना समय देखौ",
-    "Starts in": "मा शुरू होत है"
+    "Starts in": "मा शुरू होत है",
+    "Daily Prayer": "नित्य पूजा"
   },
   "ay": {
     "Next Prayer": "Jutïr Oración luraña",
@@ -2418,7 +2429,8 @@
     "Daily Worship": "Sapa uru Diosar Yupaychañataki",
     "All Deen Islam services": "Taqi Deen Islam ukan lurawinakapa",
     "View All Prayer Times": "Taqi Oracionanak lurañ horasanak uñakiptʼañamawa",
-    "Starts in": "Qalltañataki"
+    "Starts in": "Qalltañataki",
+    "Daily Prayer": "Sapa uru Diosar Yupaychañataki"
   },
   "az": {
     "Next Prayer": "Növbəti Dua",
@@ -2604,7 +2616,8 @@
     "Daily Worship": "Gündəlik İbadət",
     "All Deen Islam services": "Bütün Din İslam xidmətləri",
     "View All Prayer Times": "Bütün Namaz Vaxtlarına Baxın",
-    "Starts in": "Başlayır"
+    "Starts in": "Başlayır",
+    "Daily Prayer": "Gündəlik İbadət"
   },
   "ban": {
     "Next Prayer": "Doa Selanturnyané",
@@ -2790,7 +2803,8 @@
     "Daily Worship": "Puja Sedina-dina",
     "All Deen Islam services": "Makasami layanan Deen Islam",
     "View All Prayer Times": "Cingakin Galah Ngastawa Makasami",
-    "Starts in": "Kakawitin ring"
+    "Starts in": "Kakawitin ring",
+    "Daily Prayer": "Puja Sedina-dina"
   },
   "bm": {
     "Next Prayer": "Delili nata",
@@ -2976,7 +2990,8 @@
     "Daily Worship": "Don o don bato",
     "All Deen Islam services": "Deen silamɛya baarakɛlaw bɛɛ",
     "View All Prayer Times": "Delili waati bɛɛ lajɛ",
-    "Starts in": "A bɛ daminɛ san"
+    "Starts in": "A bɛ daminɛ san",
+    "Daily Prayer": "Don o don bato"
   },
   "ba": {
     "Next Prayer": "Киләһе доға .",
@@ -3162,7 +3177,8 @@
     "Daily Worship": "Көндәлек ғибәҙәт ҡылыу",
     "All Deen Islam services": "Бөтә Дин Ислам хеҙмәттәре",
     "View All Prayer Times": "Бөтә намаҙ ваҡыттарын ҡарау",
-    "Starts in": "Башлана 2016 йылда."
+    "Starts in": "Башлана 2016 йылда.",
+    "Daily Prayer": "Көндәлек ғибәҙәт ҡылыу"
   },
   "eu": {
     "Next Prayer": "Hurrengo otoitza",
@@ -3348,7 +3364,8 @@
     "Daily Worship": "Eguneroko gurtza",
     "All Deen Islam services": "Deen Islam zerbitzu guztiak",
     "View All Prayer Times": "Ikusi otoitz ordu guztiak",
-    "Starts in": "urtean hasten da"
+    "Starts in": "urtean hasten da",
+    "Daily Prayer": "Eguneroko gurtza"
   },
   "btx": {
     "Next Prayer": "Pertoton selanjutna .",
@@ -3534,7 +3551,8 @@
     "Daily Worship": "Ibadah tep-tep wari .",
     "All Deen Islam services": "Kerina jasa Deen Islam .",
     "View All Prayer Times": "Nehen Kerina Waktu Pertoton .",
-    "Starts in": "Mulai i bas tahun 2019."
+    "Starts in": "Mulai i bas tahun 2019.",
+    "Daily Prayer": "Ibadah tep-tep wari ."
   },
   "bts": {
     "Next Prayer": "Tonggo na mangihut",
@@ -3720,7 +3738,8 @@
     "Daily Worship": "Ibadah Ganup Ari",
     "All Deen Islam services": "Haganup kebaktian Deen Islam",
     "View All Prayer Times": "Tonggor ma ganup panorang martonggo",
-    "Starts in": "Ipungkah bani"
+    "Starts in": "Ipungkah bani",
+    "Daily Prayer": "Ibadah Ganup Ari"
   },
   "bbc": {
     "Next Prayer": "Tangiang na mangihut .",
@@ -3906,7 +3925,8 @@
     "Daily Worship": "Ibadah siganup ari .",
     "All Deen Islam services": "Semua jasa Deen Islam .",
     "View All Prayer Times": "Lihat Sude Tingki Tangiang .",
-    "Starts in": "Mulai taon 2019 ."
+    "Starts in": "Mulai taon 2019 .",
+    "Daily Prayer": "Ibadah siganup ari ."
   },
   "be": {
     "Next Prayer": "Наступная малітва",
@@ -4092,7 +4112,8 @@
     "Daily Worship": "Штодзённае набажэнства",
     "All Deen Islam services": "Усе паслугі Deen Islam",
     "View All Prayer Times": "Праглядзець усе часы малітвы",
-    "Starts in": "Пачынаецца ў"
+    "Starts in": "Пачынаецца ў",
+    "Daily Prayer": "Штодзённае набажэнства"
   },
   "bem": {
     "Next Prayer": "Ipepo lyakonkapo",
@@ -4278,7 +4299,8 @@
     "Daily Worship": "Ukupepa kwa Cila Bushiku",
     "All Deen Islam services": "Imilimo yonse iya baIslam ba Deen",
     "View All Prayer Times": "Moneni Inshita shonse isha mapepo",
-    "Starts in": "Ukutendeka mu"
+    "Starts in": "Ukutendeka mu",
+    "Daily Prayer": "Ukupepa kwa Cila Bushiku"
   },
   "bn": {
     "Next Prayer": "পরবর্তী প্রার্থনা",
@@ -4442,7 +4464,7 @@
     "Prayer Times": "নামাজের সময়",
     "Qibla Direction": "কিবলা দিক",
     "Islamic AI": "ইসলামিক এ.আই",
-    "Daily Tasks": "দৈনিক কাজ",
+    "Daily Tasks": "দৈনিক ইবাদত",
     "Islamic History": "ইসলামের ইতিহাস",
     "Ramadan": "রমজান",
     "Islamic Calendar": "ইসলামিক ক্যালেন্ডার",
@@ -4653,7 +4675,8 @@
     "Daily Worship": "Ibadah Sehari-hari",
     "All Deen Islam services": "Semua layanan Deen Islam",
     "View All Prayer Times": "Liat Semua Waktu Sholat",
-    "Starts in": "Mulai di"
+    "Starts in": "Mulai di",
+    "Daily Prayer": "Ibadah Sehari-hari"
   },
   "bho": {
     "Next Prayer": "अगिला प्रार्थना बा",
@@ -4839,7 +4862,8 @@
     "Daily Worship": "रोजाना के पूजा होला",
     "All Deen Islam services": "All Deen Islam services",
     "View All Prayer Times": "सब प्रार्थना के समय देखल जाव",
-    "Starts in": "में शुरू हो जाला"
+    "Starts in": "में शुरू हो जाला",
+    "Daily Prayer": "रोजाना के पूजा होला"
   },
   "bik": {
     "Next Prayer": "Sunod na Pamibi",
@@ -5025,7 +5049,8 @@
     "Daily Worship": "Aroaldaw na Pagsamba",
     "All Deen Islam services": "Gabos na serbisyo kan Deen Islam",
     "View All Prayer Times": "Hilingon an Gabos na Oras nin Pamibi",
-    "Starts in": "Nagpopoon sa"
+    "Starts in": "Nagpopoon sa",
+    "Daily Prayer": "Aroaldaw na Pagsamba"
   },
   "bs": {
     "Next Prayer": "Sljedeća molitva",
@@ -5211,7 +5236,8 @@
     "Daily Worship": "Daily Worship",
     "All Deen Islam services": "Sve usluge Deen Islama",
     "View All Prayer Times": "Pogledajte sva vremena molitve",
-    "Starts in": "Počinje u"
+    "Starts in": "Počinje u",
+    "Daily Prayer": "Daily Worship"
   },
   "br": {
     "Next Prayer": "Pedenn da heul",
@@ -5397,7 +5423,8 @@
     "Daily Worship": "Azeulerezh pemdeziek",
     "All Deen Islam services": "An holl servijoù Deen Islam",
     "View All Prayer Times": "Gwelet an holl amzerioù pediñ",
-    "Starts in": "Kregiñ a ra e"
+    "Starts in": "Kregiñ a ra e",
+    "Daily Prayer": "Azeulerezh pemdeziek"
   },
   "bg": {
     "Next Prayer": "Следваща молитва",
@@ -5583,7 +5610,8 @@
     "Daily Worship": "Ежедневно богослужение",
     "All Deen Islam services": "Всички услуги на Deen Islam",
     "View All Prayer Times": "Вижте всички времена за молитва",
-    "Starts in": "Започва в"
+    "Starts in": "Започва в",
+    "Daily Prayer": "Ежедневно богослужение"
   },
   "bua": {
     "Next Prayer": "Удаадахи зальбарал",
@@ -5769,7 +5797,8 @@
     "Daily Worship": "Үдэр бүриин мүргэл",
     "All Deen Islam services": "Бүхы Дин Исламай албанууд",
     "View All Prayer Times": "Бүхы мүргэлэй сагуудые хараха",
-    "Starts in": "ондо эхилнэ"
+    "Starts in": "ондо эхилнэ",
+    "Daily Prayer": "Үдэр бүриин мүргэл"
   },
   "yue": {
     "Next Prayer": "下一個祈禱",
@@ -5955,7 +5984,8 @@
     "Daily Worship": "每日敬拜",
     "All Deen Islam services": "所有迪恩伊斯蘭教服務",
     "View All Prayer Times": "睇返所有祈禱時間",
-    "Starts in": "由入面開始"
+    "Starts in": "由入面開始",
+    "Daily Prayer": "每日敬拜"
   },
   "ca": {
     "Next Prayer": "Següent pregària",
@@ -6141,7 +6171,8 @@
     "Daily Worship": "Culte diari",
     "All Deen Islam services": "Tots els serveis de Deen Islam",
     "View All Prayer Times": "Veure tots els horaris de pregària",
-    "Starts in": "Comença en"
+    "Starts in": "Comença en",
+    "Daily Prayer": "Culte diari"
   },
   "ceb": {
     "Next Prayer": "Sunod nga Pag-ampo",
@@ -6327,7 +6358,8 @@
     "Daily Worship": "Adlaw-adlaw nga Pagsimba",
     "All Deen Islam services": "Tanan nga serbisyo sa Deen Islam",
     "View All Prayer Times": "Tan-awa ang Tanang Oras sa Pag-ampo",
-    "Starts in": "Nagsugod sa"
+    "Starts in": "Nagsugod sa",
+    "Daily Prayer": "Adlaw-adlaw nga Pagsimba"
   },
   "ny": {
     "Next Prayer": "Pemphero Lotsatira",
@@ -6513,7 +6545,8 @@
     "Daily Worship": "Kulambira kwa Tsiku Lililonse",
     "All Deen Islam services": "Ntchito zonse za Deen Islam",
     "View All Prayer Times": "Onani Nthawi Zonse Zopemphera",
-    "Starts in": "Zimayambira mkati"
+    "Starts in": "Zimayambira mkati",
+    "Daily Prayer": "Kulambira kwa Tsiku Lililonse"
   },
   "zh": {
     "Next Prayer": "下一次祷告",
@@ -6699,7 +6732,8 @@
     "Daily Worship": "每日崇拜",
     "All Deen Islam services": "所有 Deen Islam 服务",
     "View All Prayer Times": "查看所有祈祷时间",
-    "Starts in": "开始于"
+    "Starts in": "开始于",
+    "Daily Prayer": "每日崇拜"
   },
   "zh-CN": {
     "Next Prayer": "下一次祷告",
@@ -6885,7 +6919,8 @@
     "Daily Worship": "每日崇拜",
     "All Deen Islam services": "所有 Deen Islam 服务",
     "View All Prayer Times": "查看所有祈祷时间",
-    "Starts in": "开始于"
+    "Starts in": "开始于",
+    "Daily Prayer": "每日崇拜"
   },
   "zh-TW": {
     "Next Prayer": "下一次禱告",
@@ -7071,7 +7106,8 @@
     "Daily Worship": "每日崇拜",
     "All Deen Islam services": "所有 Deen Islam 服務",
     "View All Prayer Times": "看所有祈禱時間",
-    "Starts in": "開始於"
+    "Starts in": "開始於",
+    "Daily Prayer": "每日崇拜"
   },
   "cv": {
     "Next Prayer": "Тепӗр кӗлӗ",
@@ -7257,7 +7293,8 @@
     "Daily Worship": "Кулленхи пуҫҫапасси",
     "All Deen Islam services": "Пур Дин Ислам службисем",
     "View All Prayer Times": "Пур кӗлӗ вӑхӑтне те пӑхӑр",
-    "Starts in": "2019 ҫулта пуҫланать"
+    "Starts in": "2019 ҫулта пуҫланать",
+    "Daily Prayer": "Кулленхи пуҫҫапасси"
   },
   "co": {
     "Next Prayer": "Prossima Preghiera",
@@ -7443,7 +7480,8 @@
     "Daily Worship": "Adorazione di ogni ghjornu",
     "All Deen Islam services": "Tutti i servizii di Deen Islam",
     "View All Prayer Times": "Vede tutti i tempi di preghiera",
-    "Starts in": "Accumincia in"
+    "Starts in": "Accumincia in",
+    "Daily Prayer": "Adorazione di ogni ghjornu"
   },
   "crh": {
     "Next Prayer": "Невбеттеки дуа .",
@@ -7629,7 +7667,8 @@
     "Daily Worship": "Эр куньки ибадет .",
     "All Deen Islam services": "Бутюн Дин Ислям хызметлери .",
     "View All Prayer Times": "Бутюн дуа вакъытларыны корьмек .",
-    "Starts in": "2014 сенеси башлай."
+    "Starts in": "2014 сенеси башлай.",
+    "Daily Prayer": "Эр куньки ибадет ."
   },
   "hr": {
     "Next Prayer": "Sljedeća molitva",
@@ -7815,7 +7854,8 @@
     "Daily Worship": "Svakodnevno bogoslužje",
     "All Deen Islam services": "Sve usluge Deen Islama",
     "View All Prayer Times": "Pogledajte sva vremena molitve",
-    "Starts in": "Počinje u"
+    "Starts in": "Počinje u",
+    "Daily Prayer": "Svakodnevno bogoslužje"
   },
   "cs": {
     "Next Prayer": "Další modlitba",
@@ -8001,7 +8041,8 @@
     "Daily Worship": "Denní bohoslužba",
     "All Deen Islam services": "Všechny služby Deen Islam",
     "View All Prayer Times": "Zobrazit všechny časy modliteb",
-    "Starts in": "Začíná v"
+    "Starts in": "Začíná v",
+    "Daily Prayer": "Denní bohoslužba"
   },
   "da": {
     "Next Prayer": "Næste bøn",
@@ -8187,7 +8228,8 @@
     "Daily Worship": "Daglig Gudstjeneste",
     "All Deen Islam services": "Alle Deen Islam tjenester",
     "View All Prayer Times": "Se alle bedetider",
-    "Starts in": "Starter i"
+    "Starts in": "Starter i",
+    "Daily Prayer": "Daglig Gudstjeneste"
   },
   "dv": {
     "Next Prayer": "ދެން އޮންނަ ދުޢާ",
@@ -8373,7 +8415,8 @@
     "Daily Worship": "ދުވަހުން ދުވަހަށް އަޅުކަންކުރުން",
     "All Deen Islam services": "ހުރިހާ ދީން އިސްލާމް ޚިދުމަތެއް",
     "View All Prayer Times": "ހުރިހާ ނަމާދު ވަގުތުތަކެއް ބަލާށެވެ",
-    "Starts in": "ފެށެނީ އިން..."
+    "Starts in": "ފެށެނީ އިން...",
+    "Daily Prayer": "ދުވަހުން ދުވަހަށް އަޅުކަންކުރުން"
   },
   "din": {
     "Next Prayer": "Lɔ̈ŋ dɛ̈t",
@@ -8559,7 +8602,8 @@
     "Daily Worship": "Duɔ̈ɔ̈r de Akölriëëc",
     "All Deen Islam services": "Käk Deen Islam ëbɛ̈n",
     "View All Prayer Times": "Tïŋ Thɛɛr ke Lɔ̈ŋ kedhiɛ",
-    "Starts in": "Jɔɔk në"
+    "Starts in": "Jɔɔk në",
+    "Daily Prayer": "Duɔ̈ɔ̈r de Akölriëëc"
   },
   "doi": {
     "Next Prayer": "अगली दुआ",
@@ -8745,7 +8789,8 @@
     "Daily Worship": "नित्य पूजा",
     "All Deen Islam services": "सारे दीन इस्लाम सेवाएं",
     "View All Prayer Times": "सारे प्रार्थना दे समय दिक्खो",
-    "Starts in": "में शुरू होंदा ऐ"
+    "Starts in": "में शुरू होंदा ऐ",
+    "Daily Prayer": "नित्य पूजा"
   },
   "dov": {
     "Next Prayer": "Mupailo Uutobela",
@@ -8931,7 +8976,8 @@
     "Daily Worship": "Kukomba kwabuzuba abuzuba",
     "All Deen Islam services": "milimu yoonse ya Deen Islam",
     "View All Prayer Times": "Langa Ziindi Zyoonse Zyakukomba",
-    "Starts in": "Italika mu"
+    "Starts in": "Italika mu",
+    "Daily Prayer": "Kukomba kwabuzuba abuzuba"
   },
   "nl": {
     "Next Prayer": "Volgende gebed",
@@ -9117,7 +9163,8 @@
     "Daily Worship": "Dagelijkse aanbidding",
     "All Deen Islam services": "Alle Deen Islam-diensten",
     "View All Prayer Times": "Bekijk alle gebedstijden",
-    "Starts in": "Begint binnen"
+    "Starts in": "Begint binnen",
+    "Daily Prayer": "Dagelijkse aanbidding"
   },
   "dz": {
     "Next Prayer": "སྨོན་ལམ་རྗེས་མ།",
@@ -9303,7 +9350,8 @@
     "Daily Worship": "ཉིན་བསྟར་ཕྱག་འཚལ།",
     "All Deen Islam services": "ཌིན་ཨིསི་ལམ་གྱི་ཞབས་ཏོག་ཆ་མཉམ།",
     "View All Prayer Times": "སྨོན་ལམ་དུས་ཚོད་ཆ་མཉམ་བལྟ།",
-    "Starts in": "2016 ལོར་འགོ་བཙུགས།"
+    "Starts in": "2016 ལོར་འགོ་བཙུགས།",
+    "Daily Prayer": "ཉིན་བསྟར་ཕྱག་འཚལ།"
   },
   "eo": {
     "Next Prayer": "Sekva Preĝo",
@@ -9489,7 +9537,8 @@
     "Daily Worship": "Ĉiutaga Adoro",
     "All Deen Islam services": "Ĉiuj Deen Islam-servoj",
     "View All Prayer Times": "Rigardu Ĉiujn Preĝajn Tempojn",
-    "Starts in": "Komencas en"
+    "Starts in": "Komencas en",
+    "Daily Prayer": "Ĉiutaga Adoro"
   },
   "et": {
     "Next Prayer": "Järgmine palve",
@@ -9675,7 +9724,8 @@
     "Daily Worship": "Igapäevane jumalateenistus",
     "All Deen Islam services": "Kõik Deen Islami teenused",
     "View All Prayer Times": "Vaadake kõiki palveaegu",
-    "Starts in": "Algab sisse"
+    "Starts in": "Algab sisse",
+    "Daily Prayer": "Igapäevane jumalateenistus"
   },
   "ee": {
     "Next Prayer": "Gbedodoɖa si kplɔe ɖo",
@@ -9861,7 +9911,8 @@
     "Daily Worship": "Gbesiagbe Tadedeagu",
     "All Deen Islam services": "Deen Islam ƒe subɔsubɔdɔwo katã",
     "View All Prayer Times": "Kpɔ Gbedodoɖa Ɣeyiɣiwo Katã",
-    "Starts in": "Edzea egɔme tso"
+    "Starts in": "Edzea egɔme tso",
+    "Daily Prayer": "Gbesiagbe Tadedeagu"
   },
   "fj": {
     "Next Prayer": "Masu ka tarava",
@@ -10047,7 +10098,8 @@
     "Daily Worship": "Sokalou ena Veisiga",
     "All Deen Islam services": "Veiqaravi kece ni Isilamu ni Deen",
     "View All Prayer Times": "Raica na Gauna ni Masu kece",
-    "Starts in": "Tekivu ena 2018."
+    "Starts in": "Tekivu ena 2018.",
+    "Daily Prayer": "Sokalou ena Veisiga"
   },
   "tl": {
     "Next Prayer": "Susunod na Panalangin",
@@ -10233,7 +10285,8 @@
     "Daily Worship": "Araw-araw na Pagsamba",
     "All Deen Islam services": "Lahat ng serbisyo ng Deen Islam",
     "View All Prayer Times": "Tingnan ang Lahat ng Oras ng Panalangin",
-    "Starts in": "Magsisimula sa"
+    "Starts in": "Magsisimula sa",
+    "Daily Prayer": "Araw-araw na Pagsamba"
   },
   "fi": {
     "Next Prayer": "Seuraava rukous",
@@ -10419,7 +10472,8 @@
     "Daily Worship": "Päivittäinen jumalanpalvelus",
     "All Deen Islam services": "Kaikki Deen Islam -palvelut",
     "View All Prayer Times": "Näytä kaikki rukousajat",
-    "Starts in": "Alkaa sisään"
+    "Starts in": "Alkaa sisään",
+    "Daily Prayer": "Päivittäinen jumalanpalvelus"
   },
   "fr": {
     "Next Prayer": "Prière suivante",
@@ -10605,7 +10659,8 @@
     "Daily Worship": "Culte quotidien",
     "All Deen Islam services": "Tous les services Deen Islam",
     "View All Prayer Times": "Voir toutes les heures de prière",
-    "Starts in": "Commence dans"
+    "Starts in": "Commence dans",
+    "Daily Prayer": "Culte quotidien"
   },
   "fr-CA": {
     "Next Prayer": "Prière suivante",
@@ -10791,7 +10846,8 @@
     "Daily Worship": "Culte quotidien",
     "All Deen Islam services": "Tous les services Deen Islam",
     "View All Prayer Times": "Voir toutes les heures de prière",
-    "Starts in": "Commence dans"
+    "Starts in": "Commence dans",
+    "Daily Prayer": "Culte quotidien"
   },
   "fy": {
     "Next Prayer": "Folgjende gebed",
@@ -10977,7 +11033,8 @@
     "Daily Worship": "Deistich oanbidding",
     "All Deen Islam services": "Alle Deen Islam tsjinsten",
     "View All Prayer Times": "Besjoch alle gebedstiden",
-    "Starts in": "Begjint yn"
+    "Starts in": "Begjint yn",
+    "Daily Prayer": "Deistich oanbidding"
   },
   "ff": {
     "Next Prayer": "Duwaawu garoowo",
@@ -11163,7 +11220,8 @@
     "Daily Worship": "Dewal ñalnde kala",
     "All Deen Islam services": "Denndaangal golle Deen Lislaam",
     "View All Prayer Times": "Yiylo Wakkatiiji Du'aawu fuu",
-    "Starts in": "Fuɗɗotoo ko e..."
+    "Starts in": "Fuɗɗotoo ko e...",
+    "Daily Prayer": "Dewal ñalnde kala"
   },
   "gaa": {
     "Next Prayer": "Sɔlemɔ ni nyiɛ sɛɛ",
@@ -11349,7 +11407,8 @@
     "Daily Worship": "Daa Gbi Jamɔ",
     "All Deen Islam services": "Deen Islam nitsumɔi fɛɛ",
     "View All Prayer Times": "Kwɛmɔ Sɔlemɔ Bei Fɛɛ",
-    "Starts in": "Jeɔ shishi yɛ"
+    "Starts in": "Jeɔ shishi yɛ",
+    "Daily Prayer": "Daa Gbi Jamɔ"
   },
   "gl": {
     "Next Prayer": "Próxima oración",
@@ -11535,7 +11594,8 @@
     "Daily Worship": "Adoración Diaria",
     "All Deen Islam services": "Todos os servizos de Deen Islam",
     "View All Prayer Times": "Ver todos os tempos de oración",
-    "Starts in": "Comeza en"
+    "Starts in": "Comeza en",
+    "Daily Prayer": "Adoración Diaria"
   },
   "ka": {
     "Next Prayer": "შემდეგი ლოცვა",
@@ -11721,7 +11781,8 @@
     "Daily Worship": "ყოველდღიური ღვთისმსახურება",
     "All Deen Islam services": "ყველა Deen Islam მომსახურება",
     "View All Prayer Times": "იხილეთ ყველა ლოცვის დრო",
-    "Starts in": "იწყება"
+    "Starts in": "იწყება",
+    "Daily Prayer": "ყოველდღიური ღვთისმსახურება"
   },
   "de": {
     "Next Prayer": "Nächstes Gebet",
@@ -11907,7 +11968,8 @@
     "Daily Worship": "Täglicher Gottesdienst",
     "All Deen Islam services": "Alle Dienste des Deen Islam",
     "View All Prayer Times": "Alle Gebetszeiten anzeigen",
-    "Starts in": "Beginnt in"
+    "Starts in": "Beginnt in",
+    "Daily Prayer": "Täglicher Gottesdienst"
   },
   "el": {
     "Next Prayer": "Επόμενη Προσευχή",
@@ -12093,7 +12155,8 @@
     "Daily Worship": "Καθημερινή Λατρεία",
     "All Deen Islam services": "Όλες οι υπηρεσίες Deen Islam",
     "View All Prayer Times": "Δείτε όλους τους χρόνους προσευχής",
-    "Starts in": "Ξεκινά μέσα"
+    "Starts in": "Ξεκινά μέσα",
+    "Daily Prayer": "Καθημερινή Λατρεία"
   },
   "gn": {
     "Next Prayer": "Ñembo’e oúva",
@@ -12279,7 +12342,8 @@
     "Daily Worship": "Ñamombaʼeguasu Ára ha Ára",
     "All Deen Islam services": "Opaite Deen Islam servicio-kuéra",
     "View All Prayer Times": "Ehecha Opaite Ñembo’e Aravo",
-    "Starts in": "Oñepyrũ oike"
+    "Starts in": "Oñepyrũ oike",
+    "Daily Prayer": "Ñamombaʼeguasu Ára ha Ára"
   },
   "gu": {
     "Next Prayer": "આગામી પ્રાર્થના",
@@ -12465,7 +12529,8 @@
     "Daily Worship": "દૈનિક પૂજા",
     "All Deen Islam services": "તમામ દીન ઇસ્લામ સેવાઓ",
     "View All Prayer Times": "બધા પ્રાર્થના સમય જુઓ",
-    "Starts in": "માં શરૂ થાય છે"
+    "Starts in": "માં શરૂ થાય છે",
+    "Daily Prayer": "દૈનિક પૂજા"
   },
   "ht": {
     "Next Prayer": "Pwochen Priyè a",
@@ -12651,7 +12716,8 @@
     "Daily Worship": "Adorasyon chak jou",
     "All Deen Islam services": "Tout sèvis Deen Islam yo",
     "View All Prayer Times": "Gade tout tan lapriyè",
-    "Starts in": "Kòmanse nan"
+    "Starts in": "Kòmanse nan",
+    "Daily Prayer": "Adorasyon chak jou"
   },
   "cnh": {
     "Next Prayer": "A hnu thlacamnak",
@@ -12837,7 +12903,8 @@
     "Daily Worship": "Nifatin Pathian Biaknak",
     "All Deen Islam services": "Deen Islam riantuannak vialte",
     "View All Prayer Times": "Thlacamnak Caan Vialte Zoh",
-    "Starts in": "2019 ah aa thawk"
+    "Starts in": "2019 ah aa thawk",
+    "Daily Prayer": "Nifatin Pathian Biaknak"
   },
   "ha": {
     "Next Prayer": "Addu'a ta Gaba",
@@ -13023,7 +13090,8 @@
     "Daily Worship": "Ibada ta Kullum",
     "All Deen Islam services": "Duk hidimomin addinin Musulunci",
     "View All Prayer Times": "Kalli Duk Lokacin Sallah",
-    "Starts in": "Yana farawa a"
+    "Starts in": "Yana farawa a",
+    "Daily Prayer": "Ibada ta Kullum"
   },
   "haw": {
     "Next Prayer": "Pule aʻe",
@@ -13209,7 +13277,8 @@
     "Daily Worship": "Hoomana i kela la i keia la",
     "All Deen Islam services": "ʻO nā lawelawe Deen Islam āpau",
     "View All Prayer Times": "Nānā i nā manawa pule a pau",
-    "Starts in": "Hoʻomaka i loko"
+    "Starts in": "Hoʻomaka i loko",
+    "Daily Prayer": "Hoomana i kela la i keia la"
   },
   "iw": {
     "Next Prayer": "התפילה הבאה",
@@ -13395,7 +13464,8 @@
     "Daily Worship": "פולחן יומי",
     "All Deen Islam services": "כל שירותי דין איסלאם",
     "View All Prayer Times": "צפה בכל זמני התפילה",
-    "Starts in": "מתחיל פנימה"
+    "Starts in": "מתחיל פנימה",
+    "Daily Prayer": "פולחן יומי"
   },
   "he": {
     "Next Prayer": "התפילה הבאה",
@@ -13581,7 +13651,8 @@
     "Daily Worship": "פולחן יומי",
     "All Deen Islam services": "כל שירותי דין איסלאם",
     "View All Prayer Times": "צפה בכל זמני התפילה",
-    "Starts in": "מתחיל פנימה"
+    "Starts in": "מתחיל פנימה",
+    "Daily Prayer": "פולחן יומי"
   },
   "hil": {
     "Next Prayer": "Masunod nga Pangamuyo",
@@ -13767,7 +13838,8 @@
     "Daily Worship": "Adlaw-adlaw nga Pagsimba",
     "All Deen Islam services": "Ang tanan nga serbisyo sa Deen Islam",
     "View All Prayer Times": "Tan-awa ang Tanan nga Oras sang Pangamuyo",
-    "Starts in": "Nagasugod sa"
+    "Starts in": "Nagasugod sa",
+    "Daily Prayer": "Adlaw-adlaw nga Pagsimba"
   },
   "hi": {
     "Next Prayer": "अगली प्रार्थना",
@@ -13953,7 +14025,8 @@
     "Daily Worship": "दैनिक पूजा",
     "All Deen Islam services": "सभी दीन इस्लाम सेवाएं",
     "View All Prayer Times": "सभी प्रार्थना समय देखें",
-    "Starts in": "में शुरू होता है"
+    "Starts in": "में शुरू होता है",
+    "Daily Prayer": "दैनिक पूजा"
   },
   "hmn": {
     "Next Prayer": "Kev Thov Vajtswv Tom Ntej",
@@ -14139,7 +14212,8 @@
     "Daily Worship": "Kev pe hawm txhua hnub",
     "All Deen Islam services": "Txhua qhov kev pabcuam Deen Islam",
     "View All Prayer Times": "Saib Txhua Lub Sijhawm Thov Vajtswv",
-    "Starts in": "Pib hauv"
+    "Starts in": "Pib hauv",
+    "Daily Prayer": "Kev pe hawm txhua hnub"
   },
   "hu": {
     "Next Prayer": "Következő ima",
@@ -14325,7 +14399,8 @@
     "Daily Worship": "Napi Istentisztelet",
     "All Deen Islam services": "Minden Deen Islam szolgáltatás",
     "View All Prayer Times": "Az összes imaidő megtekintése",
-    "Starts in": "Indul"
+    "Starts in": "Indul",
+    "Daily Prayer": "Napi Istentisztelet"
   },
   "hrx": {
     "Next Prayer": "Neekste kepeet",
@@ -14511,7 +14586,8 @@
     "Daily Worship": "Taachlich aanpeetung",
     "All Deen Islam services": "Als Deen Islam tiinst",
     "View All Prayer Times": "Siit ale kepeet tsayte",
-    "Starts in": "Begint im 2019."
+    "Starts in": "Begint im 2019.",
+    "Daily Prayer": "Taachlich aanpeetung"
   },
   "is": {
     "Next Prayer": "Næsta bæn",
@@ -14697,7 +14773,8 @@
     "Daily Worship": "Dagleg guðsþjónusta",
     "All Deen Islam services": "Öll Deen Islam þjónusta",
     "View All Prayer Times": "Skoða alla bænatíma",
-    "Starts in": "Byrjar inn"
+    "Starts in": "Byrjar inn",
+    "Daily Prayer": "Dagleg guðsþjónusta"
   },
   "ig": {
     "Next Prayer": "Ekpere Na-esote",
@@ -14883,7 +14960,8 @@
     "Daily Worship": "Ofufe kwa ụbọchị",
     "All Deen Islam services": "Ọrụ Deen Islam niile",
     "View All Prayer Times": "Lelee Oge Ekpere niile",
-    "Starts in": "Malite na"
+    "Starts in": "Malite na",
+    "Daily Prayer": "Ofufe kwa ụbọchị"
   },
   "ilo": {
     "Next Prayer": "Sumaruno a Kararag",
@@ -15069,7 +15147,8 @@
     "Daily Worship": "Inaldaw a Panagdayaw",
     "All Deen Islam services": "Amin a serbisio ti Deen Islam",
     "View All Prayer Times": "Kitaen ti Amin nga Oras ti Kararag",
-    "Starts in": "Mangrugi iti"
+    "Starts in": "Mangrugi iti",
+    "Daily Prayer": "Inaldaw a Panagdayaw"
   },
   "id": {
     "Next Prayer": "Doa Selanjutnya",
@@ -15255,7 +15334,8 @@
     "Daily Worship": "Ibadah Harian",
     "All Deen Islam services": "Semua layanan Deen Islam",
     "View All Prayer Times": "Lihat Semua Waktu Sholat",
-    "Starts in": "Mulai masuk"
+    "Starts in": "Mulai masuk",
+    "Daily Prayer": "Ibadah Harian"
   },
   "ga": {
     "Next Prayer": "An chéad phaidir eile",
@@ -15441,7 +15521,8 @@
     "Daily Worship": "Adhradh Laethúil",
     "All Deen Islam services": "Gach seirbhís Deen Ioslam",
     "View All Prayer Times": "Féach ar Gach Uair Urnaí",
-    "Starts in": "Tosaíonn i"
+    "Starts in": "Tosaíonn i",
+    "Daily Prayer": "Adhradh Laethúil"
   },
   "it": {
     "Next Prayer": "Preghiera successiva",
@@ -15627,7 +15708,8 @@
     "Daily Worship": "Culto quotidiano",
     "All Deen Islam services": "Tutti i servizi Deen Islam",
     "View All Prayer Times": "Visualizza tutti i tempi di preghiera",
-    "Starts in": "Inizia tra"
+    "Starts in": "Inizia tra",
+    "Daily Prayer": "Culto quotidiano"
   },
   "ja": {
     "Next Prayer": "次の祈り",
@@ -15813,7 +15895,8 @@
     "Daily Worship": "Daily Worship",
     "All Deen Islam services": "Deen Islam のすべてのサービス",
     "View All Prayer Times": "View All Prayer Times",
-    "Starts in": "Starts in"
+    "Starts in": "Starts in",
+    "Daily Prayer": "Daily Worship"
   },
   "jw": {
     "Next Prayer": "Pandonga Sabanjure",
@@ -15999,7 +16082,8 @@
     "Daily Worship": "Ibadah saben dina",
     "All Deen Islam services": "Kabeh layanan Deen Islam",
     "View All Prayer Times": "Deleng Kabeh Wektu Sholat",
-    "Starts in": "Diwiwiti ing"
+    "Starts in": "Diwiwiti ing",
+    "Daily Prayer": "Ibadah saben dina"
   },
   "jv": {
     "Next Prayer": "Pandonga Sabanjure",
@@ -16185,7 +16269,8 @@
     "Daily Worship": "Ibadah saben dina",
     "All Deen Islam services": "Kabeh layanan Deen Islam",
     "View All Prayer Times": "Deleng Kabeh Wektu Sholat",
-    "Starts in": "Diwiwiti ing"
+    "Starts in": "Diwiwiti ing",
+    "Daily Prayer": "Ibadah saben dina"
   },
   "kn": {
     "Next Prayer": "ಮುಂದಿನ ಪ್ರಾರ್ಥನೆ",
@@ -16371,7 +16456,8 @@
     "Daily Worship": "ದೈನಂದಿನ ಪೂಜೆ",
     "All Deen Islam services": "ಎಲ್ಲಾ ದೀನ್ ಇಸ್ಲಾಂ ಸೇವೆಗಳು",
     "View All Prayer Times": "ಎಲ್ಲಾ ಪ್ರಾರ್ಥನಾ ಸಮಯಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
-    "Starts in": "ನಲ್ಲಿ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ"
+    "Starts in": "ನಲ್ಲಿ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ",
+    "Daily Prayer": "ದೈನಂದಿನ ಪೂಜೆ"
   },
   "pam": {
     "Next Prayer": "Susunod a Panalangin",
@@ -16557,7 +16643,8 @@
     "Daily Worship": "Aldo-aldo Pamanyamba",
     "All Deen Islam services": "Deng sablang serbisyung Deen Islam",
     "View All Prayer Times": "Lawen la ngan ding oras ning panalangin",
-    "Starts in": "magumpisa ya keng"
+    "Starts in": "magumpisa ya keng",
+    "Daily Prayer": "Aldo-aldo Pamanyamba"
   },
   "kk": {
     "Next Prayer": "Келесі дұға",
@@ -16743,7 +16830,8 @@
     "Daily Worship": "Күнделікті ғибадат",
     "All Deen Islam services": "Барлық Deen Islam қызметтері",
     "View All Prayer Times": "Барлық намаз уақыттарын көру",
-    "Starts in": "Басталады"
+    "Starts in": "Басталады",
+    "Daily Prayer": "Күнделікті ғибадат"
   },
   "km": {
     "Next Prayer": "ការអធិស្ឋានបន្ទាប់",
@@ -16929,7 +17017,8 @@
     "Daily Worship": "ការថ្វាយបង្គំប្រចាំថ្ងៃ",
     "All Deen Islam services": "សេវាកម្ម Deen Islam ទាំងអស់។",
     "View All Prayer Times": "មើលម៉ោងអធិស្ឋានទាំងអស់។",
-    "Starts in": "ចាប់ផ្តើមនៅក្នុង"
+    "Starts in": "ចាប់ផ្តើមនៅក្នុង",
+    "Daily Prayer": "ការថ្វាយបង្គំប្រចាំថ្ងៃ"
   },
   "cgg": {
     "Next Prayer": "Eshaara erikukurataho",
@@ -17115,7 +17204,8 @@
     "Daily Worship": "Okuramya kwa buri izooba",
     "All Deen Islam services": "Obuheereza bwa Deen Islam bwona",
     "View All Prayer Times": "Reeba obwire bwona obw'okushaba",
-    "Starts in": "Nikitandika omu 2019."
+    "Starts in": "Nikitandika omu 2019.",
+    "Daily Prayer": "Okuramya kwa buri izooba"
   },
   "rw": {
     "Next Prayer": "Isengesho rikurikira",
@@ -17301,7 +17391,8 @@
     "Daily Worship": "Kuramya buri munsi",
     "All Deen Islam services": "Serivisi zose za Deen Islam",
     "View All Prayer Times": "Reba Ibihe Byose byamasengesho",
-    "Starts in": "Itangira"
+    "Starts in": "Itangira",
+    "Daily Prayer": "Kuramya buri munsi"
   },
   "ktu": {
     "Next Prayer": "Kisambu ya ke landa",
@@ -17487,7 +17578,8 @@
     "Daily Worship": "Lusambu ya Konso Kilumbu",
     "All Deen Islam services": "Bisalu yonso ya Kiislamu ya Deen",
     "View All Prayer Times": "Tala Bantangu Yonso ya Bisambu",
-    "Starts in": "Bandaka na 2019."
+    "Starts in": "Bandaka na 2019.",
+    "Daily Prayer": "Lusambu ya Konso Kilumbu"
   },
   "gom": {
     "Next Prayer": "फुडली प्रार्थना",
@@ -17673,7 +17765,8 @@
     "Daily Worship": "दैनिक पुजा",
     "All Deen Islam services": "सगळ्यो दीन इस्लाम सेवा",
     "View All Prayer Times": "सगळे प्रार्थना वेळ पळयात",
-    "Starts in": "च्यान सुरू जाता"
+    "Starts in": "च्यान सुरू जाता",
+    "Daily Prayer": "दैनिक पुजा"
   },
   "ko": {
     "Next Prayer": "다음 기도",
@@ -17859,7 +17952,8 @@
     "Daily Worship": "매일 예배",
     "All Deen Islam services": "모든 Deen 이슬람 서비스",
     "View All Prayer Times": "모든 기도 시간 보기",
-    "Starts in": "시작 날짜"
+    "Starts in": "시작 날짜",
+    "Daily Prayer": "매일 예배"
   },
   "kri": {
     "Next Prayer": "Nɛks Prea",
@@ -18045,7 +18139,8 @@
     "Daily Worship": "Woship fɔ Wɔship Ɛvride",
     "All Deen Islam services": "Ɔl di Deen Islam savis dɛn",
     "View All Prayer Times": "Luk Ɔl di Tɛm dɛn we dɛn kin pre",
-    "Starts in": "Start insay"
+    "Starts in": "Start insay",
+    "Daily Prayer": "Woship fɔ Wɔship Ɛvride"
   },
   "ku": {
     "Next Prayer": "Duaya Paşîn",
@@ -18231,7 +18326,8 @@
     "Daily Worship": "Îbadeta rojane",
     "All Deen Islam services": "Hemû xizmetên Deen Islam",
     "View All Prayer Times": "Hemî Demên Nimêjê Binêrin",
-    "Starts in": "de dest pê dike"
+    "Starts in": "de dest pê dike",
+    "Daily Prayer": "Îbadeta rojane"
   },
   "ckb": {
     "Next Prayer": "نوێژی داهاتوو",
@@ -18417,7 +18513,8 @@
     "Daily Worship": "پەرستنی ڕۆژانە",
     "All Deen Islam services": "هەموو خزمەتگوزاریەکانی دین ئیسلام",
     "View All Prayer Times": "بینینی هەموو کاتەکانی نوێژ",
-    "Starts in": "لە..."
+    "Starts in": "لە...",
+    "Daily Prayer": "پەرستنی ڕۆژانە"
   },
   "ky": {
     "Next Prayer": "Кийинки намаз",
@@ -18603,7 +18700,8 @@
     "Daily Worship": "Күнүмдүк сыйынуу",
     "All Deen Islam services": "Дин Исламдын бардык кызматтары",
     "View All Prayer Times": "Бардык намаз убакыттарын көрүү",
-    "Starts in": "башталат"
+    "Starts in": "башталат",
+    "Daily Prayer": "Күнүмдүк сыйынуу"
   },
   "lo": {
     "Next Prayer": "ການອະທິຖານຄັ້ງຕໍ່ໄປ",
@@ -18789,7 +18887,8 @@
     "Daily Worship": "ການໄຫວ້ປະຈໍາວັນ",
     "All Deen Islam services": "ການບໍລິການ Deen Islam ທັງຫມົດ",
     "View All Prayer Times": "ເບິ່ງເວລາອະທິຖານທັງໝົດ",
-    "Starts in": "ເລີ່ມໃນ"
+    "Starts in": "ເລີ່ມໃນ",
+    "Daily Prayer": "ການໄຫວ້ປະຈໍາວັນ"
   },
   "ltg": {
     "Next Prayer": "Nuokušuo lyugšona .",
@@ -18975,7 +19074,8 @@
     "Daily Worship": "Kasdīnys pīlyugsme .",
     "All Deen Islam services": "100 doc#1159 Vysi Dīna islama pakolpuojumi .",
     "View All Prayer Times": "Skatīt vysus lyugšonu laikus .",
-    "Starts in": "Suoc 2011. g."
+    "Starts in": "Suoc 2011. g.",
+    "Daily Prayer": "Kasdīnys pīlyugsme ."
   },
   "la": {
     "Next Prayer": "Precatio Proxima",
@@ -19161,7 +19261,8 @@
     "Daily Worship": "Adoratio quotidiana",
     "All Deen Islam services": "Omnes Deen Islam officia",
     "View All Prayer Times": "Omnes Orationis tempora",
-    "Starts in": "incipit in"
+    "Starts in": "incipit in",
+    "Daily Prayer": "Adoratio quotidiana"
   },
   "lv": {
     "Next Prayer": "Nākamā lūgšana",
@@ -19347,7 +19448,8 @@
     "Daily Worship": "Ikdienas dievkalpojums",
     "All Deen Islam services": "Visi Deen Islam pakalpojumi",
     "View All Prayer Times": "Skatīt visus lūgšanu laikus",
-    "Starts in": "Sākas iekšā"
+    "Starts in": "Sākas iekšā",
+    "Daily Prayer": "Ikdienas dievkalpojums"
   },
   "lij": {
     "Next Prayer": "Proscima Preghea",
@@ -19533,7 +19635,8 @@
     "Daily Worship": "Adoraçion Quotidiana",
     "All Deen Islam services": "Tutti i serviçi de l'Islam de Deen",
     "View All Prayer Times": "Vedi tutti i tempi de preghea",
-    "Starts in": "Commensa do 2012."
+    "Starts in": "Commensa do 2012.",
+    "Daily Prayer": "Adoraçion Quotidiana"
   },
   "li": {
     "Next Prayer": "Volgende gebed",
@@ -19719,7 +19822,8 @@
     "Daily Worship": "Daagse verere",
     "All Deen Islam services": "Alle Deen Islam-deenste",
     "View All Prayer Times": "Alle gebedstieje bekieke",
-    "Starts in": "Begint in"
+    "Starts in": "Begint in",
+    "Daily Prayer": "Daagse verere"
   },
   "ln": {
     "Next Prayer": "Libondeli oyo elandi",
@@ -19905,7 +20009,8 @@
     "Daily Worship": "Losambo ya mokolo na mokolo",
     "All Deen Islam services": "Ba services nionso ya Deen Islam",
     "View All Prayer Times": "Tala Bantango Nyonso ya Mabondeli",
-    "Starts in": "Ebandi na"
+    "Starts in": "Ebandi na",
+    "Daily Prayer": "Losambo ya mokolo na mokolo"
   },
   "lt": {
     "Next Prayer": "Kita malda",
@@ -20091,7 +20196,8 @@
     "Daily Worship": "Kasdienis šlovinimas",
     "All Deen Islam services": "Visos Deen Islam paslaugos",
     "View All Prayer Times": "Peržiūrėti visus maldos laikus",
-    "Starts in": "Prasideda"
+    "Starts in": "Prasideda",
+    "Daily Prayer": "Kasdienis šlovinimas"
   },
   "lmo": {
     "Next Prayer": "Oraziùn sucesiva",
@@ -20277,7 +20383,8 @@
     "Daily Worship": "Adoraziun quotidiana",
     "All Deen Islam services": "Tüt i servizi de Deen Islam",
     "View All Prayer Times": "Vedi tüt i temp de oraziùn",
-    "Starts in": "Cumenza en"
+    "Starts in": "Cumenza en",
+    "Daily Prayer": "Adoraziun quotidiana"
   },
   "lg": {
     "Next Prayer": "Essaala Eddako",
@@ -20463,7 +20570,8 @@
     "Daily Worship": "Okusinza kwa Buli Lunaku",
     "All Deen Islam services": "Empeereza zonna eza Deen Islam",
     "View All Prayer Times": "Laba Ebiseera Byonna By'okusaba",
-    "Starts in": "Atandikira mu..."
+    "Starts in": "Atandikira mu...",
+    "Daily Prayer": "Okusinza kwa Buli Lunaku"
   },
   "luo": {
     "Next Prayer": "Lamo maluwo",
@@ -20649,7 +20757,8 @@
     "Daily Worship": "Lamo ma pile ka pile",
     "All Deen Islam services": "Tije duto mag Deen Islam",
     "View All Prayer Times": "Neno Seche duto mag Lamo",
-    "Starts in": "Ochako higa mar"
+    "Starts in": "Ochako higa mar",
+    "Daily Prayer": "Lamo ma pile ka pile"
   },
   "lb": {
     "Next Prayer": "Nächst Gebied",
@@ -20835,7 +20944,8 @@
     "Daily Worship": "Deeglech Gottesdéngscht",
     "All Deen Islam services": "All Deen Islam Servicer",
     "View All Prayer Times": "View All Gebetszäiten",
-    "Starts in": "Fänkt un"
+    "Starts in": "Fänkt un",
+    "Daily Prayer": "Deeglech Gottesdéngscht"
   },
   "mk": {
     "Next Prayer": "Следна молитва",
@@ -21021,7 +21131,8 @@
     "Daily Worship": "Секојдневно богослужение",
     "All Deen Islam services": "Сите услуги на Дин Ислам",
     "View All Prayer Times": "Прикажи ги сите времиња на молитва",
-    "Starts in": "Започнува во"
+    "Starts in": "Започнува во",
+    "Daily Prayer": "Секојдневно богослужение"
   },
   "mai": {
     "Next Prayer": "अगिला प्रार्थना",
@@ -21207,7 +21318,8 @@
     "Daily Worship": "दैनिक पूजा",
     "All Deen Islam services": "सब दीन इस्लाम सेवा",
     "View All Prayer Times": "सब प्रार्थना समय देखें",
-    "Starts in": "में शुरू होइत अछि"
+    "Starts in": "में शुरू होइत अछि",
+    "Daily Prayer": "दैनिक पूजा"
   },
   "mak": {
     "Next Prayer": "Doa ribokoangna",
@@ -21393,7 +21505,8 @@
     "Daily Worship": "Ibadah allo-allo",
     "All Deen Islam services": "Sikontu layanan Deen Islam",
     "View All Prayer Times": "Ciniki sikontu wattu sambayanga",
-    "Starts in": "appakkaramula ri"
+    "Starts in": "appakkaramula ri",
+    "Daily Prayer": "Ibadah allo-allo"
   },
   "mg": {
     "Next Prayer": "Vavaka manaraka",
@@ -21579,7 +21692,8 @@
     "Daily Worship": "Fivavahana isan'andro",
     "All Deen Islam services": "Ny serivisy Deen Islam rehetra",
     "View All Prayer Times": "Jereo ny Fotoam-bavaka rehetra",
-    "Starts in": "Manomboka amin'ny"
+    "Starts in": "Manomboka amin'ny",
+    "Daily Prayer": "Fivavahana isan'andro"
   },
   "ms": {
     "Next Prayer": "Doa Seterusnya",
@@ -21765,7 +21879,8 @@
     "Daily Worship": "Ibadah Harian",
     "All Deen Islam services": "Semua perkhidmatan Deen Islam",
     "View All Prayer Times": "Lihat Semua Waktu Solat",
-    "Starts in": "Bermula dalam"
+    "Starts in": "Bermula dalam",
+    "Daily Prayer": "Ibadah Harian"
   },
   "ms-Arab": {
     "Next Prayer": "صلاة ستروسڽ",
@@ -21951,7 +22066,8 @@
     "Daily Worship": "عباده هارين",
     "All Deen Islam services": "سموا خدمت دين اسلام",
     "View All Prayer Times": "ليهت سموا وقتو صلاة",
-    "Starts in": "برمولا ڤد"
+    "Starts in": "برمولا ڤد",
+    "Daily Prayer": "عباده هارين"
   },
   "ml": {
     "Next Prayer": "അടുത്ത പ്രാർത്ഥന",
@@ -22137,7 +22253,8 @@
     "Daily Worship": "ദൈനംദിന ആരാധന",
     "All Deen Islam services": "എല്ലാ ദീൻ ഇസ്ലാം സേവനങ്ങളും",
     "View All Prayer Times": "എല്ലാ പ്രാർത്ഥന സമയങ്ങളും കാണുക",
-    "Starts in": "ൽ ആരംഭിക്കുന്നു"
+    "Starts in": "ൽ ആരംഭിക്കുന്നു",
+    "Daily Prayer": "ദൈനംദിന ആരാധന"
   },
   "mt": {
     "Next Prayer": "It-Talba li Jmiss",
@@ -22323,7 +22440,8 @@
     "Daily Worship": "Qima ta’ Kuljum",
     "All Deen Islam services": "Is-servizzi kollha ta' Deen Islam",
     "View All Prayer Times": "Ara l-Ħinijiet tat-Talb Kollha",
-    "Starts in": "Jibda fi"
+    "Starts in": "Jibda fi",
+    "Daily Prayer": "Qima ta’ Kuljum"
   },
   "mi": {
     "Next Prayer": "Inoi e whai ake nei",
@@ -22509,7 +22627,8 @@
     "Daily Worship": "Karakia o ia ra",
     "All Deen Islam services": "Nga ratonga Deen Islam katoa",
     "View All Prayer Times": "Tirohia nga Wa Inoi Katoa",
-    "Starts in": "Ka timata i roto"
+    "Starts in": "Ka timata i roto",
+    "Daily Prayer": "Karakia o ia ra"
   },
   "mr": {
     "Next Prayer": "पुढील प्रार्थना",
@@ -22695,7 +22814,8 @@
     "Daily Worship": "रोजची पूजा",
     "All Deen Islam services": "सर्व दीन इस्लाम सेवा",
     "View All Prayer Times": "सर्व प्रार्थना वेळा पहा",
-    "Starts in": "मध्ये सुरू होते"
+    "Starts in": "मध्ये सुरू होते",
+    "Daily Prayer": "रोजची पूजा"
   },
   "chm": {
     "Next Prayer": "Вес кумалтыш",
@@ -22881,7 +23001,8 @@
     "Daily Worship": "Кече еда кумалмаш",
     "All Deen Islam services": "Чыла Дин Ислам службо",
     "View All Prayer Times": "Чыла кумалме жапым ончалаш",
-    "Starts in": "2019 ийыште тӱҥалеш"
+    "Starts in": "2019 ийыште тӱҥалеш",
+    "Daily Prayer": "Кече еда кумалмаш"
   },
   "mni-Mtei": {
     "Next Prayer": "ꯃꯊꯪꯒꯤ ꯄ꯭ꯔꯥꯔꯊꯅꯥ꯫",
@@ -23067,7 +23188,8 @@
     "Daily Worship": "ꯅꯨꯃꯤꯠ ꯈꯨꯗꯤꯡꯒꯤ ꯂꯥꯏ ꯈꯨꯔꯨꯝꯕꯥ꯫",
     "All Deen Islam services": "ꯗꯤꯟ ꯏꯁ꯭ꯂꯥꯃꯒꯤ ꯁꯔꯚꯤꯁ ꯄꯨꯝꯅꯃꯛ꯫",
     "View All Prayer Times": "ꯄ꯭ꯔꯥꯔꯊꯅꯥꯒꯤ ꯃꯇꯝ ꯄꯨꯝꯅꯃꯛ ꯌꯦꯡꯕꯤꯌꯨ꯫",
-    "Starts in": "ꯍꯧꯔꯀꯏ꯫"
+    "Starts in": "ꯍꯧꯔꯀꯏ꯫",
+    "Daily Prayer": "ꯅꯨꯃꯤꯠ ꯈꯨꯗꯤꯡꯒꯤ ꯂꯥꯏ ꯈꯨꯔꯨꯝꯕꯥ꯫"
   },
   "min": {
     "Next Prayer": "Doa salanjuiknyo",
@@ -23253,7 +23375,8 @@
     "Daily Worship": "Ibadah Sahari-hari",
     "All Deen Islam services": "Sagalo layanan Deen Islam .",
     "View All Prayer Times": "Liek Sagalo Wakatu Sumbayang",
-    "Starts in": "Mulai tahun 2019 ."
+    "Starts in": "Mulai tahun 2019 .",
+    "Daily Prayer": "Ibadah Sahari-hari"
   },
   "lus": {
     "Next Prayer": "Tawngtai leh tur",
@@ -23439,7 +23562,8 @@
     "Daily Worship": "Nitin Pathian Biak Inkhawm",
     "All Deen Islam services": "Deen Islam rawngbawlna zawng zawng",
     "View All Prayer Times": "Tawngtai Hun zawng zawng en rawh",
-    "Starts in": "A tan in"
+    "Starts in": "A tan in",
+    "Daily Prayer": "Nitin Pathian Biak Inkhawm"
   },
   "mn": {
     "Next Prayer": "Дараагийн залбирал",
@@ -23625,7 +23749,8 @@
     "Daily Worship": "Өдөр тутмын мөргөл",
     "All Deen Islam services": "Дин Исламын бүх үйлчилгээ",
     "View All Prayer Times": "Бүх залбирлын цагийг харах",
-    "Starts in": "Орж эхэлнэ"
+    "Starts in": "Орж эхэлнэ",
+    "Daily Prayer": "Өдөр тутмын мөргөл"
   },
   "my": {
     "Next Prayer": "နောက်ဆုတောင်းချက်",
@@ -23811,7 +23936,8 @@
     "Daily Worship": "နေ့စဉ်ဝတ်ပြုခြင်း။",
     "All Deen Islam services": "Deen Islam ဝန်ဆောင်မှုအားလုံး",
     "View All Prayer Times": "ဆုတောင်းအချိန်အားလုံးကိုကြည့်ပါ။",
-    "Starts in": "စတင်သည်။"
+    "Starts in": "စတင်သည်။",
+    "Daily Prayer": "နေ့စဉ်ဝတ်ပြုခြင်း။"
   },
   "nr": {
     "Next Prayer": "Umthandazo olandelako",
@@ -23997,7 +24123,8 @@
     "Daily Worship": "Ukukhonza kwansuku zonke",
     "All Deen Islam services": "Zoke iinkonzo ze-Deen Islam",
     "View All Prayer Times": "Qala zoke iinkhathi zomthandazo",
-    "Starts in": "Ithoma ngo-"
+    "Starts in": "Ithoma ngo-",
+    "Daily Prayer": "Ukukhonza kwansuku zonke"
   },
   "new": {
     "Next Prayer": "मेगु प्रार्थना",
@@ -24183,7 +24310,8 @@
     "Daily Worship": "न्हिथंया पूजा ३.",
     "All Deen Islam services": "दक्वं दीन इस्लाम सेवा",
     "View All Prayer Times": "दक्वं प्रार्थना ई स्व ।",
-    "Starts in": "११३९ स शुरु जुइ ।"
+    "Starts in": "११३९ स शुरु जुइ ।",
+    "Daily Prayer": "न्हिथंया पूजा ३."
   },
   "ne": {
     "Next Prayer": "अर्को प्रार्थना",
@@ -24369,7 +24497,8 @@
     "Daily Worship": "दैनिक पूजा",
     "All Deen Islam services": "सबै दीन इस्लाम सेवाहरू",
     "View All Prayer Times": "सबै प्रार्थना समय हेर्नुहोस्",
-    "Starts in": "मा सुरु हुन्छ"
+    "Starts in": "मा सुरु हुन्छ",
+    "Daily Prayer": "दैनिक पूजा"
   },
   "no": {
     "Next Prayer": "Neste bønn",
@@ -24555,7 +24684,8 @@
     "Daily Worship": "Daglig gudstjeneste",
     "All Deen Islam services": "Alle Deen Islam-tjenester",
     "View All Prayer Times": "Se alle bønnetider",
-    "Starts in": "Starter inn"
+    "Starts in": "Starter inn",
+    "Daily Prayer": "Daglig gudstjeneste"
   },
   "nus": {
     "Next Prayer": "Pal in dɔ̱ŋ",
@@ -24741,7 +24871,8 @@
     "Daily Worship": "Pal kɛ cäŋ kɛl",
     "All Deen Islam services": "Kä lät Deen I̱thla̱m diaal",
     "View All Prayer Times": "Guɛc Gua̱th Palä Diaal",
-    "Starts in": "Tuɔk kɛ jɛ kɛ"
+    "Starts in": "Tuɔk kɛ jɛ kɛ",
+    "Daily Prayer": "Pal kɛ cäŋ kɛl"
   },
   "oc": {
     "Next Prayer": "Pregària seguenta",
@@ -24927,7 +25058,8 @@
     "Daily Worship": "Cultacion quotidiana",
     "All Deen Islam services": "Totes los servicis Deen Islam",
     "View All Prayer Times": "Veire totes los tempses de pregària",
-    "Starts in": "Comença en"
+    "Starts in": "Comença en",
+    "Daily Prayer": "Cultacion quotidiana"
   },
   "or": {
     "Next Prayer": "ପରବର୍ତ୍ତୀ ପ୍ରାର୍ଥନା",
@@ -25113,7 +25245,8 @@
     "Daily Worship": "ଦ Daily ନିକ ଉପାସନା |",
     "All Deen Islam services": "ସମସ୍ତ ଦେନ୍ ଇସଲାମ ସେବା |",
     "View All Prayer Times": "ସମସ୍ତ ପ୍ରାର୍ଥନା ସମୟ ଦେଖନ୍ତୁ |",
-    "Starts in": "ଆରମ୍ଭ ହୁଏ |"
+    "Starts in": "ଆରମ୍ଭ ହୁଏ |",
+    "Daily Prayer": "ଦ Daily ନିକ ଉପାସନା |"
   },
   "om": {
     "Next Prayer": "Kadhannaa Itti Aanu",
@@ -25299,7 +25432,8 @@
     "Daily Worship": "Waaqeffannaa Guyyaa Guyyaa",
     "All Deen Islam services": "Tajaajila Islaamummaa Deen hunda",
     "View All Prayer Times": "Yeroo Kadhannaa Hundaa Ilaali",
-    "Starts in": "Keessatti jalqaba"
+    "Starts in": "Keessatti jalqaba",
+    "Daily Prayer": "Waaqeffannaa Guyyaa Guyyaa"
   },
   "pag": {
     "Next Prayer": "Ontumbok a Pikakasi",
@@ -25485,7 +25619,8 @@
     "Daily Worship": "Inagew-agew a Panagdayew",
     "All Deen Islam services": "Amin ya serbisyo na Deen Islam",
     "View All Prayer Times": "Nengnengen so Amin ya Panaon na Pikakasi",
-    "Starts in": "Onggapo ed"
+    "Starts in": "Onggapo ed",
+    "Daily Prayer": "Inagew-agew a Panagdayew"
   },
   "pap": {
     "Next Prayer": "Siguiente Orashon",
@@ -25671,7 +25806,8 @@
     "Daily Worship": "Adorashon di tur dia",
     "All Deen Islam services": "Tur servisio di Deen Islam",
     "View All Prayer Times": "Wak Tur Ora di Orashon",
-    "Starts in": "Ta kuminsá na"
+    "Starts in": "Ta kuminsá na",
+    "Daily Prayer": "Adorashon di tur dia"
   },
   "ps": {
     "Next Prayer": "راتلونکې دعا",
@@ -25857,7 +25993,8 @@
     "Daily Worship": "ورځنی عبادت",
     "All Deen Islam services": "د دین اسلام ټول خدمتونه",
     "View All Prayer Times": "د لمانځه ټول وختونه وګورئ",
-    "Starts in": "کې پیل کیږي"
+    "Starts in": "کې پیل کیږي",
+    "Daily Prayer": "ورځنی عبادت"
   },
   "fa": {
     "Next Prayer": "دعای بعدی",
@@ -26043,7 +26180,8 @@
     "Daily Worship": "عبادت روزانه",
     "All Deen Islam services": "کلیه خدمات دین اسلام",
     "View All Prayer Times": "مشاهده تمام اوقات نماز",
-    "Starts in": "شروع می شود"
+    "Starts in": "شروع می شود",
+    "Daily Prayer": "عبادت روزانه"
   },
   "pl": {
     "Next Prayer": "Następna modlitwa",
@@ -26229,7 +26367,8 @@
     "Daily Worship": "Codzienne nabożeństwo",
     "All Deen Islam services": "Wszystkie usługi Deen Islam",
     "View All Prayer Times": "Zobacz wszystkie godziny modlitw",
-    "Starts in": "Zaczyna się w"
+    "Starts in": "Zaczyna się w",
+    "Daily Prayer": "Codzienne nabożeństwo"
   },
   "pt": {
     "Next Prayer": "Próxima oração",
@@ -26415,7 +26554,8 @@
     "Daily Worship": "Adoração Diária",
     "All Deen Islam services": "Todos os serviços Deen Islam",
     "View All Prayer Times": "Ver todos os horários de oração",
-    "Starts in": "Começa em"
+    "Starts in": "Começa em",
+    "Daily Prayer": "Adoração Diária"
   },
   "pt-PT": {
     "Next Prayer": "Próxima oração",
@@ -26601,7 +26741,8 @@
     "Daily Worship": "Adoração Diária",
     "All Deen Islam services": "Todos os serviços Deen Islam",
     "View All Prayer Times": "Ver todos os horários de oração",
-    "Starts in": "Começa em"
+    "Starts in": "Começa em",
+    "Daily Prayer": "Adoração Diária"
   },
   "pa": {
     "Next Prayer": "ਅਗਲੀ ਪ੍ਰਾਰਥਨਾ",
@@ -26787,7 +26928,8 @@
     "Daily Worship": "ਰੋਜ਼ਾਨਾ ਪੂਜਾ",
     "All Deen Islam services": "ਦੀਨ ਇਸਲਾਮ ਦੀਆਂ ਸਾਰੀਆਂ ਸੇਵਾਵਾਂ",
     "View All Prayer Times": "ਸਾਰੇ ਪ੍ਰਾਰਥਨਾ ਦੇ ਸਮੇਂ ਵੇਖੋ",
-    "Starts in": "ਵਿੱਚ ਸ਼ੁਰੂ ਹੁੰਦਾ ਹੈ"
+    "Starts in": "ਵਿੱਚ ਸ਼ੁਰੂ ਹੁੰਦਾ ਹੈ",
+    "Daily Prayer": "ਰੋਜ਼ਾਨਾ ਪੂਜਾ"
   },
   "pa-Arab": {
     "Next Prayer": "اگلی دعا",
@@ -26973,7 +27115,8 @@
     "Daily Worship": "روز دی عبادت",
     "All Deen Islam services": "تمام دین اسلام خدمات",
     "View All Prayer Times": "سارے نماز دے ویلے ویکھو",
-    "Starts in": "وچ شروع ہوندا اے"
+    "Starts in": "وچ شروع ہوندا اے",
+    "Daily Prayer": "روز دی عبادت"
   },
   "qu": {
     "Next Prayer": "Qatiqnin Mañakuy",
@@ -27159,7 +27302,8 @@
     "Daily Worship": "Sapa punchaw Yupaychana",
     "All Deen Islam services": "Tukuy Deen Islam serviciokuna",
     "View All Prayer Times": "Llapan mañakuy pachakunata qhaway",
-    "Starts in": "Qallarin in"
+    "Starts in": "Qallarin in",
+    "Daily Prayer": "Sapa punchaw Yupaychana"
   },
   "rom": {
     "Next Prayer": "Aver ruđimos",
@@ -27345,7 +27489,8 @@
     "Daily Worship": "Sakodivesutno luvudipe",
     "All Deen Islam services": "Sa le Deen Islamoske servisura",
     "View All Prayer Times": "Dikh sa e ruđimaske vràme",
-    "Starts in": "Astarda ko"
+    "Starts in": "Astarda ko",
+    "Daily Prayer": "Sakodivesutno luvudipe"
   },
   "ro": {
     "Next Prayer": "Următoarea rugăciune",
@@ -27531,7 +27676,8 @@
     "Daily Worship": "Închinare zilnică",
     "All Deen Islam services": "Toate serviciile Deen Islam",
     "View All Prayer Times": "Vezi toate orele de rugăciune",
-    "Starts in": "Începe în"
+    "Starts in": "Începe în",
+    "Daily Prayer": "Închinare zilnică"
   },
   "rn": {
     "Next Prayer": "Isengesho rikurikira",
@@ -27717,7 +27863,8 @@
     "Daily Worship": "Ugusenga kwa misi yose",
     "All Deen Islam services": "Ibikorwa vyose vya Deen ubuyisilamu",
     "View All Prayer Times": "Raba ibihe vyose vy'amasengesho",
-    "Starts in": "Gutangura mu 2019."
+    "Starts in": "Gutangura mu 2019.",
+    "Daily Prayer": "Ugusenga kwa misi yose"
   },
   "ru": {
     "Next Prayer": "Следующая молитва",
@@ -27903,7 +28050,8 @@
     "Daily Worship": "Ежедневное поклонение",
     "All Deen Islam services": "Все услуги Дин Ислама",
     "View All Prayer Times": "Просмотреть все время молитв",
-    "Starts in": "Начинается через"
+    "Starts in": "Начинается через",
+    "Daily Prayer": "Ежедневное поклонение"
   },
   "sm": {
     "Next Prayer": "Tatalo e Sosoo ai",
@@ -28089,7 +28237,8 @@
     "Daily Worship": "Tapuaiga i Aso Taitasi",
     "All Deen Islam services": "O auaunaga uma a Deen Islam",
     "View All Prayer Times": "Va'ai Taimi Tatalo Uma",
-    "Starts in": "Amata i totonu"
+    "Starts in": "Amata i totonu",
+    "Daily Prayer": "Tapuaiga i Aso Taitasi"
   },
   "sg": {
     "Next Prayer": "Sambela ti peko",
@@ -28275,7 +28424,8 @@
     "Daily Worship": "Vorongo ti lâ oko oko",
     "All Deen Islam services": "Azo kue so ayeke sara kua ti Deen Islam .",
     "View All Prayer Times": "Bâ angoi ti sambela kue",
-    "Starts in": "A to nda ni na ngu 1999."
+    "Starts in": "A to nda ni na ngu 1999.",
+    "Daily Prayer": "Vorongo ti lâ oko oko"
   },
   "sa": {
     "Next Prayer": "अग्रिमः प्रार्थना",
@@ -28461,7 +28611,8 @@
     "Daily Worship": "नित्यपूजा",
     "All Deen Islam services": "सर्वाणि दीन इस्लाम सेवा",
     "View All Prayer Times": "सर्वाणि प्रार्थनासमयानि पश्यन्तु",
-    "Starts in": "मध्ये आरभ्यते"
+    "Starts in": "मध्ये आरभ्यते",
+    "Daily Prayer": "नित्यपूजा"
   },
   "gd": {
     "Next Prayer": "An ath ùrnaigh",
@@ -28647,7 +28798,8 @@
     "Daily Worship": "Adhradh Làitheil",
     "All Deen Islam services": "A h-uile seirbheis Deen Islam",
     "View All Prayer Times": "Seall a h-uile àm ùrnaigh",
-    "Starts in": "A’ tòiseachadh ann an"
+    "Starts in": "A’ tòiseachadh ann an",
+    "Daily Prayer": "Adhradh Làitheil"
   },
   "nso": {
     "Next Prayer": "Thapelo e Latelago",
@@ -28833,7 +28985,8 @@
     "Daily Worship": "Borapedi bja Letšatši le Letšatši",
     "All Deen Islam services": "Ditirelo ka moka tša Deen Islam",
     "View All Prayer Times": "Lebelela Dinako ka Moka tša Thapelo",
-    "Starts in": "E thoma ka"
+    "Starts in": "E thoma ka",
+    "Daily Prayer": "Borapedi bja Letšatši le Letšatši"
   },
   "sr": {
     "Next Prayer": "Следећа молитва",
@@ -29019,7 +29172,8 @@
     "Daily Worship": "Даили Ворсхип",
     "All Deen Islam services": "Све услуге Деен Ислама",
     "View All Prayer Times": "Прикажи сва времена молитве",
-    "Starts in": "Почиње у"
+    "Starts in": "Почиње у",
+    "Daily Prayer": "Даили Ворсхип"
   },
   "st": {
     "Next Prayer": "Thapelo e Latelang",
@@ -29205,7 +29359,8 @@
     "Daily Worship": "Borapeli ba Letsatsi le Letsatsi",
     "All Deen Islam services": "Litšebeletso tsohle tsa Deen Islam",
     "View All Prayer Times": "Sheba Linako Tsohle Tsa Thapelo",
-    "Starts in": "E qala ka"
+    "Starts in": "E qala ka",
+    "Daily Prayer": "Borapeli ba Letsatsi le Letsatsi"
   },
   "crs": {
     "Next Prayer": "Prosen lapriyer",
@@ -29391,7 +29546,8 @@
     "Daily Worship": "Ladorasyon toulezour",
     "All Deen Islam services": "tou bann servis Deen Islam",
     "View All Prayer Times": "vwar tou bann ler lapriyer",
-    "Starts in": "i komans an"
+    "Starts in": "i komans an",
+    "Daily Prayer": "Ladorasyon toulezour"
   },
   "shn": {
     "Next Prayer": "ပၢင်ယွၼ်းသူးထႅင်ႈ",
@@ -29577,7 +29733,8 @@
     "Daily Worship": "ဝႆႈၽြႃးၵူႈဝၼ်း",
     "All Deen Islam services": "ၵၢၼ်ပၼ်တၢင်းၸွႆႈထႅမ် Deen ဢိတ်ႉသလမ်း တင်းမူတ်း",
     "View All Prayer Times": "တူၺ်းၶၢဝ်းယၢမ်းယွၼ်းသူးတင်းမူတ်း",
-    "Starts in": "တႄႇမိူဝ်ႈပီ 2019 ။"
+    "Starts in": "တႄႇမိူဝ်ႈပီ 2019 ။",
+    "Daily Prayer": "ဝႆႈၽြႃးၵူႈဝၼ်း"
   },
   "sn": {
     "Next Prayer": "Munamato Unotevera",
@@ -29763,7 +29920,8 @@
     "Daily Worship": "Kunamata Kwezuva Nezuva",
     "All Deen Islam services": "Masevhisi ese eDeen Islam",
     "View All Prayer Times": "Ona Nguva Dzose dzeminamato",
-    "Starts in": "Inotanga mukati"
+    "Starts in": "Inotanga mukati",
+    "Daily Prayer": "Kunamata Kwezuva Nezuva"
   },
   "scn": {
     "Next Prayer": "Prighera appressu",
@@ -29949,7 +30107,8 @@
     "Daily Worship": "Cultu cutidianu",
     "All Deen Islam services": "Tutti li sirvizzi di Deen Islam",
     "View All Prayer Times": "Visualizza tutti li tempi di prighera",
-    "Starts in": "Accumincia ntô 2012"
+    "Starts in": "Accumincia ntô 2012",
+    "Daily Prayer": "Cultu cutidianu"
   },
   "szl": {
     "Next Prayer": "Dalszy rzykanie",
@@ -30135,7 +30294,8 @@
     "Daily Worship": "Dziynne kult",
     "All Deen Islam services": "wszyske usługi Deen Islam",
     "View All Prayer Times": "Pokaż wszyske czasy rzykanio",
-    "Starts in": "Zaczyno sie w"
+    "Starts in": "Zaczyno sie w",
+    "Daily Prayer": "Dziynne kult"
   },
   "sd": {
     "Next Prayer": "ايندڙ دعا",
@@ -30321,7 +30481,8 @@
     "Daily Worship": "روزانه عبادت",
     "All Deen Islam services": "سڀ دين اسلام خدمتون",
     "View All Prayer Times": "سڀ نماز جا وقت ڏسو",
-    "Starts in": "۾ شروع ٿئي ٿو"
+    "Starts in": "۾ شروع ٿئي ٿو",
+    "Daily Prayer": "روزانه عبادت"
   },
   "si": {
     "Next Prayer": "ඊළඟ යාච්ඤාව",
@@ -30507,7 +30668,8 @@
     "Daily Worship": "දෛනික නමස්කාරය",
     "All Deen Islam services": "සියලුම ඩීන් ඉස්ලාම් සේවාවන්",
     "View All Prayer Times": "සියලුම යාච්ඤා වේලාවන් බලන්න",
-    "Starts in": "තුළ ආරම්භ වේ"
+    "Starts in": "තුළ ආරම්භ වේ",
+    "Daily Prayer": "දෛනික නමස්කාරය"
   },
   "sk": {
     "Next Prayer": "Ďalšia modlitba",
@@ -30693,7 +30855,8 @@
     "Daily Worship": "Denné uctievanie",
     "All Deen Islam services": "Všetky služby Deen Islam",
     "View All Prayer Times": "Zobraziť všetky časy modlitieb",
-    "Starts in": "Začína v"
+    "Starts in": "Začína v",
+    "Daily Prayer": "Denné uctievanie"
   },
   "sl": {
     "Next Prayer": "Naslednja molitev",
@@ -30879,7 +31042,8 @@
     "Daily Worship": "Dnevno bogoslužje",
     "All Deen Islam services": "Vse storitve Deen Islam",
     "View All Prayer Times": "Oglejte si vse čase molitve",
-    "Starts in": "Začne se v"
+    "Starts in": "Začne se v",
+    "Daily Prayer": "Dnevno bogoslužje"
   },
   "so": {
     "Next Prayer": "Ducada Xigta",
@@ -31065,7 +31229,8 @@
     "Daily Worship": "Cibaadada Maalinlaha ah",
     "All Deen Islam services": "Dhamaan adeegyada diinta Islaamka",
     "View All Prayer Times": "Daawo Wakhtiga Salaada Oo Dhan",
-    "Starts in": "Ka bilaabma"
+    "Starts in": "Ka bilaabma",
+    "Daily Prayer": "Cibaadada Maalinlaha ah"
   },
   "es": {
     "Next Prayer": "Siguiente oración",
@@ -31251,7 +31416,8 @@
     "Daily Worship": "Adoración diaria",
     "All Deen Islam services": "Todos los servicios de Deen Islam",
     "View All Prayer Times": "Ver todos los tiempos de oración",
-    "Starts in": "Comienza en"
+    "Starts in": "Comienza en",
+    "Daily Prayer": "Adoración diaria"
   },
   "su": {
     "Next Prayer": "Doa Salajengna",
@@ -31437,7 +31603,8 @@
     "Daily Worship": "Ibadah Sapopoé",
     "All Deen Islam services": "Sadaya jasa Deen Islam",
     "View All Prayer Times": "Tingali Sadayana Waktu Sholat",
-    "Starts in": "Dimimitian di"
+    "Starts in": "Dimimitian di",
+    "Daily Prayer": "Ibadah Sapopoé"
   },
   "sw": {
     "Next Prayer": "Sala Inayofuata",
@@ -31623,7 +31790,8 @@
     "Daily Worship": "Ibada ya Kila Siku",
     "All Deen Islam services": "Huduma zote za Dini ya Kiislamu",
     "View All Prayer Times": "Tazama Nyakati Zote za Maombi",
-    "Starts in": "Huanza ndani"
+    "Starts in": "Huanza ndani",
+    "Daily Prayer": "Ibada ya Kila Siku"
   },
   "ss": {
     "Next Prayer": "Umthandazo Lolandzelako",
@@ -31809,7 +31977,8 @@
     "Daily Worship": "Kukhonta Kwamalanga Onkhe",
     "All Deen Islam services": "Tonkhe tinsita te-Deen Islam",
     "View All Prayer Times": "Buka Tonkhe Tikhatsi Temthandazo",
-    "Starts in": "Kucala nga-2019."
+    "Starts in": "Kucala nga-2019.",
+    "Daily Prayer": "Kukhonta Kwamalanga Onkhe"
   },
   "sv": {
     "Next Prayer": "Nästa bön",
@@ -31995,7 +32164,8 @@
     "Daily Worship": "Daglig gudstjänst",
     "All Deen Islam services": "Alla Deen Islam-tjänster",
     "View All Prayer Times": "Se alla bönetider",
-    "Starts in": "Börjar in"
+    "Starts in": "Börjar in",
+    "Daily Prayer": "Daglig gudstjänst"
   },
   "tg": {
     "Next Prayer": "Дуои навбатӣ",
@@ -32181,7 +32351,8 @@
     "Daily Worship": "Ибодати ҳаррӯза",
     "All Deen Islam services": "Ҳама хидматҳои Дин Ислом",
     "View All Prayer Times": "Ҳамаи вақтҳои намозро бинед",
-    "Starts in": "Оғоз мешавад"
+    "Starts in": "Оғоз мешавад",
+    "Daily Prayer": "Ибодати ҳаррӯза"
   },
   "ta": {
     "Next Prayer": "அடுத்த பிரார்த்தனை",
@@ -32367,7 +32538,8 @@
     "Daily Worship": "தினசரி வழிபாடு",
     "All Deen Islam services": "அனைத்து தீன் இஸ்லாம் சேவைகள்",
     "View All Prayer Times": "அனைத்து பிரார்த்தனை நேரங்களையும் காண்க",
-    "Starts in": "இல் தொடங்குகிறது"
+    "Starts in": "இல் தொடங்குகிறது",
+    "Daily Prayer": "தினசரி வழிபாடு"
   },
   "tt": {
     "Next Prayer": "Киләсе дога",
@@ -32553,7 +32725,8 @@
     "Daily Worship": "Көндәлек гыйбадәт",
     "All Deen Islam services": "Барлык дин Ислам хезмәтләре",
     "View All Prayer Times": "Барлык дога вакытларын карау",
-    "Starts in": "Башлана"
+    "Starts in": "Башлана",
+    "Daily Prayer": "Көндәлек гыйбадәт"
   },
   "te": {
     "Next Prayer": "తదుపరి ప్రార్థన",
@@ -32739,7 +32912,8 @@
     "Daily Worship": "రోజువారీ ఆరాధన",
     "All Deen Islam services": "అన్ని దీన్ ఇస్లాం సేవలు",
     "View All Prayer Times": "అన్ని ప్రార్థన సమయాలను వీక్షించండి",
-    "Starts in": "లో ప్రారంభమవుతుంది"
+    "Starts in": "లో ప్రారంభమవుతుంది",
+    "Daily Prayer": "రోజువారీ ఆరాధన"
   },
   "tet": {
     "Next Prayer": "Orasaun tuirmai",
@@ -32925,7 +33099,8 @@
     "Daily Worship": "Adorasaun loroloron nian",
     "All Deen Islam services": "Servisu Deen Islam hotu-hotu",
     "View All Prayer Times": "Haree Tempu Orasaun Hotu-hotu",
-    "Starts in": "Hahú iha"
+    "Starts in": "Hahú iha",
+    "Daily Prayer": "Adorasaun loroloron nian"
   },
   "th": {
     "Next Prayer": "คำอธิษฐานต่อไป",
@@ -33111,7 +33286,8 @@
     "Daily Worship": "นมัสการทุกวัน",
     "All Deen Islam services": "บริการดีนอิสลามทั้งหมด",
     "View All Prayer Times": "ดูเวลาละหมาดทั้งหมด",
-    "Starts in": "เริ่มใน"
+    "Starts in": "เริ่มใน",
+    "Daily Prayer": "นมัสการทุกวัน"
   },
   "ti": {
     "Next Prayer": "ዝቕጽል ጸሎት",
@@ -33297,7 +33473,8 @@
     "Daily Worship": "መዓልታዊ ኣምልኾ",
     "All Deen Islam services": "ኩሉ ኣገልግሎት ዲን ኢስላም",
     "View All Prayer Times": "ኩሉ ናይ ጸሎት ግዜ ርአ",
-    "Starts in": "ኣብ ዝጅምር"
+    "Starts in": "ኣብ ዝጅምር",
+    "Daily Prayer": "መዓልታዊ ኣምልኾ"
   },
   "ts": {
     "Next Prayer": "Xikhongelo lexi landzelaka",
@@ -33483,7 +33660,8 @@
     "Daily Worship": "Vugandzeri Bya Siku Na Siku",
     "All Deen Islam services": "Vukorhokeri hinkwabyo bya Deen Islam",
     "View All Prayer Times": "Languta Minkarhi Hinkwayo Ya Xikhongelo",
-    "Starts in": "Ku sungula hi"
+    "Starts in": "Ku sungula hi",
+    "Daily Prayer": "Vugandzeri Bya Siku Na Siku"
   },
   "tn": {
     "Next Prayer": "Thapelo e e latelang",
@@ -33669,7 +33847,8 @@
     "Daily Worship": "Kobamelo ya Letsatsi le Letsatsi",
     "All Deen Islam services": "Ditirelo tsotlhe tsa Deen Islam",
     "View All Prayer Times": "Leba Dinako Tsotlhe Tsa Thapelo",
-    "Starts in": "E simolola ka"
+    "Starts in": "E simolola ka",
+    "Daily Prayer": "Kobamelo ya Letsatsi le Letsatsi"
   },
   "tr": {
     "Next Prayer": "Sonraki Dua",
@@ -33855,7 +34034,8 @@
     "Daily Worship": "Günlük İbadet",
     "All Deen Islam services": "Tüm Deen İslam hizmetleri",
     "View All Prayer Times": "Tüm Namaz Vakitlerini Görüntüle",
-    "Starts in": "Başlıyor"
+    "Starts in": "Başlıyor",
+    "Daily Prayer": "Günlük İbadet"
   },
   "tk": {
     "Next Prayer": "Indiki namaz",
@@ -34041,7 +34221,8 @@
     "Daily Worship": "Gündelik ybadat",
     "All Deen Islam services": "Din Yslamyň ähli hyzmatlary",
     "View All Prayer Times": "Prayerhli doga wagtlaryny görüň",
-    "Starts in": "Başlaýar"
+    "Starts in": "Başlaýar",
+    "Daily Prayer": "Gündelik ybadat"
   },
   "ak": {
     "Next Prayer": "Mpaebɔ a Edi Hɔ",
@@ -34227,7 +34408,8 @@
     "Daily Worship": "Daa Som a Wɔyɛ",
     "All Deen Islam services": "Deen Islam som nyinaa",
     "View All Prayer Times": "Hwɛ Mpaebɔ Bere Nyinaa",
-    "Starts in": "Fi ase wɔ"
+    "Starts in": "Fi ase wɔ",
+    "Daily Prayer": "Daa Som a Wɔyɛ"
   },
   "uk": {
     "Next Prayer": "Наступна молитва",
@@ -34413,7 +34595,8 @@
     "Daily Worship": "Щоденне богослужіння",
     "All Deen Islam services": "Усі послуги Deen Islam",
     "View All Prayer Times": "Переглянути всі часи молитов",
-    "Starts in": "Починається в"
+    "Starts in": "Починається в",
+    "Daily Prayer": "Щоденне богослужіння"
   },
   "ur": {
     "Next Prayer": "اگلی نماز",
@@ -34599,7 +34782,8 @@
     "Daily Worship": "روزانہ کی عبادت",
     "All Deen Islam services": "تمام دین اسلام خدمات",
     "View All Prayer Times": "نماز کے تمام اوقات دیکھیں",
-    "Starts in": "میں شروع ہوتا ہے۔"
+    "Starts in": "میں شروع ہوتا ہے۔",
+    "Daily Prayer": "روزانہ کی عبادت"
   },
   "ug": {
     "Next Prayer": "كېيىنكى دۇئا",
@@ -34785,7 +34969,8 @@
     "Daily Worship": "كۈندىلىك ئىبادەت",
     "All Deen Islam services": "بارلىق دىن ئىسلام مۇلازىمەتلىرى",
     "View All Prayer Times": "بارلىق دۇئا ۋاقىتلىرىنى كۆرۈش",
-    "Starts in": "باشلىنىدۇ"
+    "Starts in": "باشلىنىدۇ",
+    "Daily Prayer": "كۈندىلىك ئىبادەت"
   },
   "uz": {
     "Next Prayer": "Keyingi ibodat",
@@ -34971,7 +35156,8 @@
     "Daily Worship": "Kundalik ibodat",
     "All Deen Islam services": "Barcha Din Islom xizmatlari",
     "View All Prayer Times": "Barcha namoz vaqtlarini ko'rish",
-    "Starts in": "Boshlanadi"
+    "Starts in": "Boshlanadi",
+    "Daily Prayer": "Kundalik ibodat"
   },
   "vi": {
     "Next Prayer": "Lời cầu nguyện tiếp theo",
@@ -35157,7 +35343,8 @@
     "Daily Worship": "thờ cúng hàng ngày",
     "All Deen Islam services": "Tất cả các dịch vụ của Deen Islam",
     "View All Prayer Times": "Xem tất cả thời gian cầu nguyện",
-    "Starts in": "Bắt đầu vào"
+    "Starts in": "Bắt đầu vào",
+    "Daily Prayer": "thờ cúng hàng ngày"
   },
   "cy": {
     "Next Prayer": "Gweddi Nesaf",
@@ -35343,7 +35530,8 @@
     "Daily Worship": "Addoliad Beunyddiol",
     "All Deen Islam services": "Holl wasanaethau Deen Islam",
     "View All Prayer Times": "Gweld Pob Amser Gweddi",
-    "Starts in": "Yn dechrau yn"
+    "Starts in": "Yn dechrau yn",
+    "Daily Prayer": "Addoliad Beunyddiol"
   },
   "xh": {
     "Next Prayer": "Umthandazo Olandelayo",
@@ -35529,7 +35717,8 @@
     "Daily Worship": "Unqulo Lwemihla Ngemihla",
     "All Deen Islam services": "Zonke iinkonzo zeDeen Islam",
     "View All Prayer Times": "Jonga Onke Amaxesha Omthandazo",
-    "Starts in": "Iqala ngo"
+    "Starts in": "Iqala ngo",
+    "Daily Prayer": "Unqulo Lwemihla Ngemihla"
   },
   "yi": {
     "Next Prayer": "נעקסטע תפילה",
@@ -35715,7 +35904,8 @@
     "Daily Worship": "טעגלעך דינען",
     "All Deen Islam services": "כל דין איסלאם באַדינונגס",
     "View All Prayer Times": "זען אַלע תפילה צייט",
-    "Starts in": "הייבט זיך אן"
+    "Starts in": "הייבט זיך אן",
+    "Daily Prayer": "טעגלעך דינען"
   },
   "yo": {
     "Next Prayer": "Àdúrà Tó Tẹ̀lé",
@@ -35901,7 +36091,8 @@
     "Daily Worship": "Ijosin Ojoojumọ",
     "All Deen Islam services": "Gbogbo awọn iṣẹ Deen Islam",
     "View All Prayer Times": "Wo Gbogbo Akoko Adura",
-    "Starts in": "Bẹrẹ ni"
+    "Starts in": "Bẹrẹ ni",
+    "Daily Prayer": "Ijosin Ojoojumọ"
   },
   "yua": {
     "Next Prayer": "U láak' payalchi'",
@@ -36087,7 +36278,8 @@
     "Daily Worship": "Adoración Sáansamal",
     "All Deen Islam services": "Tuláakal le áantajo'ob Deen Islam",
     "View All Prayer Times": "Ilawil tuláakal u súutukil payalchi'",
-    "Starts in": "ku káajal"
+    "Starts in": "ku káajal",
+    "Daily Prayer": "Adoración Sáansamal"
   },
   "zu": {
     "Next Prayer": "Umthandazo Olandelayo",
@@ -36273,6 +36465,7 @@
     "Daily Worship": "Ukukhulekela Kwansuku Zonke",
     "All Deen Islam services": "Zonke izinkonzo ze-Deen Islam",
     "View All Prayer Times": "Buka Zonke Izikhathi Zokuthandaza",
-    "Starts in": "Iqala ngo"
+    "Starts in": "Iqala ngo",
+    "Daily Prayer": "Ukukhulekela Kwansuku Zonke"
   }
 }

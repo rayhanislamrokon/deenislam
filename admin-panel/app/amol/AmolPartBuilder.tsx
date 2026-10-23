@@ -1,6 +1,10 @@
 "use client";
 
-import RichTextEditor from "../islamic-lifestyle/RichTextEditor";
+import BaseRichTextEditor from "../islamic-lifestyle/RichTextEditor";
+
+const RichTextEditor = (
+  props: Parameters<typeof BaseRichTextEditor>[0],
+) => <BaseRichTextEditor {...props} cleanupUnsavedImages />;
 
 export type AmolPart = {
   number: number;
@@ -120,24 +124,7 @@ export default function AmolPartBuilder({
               token={token}
               onMessage={onMessage}
               recordId={`${recordId}:part:${index + 1}`}
-              largeText
             />
-            <div className='cardPreview'>
-              <div className='previewLabel'>APP & WEB CARD PREVIEW</div>
-              <span>PART {index + 1}</span>
-              <h4>{part.title || "Part title will appear here"}</h4>
-              <div
-                className='previewText'
-                dangerouslySetInnerHTML={{
-                  __html: valueOf(part) || "<p>Your content preview will appear here.</p>",
-                }}
-              />
-              <aside>
-                <small>AUTHENTIC AMOL GUIDE</small>
-                <b>{part.reference || "Add a Quran, Hadith or verified source"}</b>
-              </aside>
-              <footer>Read full guide <b>›</b></footer>
-            </div>
           </article>
         ))}
       </div>
@@ -151,8 +138,7 @@ export default function AmolPartBuilder({
         .parts{display:grid;gap:14px}.parts>article{min-width:0;overflow:hidden;scroll-margin-top:15px;padding:15px;border:1px solid #d8e6dc;border-radius:14px;background:#fff}
         .partHead{margin-bottom:13px}.partHead>div{display:flex;align-items:center;gap:8px}.partHead b{color:#087a4d;font-size:11px}.partHead span{padding:5px 7px;border-radius:7px;background:#fff4d7;color:#8b6a18;font-size:8px;font-weight:900}.partHead nav{display:flex;gap:5px}.partHead button{padding:7px 9px}.partHead button:disabled{opacity:.3}.partHead .remove{background:#fff0ed;color:#ad4736}
         .meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}label{font-size:10px;font-weight:800;color:#294c3d}input{width:100%;margin-top:6px;padding:10px;border:1px solid #cdded2;border-radius:9px;background:#fcfefc}.contentLabel{display:block;margin-bottom:7px}
-        .parts :global(.tiptapShell){width:100%;max-width:100%;min-width:0}.parts :global(.richToolbar){max-width:100%;flex-wrap:wrap}.parts :global(.richEditorBody){min-height:280px;max-width:100%;overflow-wrap:anywhere;font-size:17px!important;line-height:1.8!important;color:#203d30!important}
-        .cardPreview{margin-top:14px;padding:18px;border:1px solid #d8e6dc;border-radius:16px;background:#fff;color:#173d2e}.previewLabel{margin-bottom:11px;color:#a27f24;font-size:8px;font-weight:900;letter-spacing:1px}.cardPreview>span{display:inline-block;padding:5px 9px;border-radius:999px;background:#e5f3e9;color:#075b3b;font-size:9px;font-weight:900}.cardPreview h4{margin:11px 0 7px;font:800 18px Georgia,serif}.previewText{max-height:84px;overflow:hidden;color:#65736b;font-size:12px;line-height:1.65}.previewText :global(p){margin:0}.cardPreview aside{margin-top:13px;padding:10px 12px;border-left:3px solid #d0ad45;border-radius:9px;background:#fff8e5}.cardPreview aside small,.cardPreview aside b{display:block}.cardPreview aside small{color:#9b7827}.cardPreview aside b{margin-top:3px;color:#71613c;font-size:10px}.cardPreview footer{margin-top:13px;padding-top:12px;border-top:1px solid #e3ebe5;display:flex;justify-content:space-between;color:#087a4d;font-size:11px;font-weight:800}.cardPreview footer b{font-size:20px}
+        .parts :global(.tiptapShell){width:100%;max-width:100%;min-width:0}.parts :global(.richToolbar){max-width:100%;flex-wrap:wrap}.parts :global(.richEditorBody){min-height:280px;max-width:100%;overflow-wrap:anywhere}
         .addBottom{width:100%;margin-top:13px;background:#e2f2e7;color:#087a4d}
         @media(max-width:700px){.builder>header,.partHead{align-items:flex-start;flex-direction:column}.partHead nav{width:100%;justify-content:flex-end}.meta{grid-template-columns:1fr}}
       `}</style>

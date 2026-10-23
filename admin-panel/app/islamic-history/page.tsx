@@ -1,23 +1,535 @@
 "use client";
-import{FormEvent,useEffect,useMemo,useState}from"react";
-import Link from"next/link";
-import AdminLanguagePicker,{ADMIN_LANGUAGES}from"../components/AdminLanguagePicker";
-import RichTextEditor from"../islamic-lifestyle/RichTextEditor";
-const API=(process.env.NEXT_PUBLIC_API_URL||"http://localhost:4000").replace(/\/$/,"");
-type Chapter={title:string;content:string;about:string;reference:string};
-type Form={id:string;title:string;subtitle:string;range:string;summary:string;order:number;published:boolean;chapters:Chapter[]};
-const blank:Form={id:"",title:"",subtitle:"",range:"",summary:"",order:1,published:true,chapters:[{title:"",content:"",about:"",reference:""}]};
-export default function IslamicHistoryManager(){
- const[token,setToken]=useState(""),[items,setItems]=useState<any[]>([]),[form,setForm]=useState<Form>(blank),[language,setLanguage]=useState("en"),[message,setMessage]=useState(""),[saving,setSaving]=useState(false);
- useEffect(()=>setToken(sessionStorage.getItem("deenislam_admin_token")||""),[]);
- const headers=()=>({"Content-Type":"application/json",Authorization:"Bearer "+token});
- const load=async()=>{if(!token)return;const response=await fetch(API+"/api/admin/islamic-history",{headers:headers()}),body=await response.json();response.ok?setItems(body.data||[]):setMessage(body.message||"Unable to load content.")};
- useEffect(()=>{void load()},[token]);
- const localized=(item:any)=>{const copy=language==="en"?item:item.translations?.[language]||{};return{id:item.id,title:copy.title||"",subtitle:copy.subtitle||"",range:copy.range||"",summary:copy.summary||"",order:item.order||1,published:item.published!==false,chapters:(copy.chapters||[]).length?copy.chapters:[{title:"",content:"",about:"",reference:""}]}};
- const choose=(id:string)=>{const item=items.find(x=>x.id===id);setForm(item?localized(item):blank)};
- const updateChapter=(index:number,key:keyof Chapter,value:string)=>setForm(current=>({...current,chapters:current.chapters.map((row,i)=>i===index?{...row,[key]:value}:row)}));
- const save=async(event:FormEvent)=>{event.preventDefault();if(language!=="en"&&!form.id)return setMessage("Choose an English period before adding its translation.");setSaving(true);try{const response=await fetch(API+"/api/admin/islamic-history"+(form.id?"/"+form.id:""),{method:form.id?"PUT":"POST",headers:headers(),body:JSON.stringify({...form,language})}),body=await response.json();if(!response.ok)throw Error(body.message);setMessage("Islamic History content saved. App and Web will receive this data.");setForm(blank);await load()}catch(error){setMessage(error instanceof Error?error.message:"Unable to save content.")}finally{setSaving(false)}};
- const remove=async(item:any)=>{if(!confirm("Delete "+item.title+"?"))return;const response=await fetch(API+"/api/admin/islamic-history/"+item.id,{method:"DELETE",headers:headers()}),body=await response.json();setMessage(response.ok?"Period deleted.":body.message);if(response.ok)await load()};
- const visible=useMemo(()=>language==="en"?items:items.filter(x=>x.translations?.[language]),[items,language]);
- return <main><header><div><Link href="/">‹ Dashboard</Link><small>SHARED APP + WEB CONTENT</small><h1>Islamic History Manager</h1><p>Create periods, chapters, full content, sources and translations from one place.</p></div><b>{visible.length}<span>periods</span></b></header>{message&&<p className="message">{message}</p>}<section className="layout"><form onSubmit={save} className="panel"><div className="head"><h2>{form.id?"Edit historical period":"New historical period"}</h2><button disabled={saving}>{saving?"Saving...":"Save & publish"}</button></div><label>Content language<AdminLanguagePicker section="Islamic History" value={language} onChange={code=>{setLanguage(code);setForm(blank)}} statusFor={code=>code==="en"?"Base content · Available":items.some(x=>x.translations?.[code])?`${items.filter(x=>x.translations?.[code]).length} translated`:"Not uploaded yet"} completeFor={code=>code==="en"||items.some(x=>Boolean(x.translations?.[code]))}/></label><label>Choose period<select value={form.id} onChange={e=>choose(e.target.value)}><option value="">{language==="en"?"Create new period...":"Select period to translate..."}</option>{items.map(item=><option key={item.id} value={item.id}>{item.title}</option>)}</select></label><div className="grid"><label>Period title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label><label>Timeline / range<input value={form.range} onChange={e=>setForm({...form,range:e.target.value})} placeholder="610–622 CE"/></label><label className="wide">Subtitle<input value={form.subtitle} onChange={e=>setForm({...form,subtitle:e.target.value})}/></label><label className="wide">Overview<textarea required value={form.summary} onChange={e=>setForm({...form,summary:e.target.value})}/></label><label>Display order<input type="number" min="1" disabled={language!=="en"} value={form.order} onChange={e=>setForm({...form,order:Number(e.target.value)})}/></label></div><div className="chapterHead"><h3>Content chapters</h3><button type="button" onClick={()=>setForm({...form,chapters:[...form.chapters,{title:"",content:"",about:"",reference:""}]})}>+ Add chapter</button></div>{form.chapters.map((chapter,index)=><article key={index}><div className="chapterTop"><b>CHAPTER {index+1}</b>{form.chapters.length>1&&<button type="button" onClick={()=>setForm({...form,chapters:form.chapters.filter((_,i)=>i!==index)})}>Remove</button>}</div><label>Chapter title<input required value={chapter.title} onChange={e=>updateChapter(index,"title",e.target.value)}/></label><label>Detailed content<RichTextEditor value={chapter.content} onChange={value=>updateChapter(index,"content",value)} api={API} token={token} onMessage={setMessage} recordId={`history:${form.id||"new"}:${index}`}/></label><label>About this chapter<textarea value={chapter.about||""} onChange={e=>updateChapter(index,"about",e.target.value)} placeholder="Short chapter introduction shown in App and Web"/></label><label>Quran / Hadith / verified source<textarea value={chapter.reference} onChange={e=>updateChapter(index,"reference",e.target.value)}/></label></article>)}<label className="publish"><input type="checkbox" checked={form.published} disabled={language!=="en"} onChange={e=>setForm({...form,published:e.target.checked})}/> Published in App and Web</label></form><section className="panel"><div className="head"><h2>Saved periods</h2><b>{visible.length}</b></div>{visible.map(item=><article className="saved" key={item.id}><div><b>{language==="en"?item.title:item.translations[language].title}</b><small>{item.chapters?.length||0} chapters · {item.published?"Published":"Draft"}</small></div><nav><button onClick={()=>choose(item.id)}>Edit</button><button className="danger" onClick={()=>void remove(item)}>Delete</button></nav></article>)}</section></section><style jsx>{`*{box-sizing:border-box}main{min-height:100vh;padding:28px;background:#f3f8f4;color:#173d2e;font-family:Arial}header{max-width:1450px;margin:auto;padding:25px 28px;border-radius:22px;background:#075b3b;color:#fff;display:flex;justify-content:space-between}header a{color:#d9eee1;text-decoration:none}header small{display:block;margin-top:8px;color:#e4c866;font-weight:900}header h1{margin:5px 0}header p{margin:0}header>b{font-size:30px;text-align:center}header>b span{display:block;font-size:10px}.message{max-width:1450px;margin:12px auto;padding:12px;border-radius:10px;background:#dff2e5}.layout{max-width:1450px;margin:18px auto;display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.panel{padding:21px;border:1px solid #d8e7dc;border-radius:20px;background:#fff}.head,.chapterHead,.chapterTop,.saved{display:flex;align-items:center;justify-content:space-between}.head{margin-bottom:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:13px}.wide{grid-column:1/-1}label{display:block;margin-bottom:11px;font-size:11px;font-weight:800}input,select,textarea{width:100%;margin-top:6px;padding:11px;border:1px solid #cdded2;border-radius:9px;background:#fcfefc}textarea{min-height:90px}button{border:0;border-radius:9px;padding:10px 13px;background:#087a4d;color:#fff;font-weight:800;cursor:pointer}.chapterHead{margin:20px 0 10px}.panel>article:not(.saved){margin-bottom:12px;padding:14px;border:1px solid #d9e7dd;border-radius:14px;background:#f8fbf9}.chapterTop b{color:#a27f24;font-size:10px}.chapterTop button,.danger{background:#b54d3d}.publish{display:flex;align-items:center;gap:8px;margin-top:14px}.publish input{width:auto;margin:0}.saved{padding:14px 0;border-bottom:1px solid #e5ede7}.saved small{display:block;margin-top:5px;color:#718078}.saved nav{display:flex;gap:6px}@media(max-width:900px){.layout,.grid{grid-template-columns:1fr}.wide{grid-column:auto}}`}</style></main>;
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import AdminLanguagePicker, {
+  ADMIN_LANGUAGES,
+} from "../components/AdminLanguagePicker";
+import RichTextEditor, {
+  commitRichTextUploads,
+} from "../islamic-lifestyle/RichTextEditor";
+const API = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+).replace(/\/$/, "");
+type Chapter = {
+  title: string;
+  content: string;
+  about: string;
+  reference: string;
+};
+type Form = {
+  id: string;
+  title: string;
+  subtitle: string;
+  range: string;
+  summary: string;
+  order: number;
+  published: boolean;
+  chapters: Chapter[];
+};
+const blank: Form = {
+  id: "",
+  title: "",
+  subtitle: "",
+  range: "",
+  summary: "",
+  order: 1,
+  published: true,
+  chapters: [{ title: "", content: "", about: "", reference: "" }],
+};
+export default function IslamicHistoryManager() {
+  const [token, setToken] = useState(""),
+    [items, setItems] = useState<any[]>([]),
+    [form, setForm] = useState<Form>(blank),
+    [language, setLanguage] = useState("en"),
+    [message, setMessage] = useState(""),
+    [saving, setSaving] = useState(false);
+  useEffect(
+    () => setToken(sessionStorage.getItem("deenislam_admin_token") || ""),
+    [],
+  );
+  const headers = () => ({
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + token,
+  });
+  const load = async () => {
+    if (!token) return;
+    const response = await fetch(API + "/api/admin/islamic-history", {
+        headers: headers(),
+      }),
+      body = await response.json();
+    response.ok
+      ? setItems(body.data || [])
+      : setMessage(body.message || "Unable to load content.");
+  };
+  useEffect(() => {
+    void load();
+  }, [token]);
+  const localized = (item: any) => {
+    const copy = language === "en" ? item : item.translations?.[language] || {};
+    return {
+      id: item.id,
+      title: copy.title || "",
+      subtitle: copy.subtitle || "",
+      range: copy.range || "",
+      summary: copy.summary || "",
+      order: item.order || 1,
+      published: item.published !== false,
+      chapters: (copy.chapters || []).length
+        ? copy.chapters
+        : [{ title: "", content: "", about: "", reference: "" }],
+    };
+  };
+  const choose = (id: string) => {
+    const item = items.find((x) => x.id === id);
+    setForm(item ? localized(item) : blank);
+  };
+  const updateChapter = (index: number, key: keyof Chapter, value: string) =>
+    setForm((current) => ({
+      ...current,
+      chapters: current.chapters.map((row, i) =>
+        i === index ? { ...row, [key]: value } : row,
+      ),
+    }));
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    if (language !== "en" && !form.id)
+      return setMessage(
+        "Choose an English period before adding its translation.",
+      );
+    setSaving(true);
+    try {
+      const response = await fetch(
+          API + "/api/admin/islamic-history" + (form.id ? "/" + form.id : ""),
+          {
+            method: form.id ? "PUT" : "POST",
+            headers: headers(),
+            body: JSON.stringify({ ...form, language }),
+          },
+        ),
+        body = await response.json();
+      if (!response.ok) throw Error(body.message);
+      commitRichTextUploads();
+      setMessage(
+        "Islamic History content saved. App and Web will receive this data.",
+      );
+      setForm(blank);
+      await load();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Unable to save content.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+  const remove = async (item: any) => {
+    if (!confirm("Delete " + item.title + "?")) return;
+    const response = await fetch(
+        API + "/api/admin/islamic-history/" + item.id,
+        { method: "DELETE", headers: headers() },
+      ),
+      body = await response.json();
+    setMessage(response.ok ? "Period deleted." : body.message);
+    if (response.ok) await load();
+  };
+  const visible = useMemo(
+    () =>
+      language === "en"
+        ? items
+        : items.filter((x) => x.translations?.[language]),
+    [items, language],
+  );
+  return (
+    <main>
+      <header>
+        <div>
+          <Link href="/">‹ Dashboard</Link>
+          <small>SHARED APP + WEB CONTENT</small>
+          <h1>Islamic History Manager</h1>
+          <p>
+            Create periods, chapters, full content, sources and translations
+            from one place.
+          </p>
+        </div>
+        <b>
+          {visible.length}
+          <span>periods</span>
+        </b>
+      </header>
+      {message && <p className="message">{message}</p>}
+      <section className="layout">
+        <form onSubmit={save} className="panel">
+          <div className="head">
+            <h2>
+              {form.id ? "Edit historical period" : "New historical period"}
+            </h2>
+            <button disabled={saving}>
+              {saving ? "Saving..." : "Save & publish"}
+            </button>
+          </div>
+          <label>
+            Content language
+            <AdminLanguagePicker
+              section="Islamic History"
+              value={language}
+              onChange={(code) => {
+                setLanguage(code);
+                setForm(blank);
+              }}
+              statusFor={(code) =>
+                code === "en"
+                  ? "Base content · Available"
+                  : items.some((x) => x.translations?.[code])
+                    ? `${items.filter((x) => x.translations?.[code]).length} translated`
+                    : "Not uploaded yet"
+              }
+              completeFor={(code) =>
+                code === "en" ||
+                items.some((x) => Boolean(x.translations?.[code]))
+              }
+            />
+          </label>
+          <label>
+            Choose period
+            <select value={form.id} onChange={(e) => choose(e.target.value)}>
+              <option value="">
+                {language === "en"
+                  ? "Create new period..."
+                  : "Select period to translate..."}
+              </option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="grid">
+            <label>
+              Period title
+              <input
+                required
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+            </label>
+            <label>
+              Timeline / range
+              <input
+                value={form.range}
+                onChange={(e) => setForm({ ...form, range: e.target.value })}
+                placeholder="610–622 CE"
+              />
+            </label>
+            <label className="wide">
+              Subtitle
+              <input
+                value={form.subtitle}
+                onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+              />
+            </label>
+            <label className="wide">
+              Overview
+              <textarea
+                required
+                value={form.summary}
+                onChange={(e) => setForm({ ...form, summary: e.target.value })}
+              />
+            </label>
+            <label>
+              Display order
+              <input
+                type="number"
+                min="1"
+                disabled={language !== "en"}
+                value={form.order}
+                onChange={(e) =>
+                  setForm({ ...form, order: Number(e.target.value) })
+                }
+              />
+            </label>
+          </div>
+          <div className="chapterHead">
+            <h3>Content chapters</h3>
+            <button
+              type="button"
+              onClick={() =>
+                setForm({
+                  ...form,
+                  chapters: [
+                    ...form.chapters,
+                    { title: "", content: "", about: "", reference: "" },
+                  ],
+                })
+              }
+            >
+              + Add chapter
+            </button>
+          </div>
+          {form.chapters.map((chapter, index) => (
+            <article key={index}>
+              <div className="chapterTop">
+                <b>CHAPTER {index + 1}</b>
+                {form.chapters.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        chapters: form.chapters.filter((_, i) => i !== index),
+                      })
+                    }
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <label>
+                Chapter title
+                <input
+                  required
+                  value={chapter.title}
+                  onChange={(e) =>
+                    updateChapter(index, "title", e.target.value)
+                  }
+                />
+              </label>
+              <div className="chapterEditor">
+                <label>Detailed content</label>
+                <RichTextEditor
+                  value={chapter.content}
+                  onChange={(value) => updateChapter(index, "content", value)}
+                  api={API}
+                  token={token}
+                  onMessage={setMessage}
+                  recordId={`history:${form.id || "new"}:${index}`}
+                />
+              </div>
+              <label>
+                About this chapter
+                <textarea
+                  value={chapter.about || ""}
+                  onChange={(e) =>
+                    updateChapter(index, "about", e.target.value)
+                  }
+                  placeholder="Short chapter introduction shown in App and Web"
+                />
+              </label>
+              <label>
+                Quran / Hadith / verified source
+                <textarea
+                  value={chapter.reference}
+                  onChange={(e) =>
+                    updateChapter(index, "reference", e.target.value)
+                  }
+                />
+              </label>
+            </article>
+          ))}
+          <label className="publish">
+            <input
+              type="checkbox"
+              checked={form.published}
+              disabled={language !== "en"}
+              onChange={(e) =>
+                setForm({ ...form, published: e.target.checked })
+              }
+            />{" "}
+            Published in App and Web
+          </label>
+        </form>
+        <section className="panel">
+          <div className="head">
+            <h2>Saved periods</h2>
+            <b>{visible.length}</b>
+          </div>
+          {visible.map((item) => (
+            <article className="saved" key={item.id}>
+              <div>
+                <b>
+                  {language === "en"
+                    ? item.title
+                    : item.translations[language].title}
+                </b>
+                <small>
+                  {item.chapters?.length || 0} chapters ·{" "}
+                  {item.published ? "Published" : "Draft"}
+                </small>
+              </div>
+              <nav>
+                <button onClick={() => choose(item.id)}>Edit</button>
+                <button className="danger" onClick={() => void remove(item)}>
+                  Delete
+                </button>
+              </nav>
+            </article>
+          ))}
+        </section>
+      </section>
+      <style jsx>{`
+        * {
+          box-sizing: border-box;
+        }
+        main {
+          min-height: 100vh;
+          padding: 28px;
+          background: #f3f8f4;
+          color: #173d2e;
+          font-family: Arial;
+        }
+        header {
+          max-width: 1450px;
+          margin: auto;
+          padding: 25px 28px;
+          border-radius: 22px;
+          background: #075b3b;
+          color: #fff;
+          display: flex;
+          justify-content: space-between;
+        }
+        header a {
+          color: #d9eee1;
+          text-decoration: none;
+        }
+        header small {
+          display: block;
+          margin-top: 8px;
+          color: #e4c866;
+          font-weight: 900;
+        }
+        header h1 {
+          margin: 5px 0;
+        }
+        header p {
+          margin: 0;
+        }
+        header > b {
+          font-size: 30px;
+          text-align: center;
+        }
+        header > b span {
+          display: block;
+          font-size: 10px;
+        }
+        .message {
+          max-width: 1450px;
+          margin: 12px auto;
+          padding: 12px;
+          border-radius: 10px;
+          background: #dff2e5;
+        }
+        .layout {
+          max-width: 1450px;
+          margin: 18px auto;
+          display: grid;
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: 18px;
+        }
+        .panel {
+          padding: 21px;
+          border: 1px solid #d8e7dc;
+          border-radius: 20px;
+          background: #fff;
+        }
+        .head,
+        .chapterHead,
+        .chapterTop,
+        .saved {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .head {
+          margin-bottom: 16px;
+        }
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 11px;
+          margin-top: 13px;
+        }
+        .wide {
+          grid-column: 1/-1;
+        }
+        label {
+          display: block;
+          margin-bottom: 11px;
+          font-size: 11px;
+          font-weight: 800;
+        }
+        input,
+        select,
+        textarea {
+          width: 100%;
+          margin-top: 6px;
+          padding: 11px;
+          border: 1px solid #cdded2;
+          border-radius: 9px;
+          background: #fcfefc;
+        }
+        textarea {
+          min-height: 90px;
+        }
+        button {
+          border: 0;
+          border-radius: 9px;
+          padding: 10px 13px;
+          background: #087a4d;
+          color: #fff;
+          font-weight: 800;
+          cursor: pointer;
+        }
+        .chapterHead {
+          margin: 20px 0 10px;
+        }
+        .panel > article:not(.saved) {
+          margin-bottom: 12px;
+          padding: 14px;
+          border: 1px solid #d9e7dd;
+          border-radius: 14px;
+          background: #f8fbf9;
+        }
+        .chapterTop b {
+          color: #a27f24;
+          font-size: 10px;
+        }
+        .chapterTop button,
+        .danger {
+          background: #b54d3d;
+        }
+        .publish {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 14px;
+        }
+        .publish input {
+          width: auto;
+          margin: 0;
+        }
+        .saved {
+          padding: 14px 0;
+          border-bottom: 1px solid #e5ede7;
+        }
+        .saved small {
+          display: block;
+          margin-top: 5px;
+          color: #718078;
+        }
+        .saved nav {
+          display: flex;
+          gap: 6px;
+        }
+        @media (max-width: 900px) {
+          .layout,
+          .grid {
+            grid-template-columns: 1fr;
+          }
+          .wide {
+            grid-column: auto;
+          }
+        }
+      `}</style>
+    </main>
+  );
 }

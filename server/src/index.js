@@ -1096,7 +1096,16 @@ app.use(
   createDailyPrayerRouter(
     () => dailyPrayerPlans,
     jwtSecret,
-    () => ({ duas: duaContent, surahs, lifestyle: lifestyleContent }),
+    () => ({
+      duas: duaContent,
+      surahs,
+      lifestyle: lifestyleContent,
+      hadith: hadithContent,
+      tafsir: tafsirContent,
+      books,
+      prophets: prophetsContent,
+      history: islamicHistoryContent,
+    }),
   ),
 );
 app.use(createHomeEventsRouter(() => homeEvents, jwtSecret));

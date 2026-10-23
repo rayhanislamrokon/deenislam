@@ -12,7 +12,7 @@ const VERIFIED_WEB_TRANSLATIONS: BundledTranslationPacks = {
     "Prayer Times": "নামাজের সময়",
     "Qibla Direction": "কিবলার দিক",
     "Islamic AI": "ইসলামিক এআই",
-    "Daily Tasks": "দৈনিক কাজ",
+    "Daily Prayer": "দৈনিক ইবাদত",
     "Islamic Lifestyle": "ইসলামি জীবনধারা",
     Prophets: "নবী-রাসুল",
     Sahaba: "সাহাবায়ে কেরাম",

@@ -10,11 +10,74 @@ import { Mark, mergeAttributes } from "@tiptap/core";
 import { deleteManagedImage, uploadImageToS3 } from "../lib/imageUpload";
 
 const RICH_TEXT_UPLOADS_COMMITTED = "deenislam:rich-text-uploads-committed";
+const PENDING_RICH_TEXT_IMAGES = "deenislam:pending-rich-text-images";
+
+type PendingImage = { key: string; url: string };
+type StoredPendingImage = PendingImage & { sessionId: string };
+const RICH_TEXT_SESSION_ID =
+  typeof window === "undefined"
+    ? "server"
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const readPendingImages = (): StoredPendingImage[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const value = JSON.parse(localStorage.getItem(PENDING_RICH_TEXT_IMAGES) || "[]");
+    return Array.isArray(value)
+      ? value.filter((item): item is StoredPendingImage =>
+          Boolean(
+            item &&
+              typeof item.key === "string" &&
+              typeof item.url === "string" &&
+              typeof item.sessionId === "string",
+          ),
+        )
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const rememberPendingImage = (image: PendingImage) => {
+  try {
+    const images = readPendingImages().filter((item) => item.url !== image.url);
+    localStorage.setItem(
+      PENDING_RICH_TEXT_IMAGES,
+      JSON.stringify([...images, { ...image, sessionId: RICH_TEXT_SESSION_ID }]),
+    );
+  } catch {
+    // The in-memory cleanup still works when browser storage is unavailable.
+  }
+};
+
+const forgetPendingImages = (urls?: Set<string>) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (!urls) {
+      localStorage.removeItem(PENDING_RICH_TEXT_IMAGES);
+      return;
+    }
+    const remaining = readPendingImages().filter((item) => !urls.has(item.url));
+    if (remaining.length)
+      localStorage.setItem(PENDING_RICH_TEXT_IMAGES, JSON.stringify(remaining));
+    else localStorage.removeItem(PENDING_RICH_TEXT_IMAGES);
+  } catch {
+    // Storage cleanup is best-effort; the S3 deletion is authoritative.
+  }
+};
 
 /** Call only after the content API confirms that the rich text was saved. */
 export const commitRichTextUploads = () => {
-  if (typeof window !== "undefined")
+  if (typeof window !== "undefined") {
+    forgetPendingImages(
+      new Set(
+        readPendingImages()
+          .filter((item) => item.sessionId === RICH_TEXT_SESSION_ID)
+          .map((item) => item.url),
+      ),
+    );
     window.dispatchEvent(new Event(RICH_TEXT_UPLOADS_COMMITTED));
+  }
 };
 
 const SelectionStyle = Mark.create({
@@ -128,12 +191,14 @@ export default function RichTextEditor({
   compact = false,
   autoArrange,
   showPreviewTabs = true,
-  cleanupUnsavedImages = false,
+  cleanupUnsavedImages = true,
 }: Props) {
   const initializedRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const fileRef = useRef<HTMLInputElement>(null);
   const imagePositionRef = useRef<number | null>(null);
-  const pendingImagesRef = useRef(new Map<string, { key: string; url: string }>());
+  const pendingImagesRef = useRef(new Map<string, PendingImage>());
   const linkSelectionRef = useRef({ from: 1, to: 1 });
   const [uploading, setUploading] = useState(false);
   const [linkPanel, setLinkPanel] = useState(false);
@@ -167,12 +232,19 @@ export default function RichTextEditor({
       Image.configure({ inline: false, allowBase64: false }),
     ],
     content: value,
+    editable: true,
     editorProps: {
-      attributes: { class: "richEditorBody", spellcheck: "true" },
+      attributes: {
+        class: "richEditorBody",
+        spellcheck: "true",
+        tabindex: "0",
+        role: "textbox",
+        "aria-multiline": "true",
+      },
     },
     onCreate: ({ editor: activeEditor }) => {
       if (activeEditor.isEmpty)
-        activeEditor.chain().setParagraph().unsetAllMarks().run();
+        activeEditor.commands.setContent("<p></p>", { emitUpdate: false });
     },
     onFocus: ({ editor: activeEditor }) => {
       if (activeEditor.isEmpty)
@@ -181,7 +253,10 @@ export default function RichTextEditor({
     // A selection move does not change the document, so it does not trigger
     // onUpdate. Re-render the toolbar to reflect the marks at the new range.
     onSelectionUpdate: () => refreshToolbar((version) => version + 1),
-    onUpdate: ({ editor: activeEditor }) => onChange(activeEditor.getHTML()),
+    // TipTap creates the editor once. Reading the callback from a ref prevents
+    // it from writing through an old parent-render closure after form changes.
+    onUpdate: ({ editor: activeEditor }) =>
+      onChangeRef.current(activeEditor.getHTML()),
   });
 
   useEffect(() => {
@@ -189,11 +264,29 @@ export default function RichTextEditor({
     const discardPendingImages = (keepalive = false) => {
       const pending = [...pendingImagesRef.current.values()];
       pendingImagesRef.current.clear();
-      for (const image of pending)
-        void deleteManagedImage(api, token, image, { keepalive }).catch(() => undefined);
+      for (const image of pending) {
+        void deleteManagedImage(api, token, image, { keepalive })
+          .then(() => forgetPendingImages(new Set([image.url])))
+          .catch(() => undefined);
+      }
     };
-    const commitPendingImages = () => pendingImagesRef.current.clear();
+    const commitPendingImages = () => {
+      const urls = new Set(pendingImagesRef.current.keys());
+      pendingImagesRef.current.clear();
+      forgetPendingImages(urls);
+    };
     const onPageHide = () => discardPendingImages(true);
+
+    // A tab or browser may have been terminated before its keepalive request
+    // completed. Remove those still-pending uploads the next time the admin
+    // editor opens, so abandoned S3 objects do not accumulate.
+    for (const image of readPendingImages().filter(
+      (item) => item.sessionId !== RICH_TEXT_SESSION_ID,
+    )) {
+      void deleteManagedImage(api, token, image)
+        .then(() => forgetPendingImages(new Set([image.url])))
+        .catch(() => undefined);
+    }
 
     window.addEventListener(RICH_TEXT_UPLOADS_COMMITTED, commitPendingImages);
     window.addEventListener("pagehide", onPageHide);
@@ -224,10 +317,13 @@ export default function RichTextEditor({
         return;
       }
     }
-    if (editor.getHTML() !== value) {
-      editor.commands.setContent(value || "", { emitUpdate: false });
-      if (!value || value === "<p></p>")
+    const nextContent = value && value !== "<p></p>" ? value : "<p></p>";
+    if (editor.getHTML() !== nextContent) {
+      editor.commands.setContent(nextContent, { emitUpdate: false });
+      if (!value || value === "<p></p>") {
+        editor.commands.setTextSelection(1);
         editor.view.dispatch(editor.state.tr.setStoredMarks([]));
+      }
     }
   }, [editor, value, recordId]);
 
@@ -328,6 +424,8 @@ export default function RichTextEditor({
           key: payload.key,
           url: payload.publicUrl,
         });
+      if (cleanupUnsavedImages)
+        rememberPendingImage({ key: payload.key, url: payload.publicUrl });
       const position = imagePositionRef.current;
       const chain = editor.chain().focus();
       if (position !== null) chain.setTextSelection(position);
@@ -990,9 +1088,16 @@ export default function RichTextEditor({
           }
         }
         .richEditorBody {
+          position: relative;
+          z-index: 1;
           min-height: 430px;
           padding: 22px;
           outline: none;
+          cursor: text;
+          caret-color: #087a4d;
+          pointer-events: auto;
+          user-select: text;
+          -webkit-user-select: text;
           color: #263f34;
           font:
             16px/1.75 "Nirmala UI",
@@ -1042,6 +1147,7 @@ export default function RichTextEditor({
           margin-bottom: 18px;
         }
         .richEditorBody p {
+          min-height: 1.75em;
           margin: 8px 0 13px;
         }
         .richEditorBody h1,

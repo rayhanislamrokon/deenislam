@@ -3,9 +3,12 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AdminLanguagePicker, { ADMIN_LANGUAGES } from "../components/AdminLanguagePicker";
-import RichTextEditor from "../islamic-lifestyle/RichTextEditor";
+import BaseRichTextEditor, { commitRichTextUploads } from "../islamic-lifestyle/RichTextEditor";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
+const RichTextEditor = (
+  props: Parameters<typeof BaseRichTextEditor>[0],
+) => <BaseRichTextEditor {...props} cleanupUnsavedImages />;
 
 // Complete 114 Quran Surahs list
 const SURAHS = [
@@ -266,7 +269,6 @@ export default function TafsirManager() {
   const [language, setLanguage] = useState("bn");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
-  const [contentView, setContentView] = useState<"editor" | "app" | "web">("editor");
   const [loadingItems, setLoadingItems] = useState(false);
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -525,6 +527,7 @@ export default function TafsirManager() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.message);
+      commitRichTextUploads();
 
       setMessage(`Tafsir for Surah ${form.surahNumber}:${form.ayahNumber} saved successfully. App & Web will reflect this.`);
       setForm({
@@ -793,82 +796,19 @@ export default function TafsirManager() {
             <div className="composerHead">
               <div>
                 <b>Detailed commentary text</b>
-                <small>Format once, then check how it will look before publishing.</small>
+                <small>Format once, then check the App and Web previews before publishing.</small>
               </div>
-              <nav aria-label="Commentary editor and previews">
-                <button type="button" className={contentView === "editor" ? "active" : ""} onClick={() => setContentView("editor")}>Edit text</button>
-                <button type="button" className={contentView === "app" ? "active" : ""} onClick={() => setContentView("app")}>App preview</button>
-                <button type="button" className={contentView === "web" ? "active" : ""} onClick={() => setContentView("web")}>Web preview</button>
-              </nav>
             </div>
-
-            {contentView === "editor" ? <>
-              <div className="formatGuide">
-                <span><b>Title/Heading</b> section name</span>
-                <span><b>Numbers</b> ordered explanation</span>
-                <span><b>Bullets</b> key points</span>
-                <span><b>Quote</b> highlighted evidence</span>
-              </div>
-              <RichTextEditor
-                value={form.text}
-                onChange={(value) => setForm({ ...form, text: value })}
-                api={API}
-                token={token}
-                onMessage={setMessage}
-                recordId={`tafsir:${form.sourceId}:${form.surahNumber}:${form.ayahNumber}`}
-                autoArrange={arrangeTafsirHtml}
-                showPreviewTabs={false}
-              />
-            </> : contentView === "app" ? (
-              <div className="previewStage appStage">
-                <div className="previewStatus">
-                  <b>FULL APP CONTENT PREVIEW</b>
-                  <span>{cleanSnippet(form.text).length.toLocaleString()} characters · click the text below to edit</span>
-                </div>
-                <div className="phonePreview">
-                  <small>TAFSIR PREVIEW · {selectedSurah.name} {form.surahNumber}:{form.ayahNumber}</small>
-                  <h2
-                    className="editableTitle"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(event) => setForm((current) => ({ ...current, title: event.currentTarget.textContent?.trim() === "Explanation" ? "" : event.currentTarget.textContent?.trim() || "" }))}
-                  >{form.title || "Explanation"}</h2>
-                  <div
-                    className="previewContent editablePreview appCommentaryPreview"
-                    contentEditable
-                    suppressContentEditableWarning
-                    role="textbox"
-                    aria-label="Edit app preview commentary"
-                    onBlur={(event) => setForm((current) => ({ ...current, text: event.currentTarget.innerHTML }))}
-                    dangerouslySetInnerHTML={{ __html: previewHtml(form.text) }}
-                  />
-                  <footer>Source: {form.sourceName || "Selected Tafsir book"}</footer>
-                </div>
-              </div>
-            ) : (
-              <div className="previewStage webStage">
-                <article className="webPreview">
-                  <div className="inlineEditNotice">EDITABLE PREVIEW · click the commentary text to edit</div>
-                  <small>VERIFIED COMMENTARY · {selectedSurah.name} {form.surahNumber}:{form.ayahNumber}</small>
-                  <h2
-                    className="editableTitle"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(event) => setForm((current) => ({ ...current, title: event.currentTarget.textContent?.trim() === "Explanation" ? "" : event.currentTarget.textContent?.trim() || "" }))}
-                  >{form.title || "Explanation"}</h2>
-                  <div
-                    className="previewContent editablePreview webCommentaryPreview"
-                    contentEditable
-                    suppressContentEditableWarning
-                    role="textbox"
-                    aria-label="Edit web preview commentary"
-                    onBlur={(event) => setForm((current) => ({ ...current, text: event.currentTarget.innerHTML }))}
-                    dangerouslySetInnerHTML={{ __html: previewHtml(form.text) }}
-                  />
-                  <footer>Source: {form.sourceName || "Selected Tafsir book"}</footer>
-                </article>
-              </div>
-            )}
+            <RichTextEditor
+              value={form.text}
+              onChange={(value) =>
+                setForm((current) => ({ ...current, text: value }))
+              }
+              api={API}
+              token={token}
+              onMessage={setMessage}
+              recordId={`tafsir:${form.sourceId}:${form.surahNumber}:${form.ayahNumber}`}
+            />
           </section>
 
           <label className="publish">
